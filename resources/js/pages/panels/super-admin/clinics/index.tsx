@@ -20,6 +20,7 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import { useRowSelection } from '@/hooks/use-row-selection';
+import { enumLabel } from '@/lib/i18n/doctor';
 import { useSuperAdminLang } from '@/lib/i18n/super-admin-context';
 import { useLocale } from '@/lib/i18n/use-locale';
 import { cn } from '@/lib/utils';
@@ -70,6 +71,13 @@ export default function SuperAdminClinicsIndex({
 }: ClinicsIndexProps) {
     const { t } = useSuperAdminLang();
     const { slug: locale } = useLocale();
+    const statusLabels: Record<string, string> = {
+        active: t.clinic_status_active,
+        trial: t.clinic_status_trial,
+        suspended: t.clinic_status_suspended,
+        cancelled: t.clinic_status_cancelled,
+        expired: t.clinic_status_expired,
+    };
     const data = clinics?.data ?? [];
     const total = clinics?.total ?? data.length;
     const currentFilters: Filters = filters ?? { search: '', status: '' };
@@ -129,7 +137,10 @@ export default function SuperAdminClinicsIndex({
             <div className="px-6 py-5 lg:px-8">
                 <PageHeader
                     title={t.nav_clinics}
-                    description={`${total} clinics across the platform`}
+                    description={t.clinics_index_desc.replace(
+                        '{total}',
+                        String(total),
+                    )}
                     actions={
                         <div className="flex items-center gap-2">
                             <Button
@@ -145,7 +156,7 @@ export default function SuperAdminClinicsIndex({
                                     )}
                                 >
                                     <Download className="size-3.5" />
-                                    Export
+                                    {t.action_export}
                                 </a>
                             </Button>
                             <CreateClinicsSheet>
@@ -154,7 +165,7 @@ export default function SuperAdminClinicsIndex({
                                     className="gap-2 bg-navy-900 text-white hover:bg-navy-800"
                                 >
                                     <Plus className="size-3.5" />
-                                    New clinic
+                                    {t.clinics_action_new}
                                 </Button>
                             </CreateClinicsSheet>
                         </div>
@@ -169,7 +180,7 @@ export default function SuperAdminClinicsIndex({
                         tone="navy"
                     />
                     <KpiCard
-                        label="Active subscriptions"
+                        label={t.finance_kpi_active_subs}
                         value={
                             data.filter(
                                 (c) => c.subscription_status === 'active',
@@ -179,7 +190,7 @@ export default function SuperAdminClinicsIndex({
                         tone="olive"
                     />
                     <KpiCard
-                        label="Total staff"
+                        label={t.clinics_kpi_total_staff}
                         value={data.reduce(
                             (s, c) => s + (c.users_count ?? 0),
                             0,
@@ -218,11 +229,21 @@ export default function SuperAdminClinicsIndex({
                             <option value="">
                                 {t.th_status}: {t.status_all}
                             </option>
-                            <option value="active">active</option>
-                            <option value="trial">trial</option>
-                            <option value="suspended">suspended</option>
-                            <option value="cancelled">cancelled</option>
-                            <option value="expired">expired</option>
+                            <option value="active">
+                                {enumLabel(statusLabels, 'active')}
+                            </option>
+                            <option value="trial">
+                                {enumLabel(statusLabels, 'trial')}
+                            </option>
+                            <option value="suspended">
+                                {enumLabel(statusLabels, 'suspended')}
+                            </option>
+                            <option value="cancelled">
+                                {enumLabel(statusLabels, 'cancelled')}
+                            </option>
+                            <option value="expired">
+                                {enumLabel(statusLabels, 'expired')}
+                            </option>
                         </select>
                     </div>
 
@@ -231,7 +252,7 @@ export default function SuperAdminClinicsIndex({
                             <TableRow className="bg-muted/50">
                                 <TableHead className="w-10 px-5">
                                     <Checkbox
-                                        aria-label="Select all"
+                                        aria-label={t.clinics_select_all}
                                         checked={
                                             selection.allSelected
                                                 ? true
@@ -254,7 +275,7 @@ export default function SuperAdminClinicsIndex({
                                     {t.th_plan}
                                 </TableHead>
                                 <TableHead className="text-end text-[11px] tracking-wider uppercase">
-                                    Staff
+                                    {t.label_staff}
                                 </TableHead>
                                 <TableHead className="text-end text-[11px] tracking-wider uppercase">
                                     {t.label_patients}
@@ -292,7 +313,10 @@ export default function SuperAdminClinicsIndex({
                                     >
                                         <TableCell className="px-5">
                                             <Checkbox
-                                                aria-label={`Select ${c.name}`}
+                                                aria-label={t.clinics_select_row.replace(
+                                                    '{name}',
+                                                    c.name,
+                                                )}
                                                 checked={selection.has(c.id)}
                                                 onCheckedChange={() =>
                                                     selection.toggle(c.id)
@@ -390,10 +414,16 @@ export default function SuperAdminClinicsIndex({
                 count={selection.count}
                 onClear={selection.clear}
                 actions={[
-                    { label: 'Restore', onClick: () => runBulk('restore') },
-                    { label: 'Export selected', onClick: exportSelected },
                     {
-                        label: 'Suspend',
+                        label: t.clinics_bulk_restore,
+                        onClick: () => runBulk('restore'),
+                    },
+                    {
+                        label: t.clinics_bulk_export,
+                        onClick: exportSelected,
+                    },
+                    {
+                        label: t.clinics_bulk_suspend,
                         onClick: () => runBulk('suspend'),
                         destructive: true,
                     },

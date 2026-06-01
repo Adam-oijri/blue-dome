@@ -13,6 +13,8 @@ import {
     SheetTitle,
     SheetTrigger,
 } from '@/components/ui/sheet';
+import { enumLabel } from '@/lib/i18n/doctor';
+import { useDoctorLang } from '@/lib/i18n/doctor-context';
 import { useLocale } from '@/lib/i18n/use-locale';
 import expenses from '@/routes/expenses';
 
@@ -75,6 +77,7 @@ export function CreateExpensesSheet({
     children: ReactNode;
     vendors: Array<{ id: string; [key: string]: unknown }>;
 }) {
+    const { t } = useDoctorLang();
     const { slug: locale } = useLocale();
     const [open, setOpen] = useState(false);
 
@@ -118,7 +121,7 @@ export function CreateExpensesSheet({
             <SheetTrigger asChild>{children}</SheetTrigger>
             <SheetContent className="flex w-full flex-col sm:max-w-md">
                 <SheetHeader>
-                    <SheetTitle>Record expense</SheetTitle>
+                    <SheetTitle>{t.new_expense}</SheetTitle>
                     <SheetDescription>
                         Log a clinic expense. Categorize it and optionally link
                         a vendor.
@@ -131,7 +134,7 @@ export function CreateExpensesSheet({
                 >
                     <div className="flex-1 space-y-4 overflow-y-auto px-4 pb-4">
                         <div className="grid gap-2">
-                            <Label htmlFor="expense_date">Expense date</Label>
+                            <Label htmlFor="expense_date">{t.col_date}</Label>
                             <input
                                 id="expense_date"
                                 type="date"
@@ -146,7 +149,9 @@ export function CreateExpensesSheet({
 
                         <div className="grid grid-cols-2 gap-3">
                             <div className="grid gap-2">
-                                <Label htmlFor="category">Category</Label>
+                                <Label htmlFor="category">
+                                    {t.col_category}
+                                </Label>
                                 <select
                                     id="category"
                                     value={form.data.category}
@@ -164,7 +169,7 @@ export function CreateExpensesSheet({
                                 <InputError message={form.errors.category} />
                             </div>
                             <div className="grid gap-2">
-                                <Label htmlFor="amount">Amount</Label>
+                                <Label htmlFor="amount">{t.col_amount}</Label>
                                 <input
                                     id="amount"
                                     type="number"
@@ -183,7 +188,7 @@ export function CreateExpensesSheet({
                         <div className="grid grid-cols-2 gap-3">
                             <div className="grid gap-2">
                                 <Label htmlFor="payment_method">
-                                    Payment method
+                                    {t.col_method}
                                 </Label>
                                 <input
                                     id="payment_method"
@@ -217,9 +222,12 @@ export function CreateExpensesSheet({
                                     className={FIELD_CLASS}
                                 >
                                     {PAYMENT_STATUS_OPTIONS.map(
-                                        ([value, label]) => (
+                                        ([value]) => (
                                             <option key={value} value={value}>
-                                                {label}
+                                                {enumLabel(
+                                                    t.payment_status_opts,
+                                                    value,
+                                                )}
                                             </option>
                                         ),
                                     )}
@@ -245,7 +253,7 @@ export function CreateExpensesSheet({
                         </div>
 
                         <div className="grid gap-2">
-                            <Label htmlFor="vendor_id">Vendor</Label>
+                            <Label htmlFor="vendor_id">{t.col_vendor}</Label>
                             <select
                                 id="vendor_id"
                                 value={form.data.vendor_id}
@@ -290,7 +298,7 @@ export function CreateExpensesSheet({
                             <div className="grid grid-cols-2 gap-3">
                                 <div className="grid gap-2">
                                     <Label htmlFor="recurring_frequency">
-                                        Frequency
+                                        {t.frequency}
                                     </Label>
                                     <select
                                         id="recurring_frequency"
@@ -344,7 +352,9 @@ export function CreateExpensesSheet({
                         )}
 
                         <div className="grid gap-2">
-                            <Label htmlFor="description">Description</Label>
+                            <Label htmlFor="description">
+                                {t.col_description}
+                            </Label>
                             <textarea
                                 id="description"
                                 rows={3}
@@ -364,7 +374,7 @@ export function CreateExpensesSheet({
                             disabled={form.processing}
                             className="w-full bg-olive-600 text-white hover:bg-olive-700"
                         >
-                            Record expense
+                            {t.new_expense}
                         </Button>
                     </div>
                 </form>

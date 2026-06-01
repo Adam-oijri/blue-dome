@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
+import { enumLabel } from '@/lib/i18n/doctor';
 import { useDoctorLang } from '@/lib/i18n/doctor-context';
 import { useLocale } from '@/lib/i18n/use-locale';
 import medicalRecords from '@/routes/medical-records';
@@ -57,11 +58,12 @@ export default function MedicalRecordEdit({
     const { t } = useDoctorLang();
     const { slug: locale } = useLocale();
 
-    const heading = record.title || record.record_type.replace(/_/g, ' ');
+    const heading =
+        record.title || enumLabel(t.record_type_opts, record.record_type);
 
     return (
         <>
-            <Head title={`Edit ${heading}`} />
+            <Head title={`${t.edit_record} · ${heading}`} />
 
             <div className="px-8 py-6 lg:px-10">
                 <div className="mb-4 flex items-center gap-3 text-sm">
@@ -82,10 +84,13 @@ export default function MedicalRecordEdit({
                         </Link>
                     </Button>
                     <span className="text-muted-foreground">/</span>
-                    <span className="text-[13px] font-medium">Edit</span>
+                    <span className="text-[13px] font-medium">{t.edit}</span>
                 </div>
 
-                <PageHeader title="Edit record" description={t.consultations} />
+                <PageHeader
+                    title={t.edit_record}
+                    description={t.consultations}
+                />
 
                 <SectionCard className="mt-6">
                     <Form
@@ -100,7 +105,9 @@ export default function MedicalRecordEdit({
                             <>
                                 <div className="grid gap-5 sm:grid-cols-2">
                                     <div className="grid gap-2">
-                                        <Label htmlFor="title">Title</Label>
+                                        <Label htmlFor="title">
+                                            {t.title_label}
+                                        </Label>
                                         <Input
                                             id="title"
                                             name="title"
@@ -110,7 +117,7 @@ export default function MedicalRecordEdit({
                                     </div>
                                     <div className="grid gap-2">
                                         <Label htmlFor="record_type">
-                                            Type
+                                            {t.type_label}
                                         </Label>
                                         <select
                                             id="record_type"
@@ -120,7 +127,10 @@ export default function MedicalRecordEdit({
                                         >
                                             {RECORD_TYPES.map((rt) => (
                                                 <option key={rt} value={rt}>
-                                                    {rt.replace(/_/g, ' ')}
+                                                    {enumLabel(
+                                                        t.record_type_opts,
+                                                        rt,
+                                                    )}
                                                 </option>
                                             ))}
                                         </select>
@@ -130,7 +140,7 @@ export default function MedicalRecordEdit({
                                     </div>
                                     <div className="grid gap-2">
                                         <Label htmlFor="record_date">
-                                            Date
+                                            {t.date_label}
                                         </Label>
                                         <Input
                                             id="record_date"
@@ -149,7 +159,7 @@ export default function MedicalRecordEdit({
                                     </div>
                                     <div className="grid gap-2">
                                         <Label htmlFor="is_confidential">
-                                            Confidential
+                                            {t.confidential_field}
                                         </Label>
                                         <select
                                             id="is_confidential"
@@ -161,8 +171,10 @@ export default function MedicalRecordEdit({
                                             }
                                             className={selectClass}
                                         >
-                                            <option value="0">No</option>
-                                            <option value="1">Yes</option>
+                                            <option value="0">
+                                                {t.no_label}
+                                            </option>
+                                            <option value="1">{t.yes}</option>
                                         </select>
                                         <InputError
                                             message={errors.is_confidential}
@@ -172,7 +184,7 @@ export default function MedicalRecordEdit({
 
                                 <div className="grid gap-2">
                                     <Label htmlFor="subjective">
-                                        Subjective
+                                        {t.subjective_label}
                                     </Label>
                                     <textarea
                                         id="subjective"
@@ -184,7 +196,9 @@ export default function MedicalRecordEdit({
                                     <InputError message={errors.subjective} />
                                 </div>
                                 <div className="grid gap-2">
-                                    <Label htmlFor="objective">Objective</Label>
+                                    <Label htmlFor="objective">
+                                        {t.objective_label}
+                                    </Label>
                                     <textarea
                                         id="objective"
                                         name="objective"
@@ -196,7 +210,7 @@ export default function MedicalRecordEdit({
                                 </div>
                                 <div className="grid gap-2">
                                     <Label htmlFor="assessment">
-                                        Assessment
+                                        {t.assessment_label}
                                     </Label>
                                     <textarea
                                         id="assessment"
@@ -208,7 +222,7 @@ export default function MedicalRecordEdit({
                                     <InputError message={errors.assessment} />
                                 </div>
                                 <div className="grid gap-2">
-                                    <Label htmlFor="plan">Plan</Label>
+                                    <Label htmlFor="plan">{t.plan_label}</Label>
                                     <textarea
                                         id="plan"
                                         name="plan"
@@ -219,7 +233,9 @@ export default function MedicalRecordEdit({
                                     <InputError message={errors.plan} />
                                 </div>
                                 <div className="grid gap-2">
-                                    <Label htmlFor="content">Notes</Label>
+                                    <Label htmlFor="content">
+                                        {t.notes_field}
+                                    </Label>
                                     <textarea
                                         id="content"
                                         name="content"
@@ -236,7 +252,7 @@ export default function MedicalRecordEdit({
                                     className="bg-olive-600 text-white hover:bg-olive-700"
                                 >
                                     {processing && <Spinner />}
-                                    Save changes
+                                    {t.save_changes}
                                 </Button>
                             </>
                         )}

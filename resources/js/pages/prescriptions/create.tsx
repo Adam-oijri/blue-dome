@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
+import { enumLabel } from '@/lib/i18n/doctor';
 import { useDoctorLang } from '@/lib/i18n/doctor-context';
 import { useLocale } from '@/lib/i18n/use-locale';
 import prescriptions from '@/routes/prescriptions';
@@ -165,7 +166,7 @@ export default function PrescriptionCreate({
                                 className={selectClass}
                             >
                                 <option value="" disabled>
-                                    Select a patient…
+                                    {t.select_patient_ph}
                                 </option>
                                 {patients.map((p) => (
                                     <option key={p.id} value={p.id}>
@@ -176,7 +177,7 @@ export default function PrescriptionCreate({
                             <InputError message={err.patient_id} />
                         </div>
                         <div className="grid gap-2">
-                            <Label htmlFor="status">Status</Label>
+                            <Label htmlFor="status">{t.col_status}</Label>
                             <select
                                 id="status"
                                 value={data.status}
@@ -187,14 +188,19 @@ export default function PrescriptionCreate({
                             >
                                 {STATUSES.map((s) => (
                                     <option key={s} value={s}>
-                                        {s}
+                                        {enumLabel(
+                                            t.prescription_status_opts,
+                                            s,
+                                        )}
                                     </option>
                                 ))}
                             </select>
                             <InputError message={err.status} />
                         </div>
                         <div className="grid gap-2">
-                            <Label htmlFor="prescription_date">Issued</Label>
+                            <Label htmlFor="prescription_date">
+                                {t.issued}
+                            </Label>
                             <Input
                                 id="prescription_date"
                                 type="date"
@@ -206,7 +212,9 @@ export default function PrescriptionCreate({
                             <InputError message={err.prescription_date} />
                         </div>
                         <div className="grid gap-2">
-                            <Label htmlFor="expiry_date">Expires</Label>
+                            <Label htmlFor="expiry_date">
+                                {t.expires_label}
+                            </Label>
                             <Input
                                 id="expiry_date"
                                 type="date"
@@ -231,7 +239,7 @@ export default function PrescriptionCreate({
                                 onClick={addItem}
                             >
                                 <Plus className="size-3.5" />
-                                Add
+                                {t.add_label}
                             </Button>
                         }
                     >
@@ -263,7 +271,7 @@ export default function PrescriptionCreate({
                                             className={selectClass}
                                         >
                                             <option value="" disabled>
-                                                Select a medication…
+                                                {t.select_medication_ph}
                                             </option>
                                             {medications.map((m) => (
                                                 <option key={m.id} value={m.id}>
@@ -302,7 +310,7 @@ export default function PrescriptionCreate({
                                         <Input
                                             id={`freq-${i}`}
                                             value={item.frequency_text}
-                                            placeholder="e.g. Twice daily"
+                                            placeholder={t.freq_twice_daily_ph}
                                             onChange={(e) =>
                                                 updateItem(i, {
                                                     frequency_text:
@@ -313,7 +321,7 @@ export default function PrescriptionCreate({
                                     </div>
                                     <div className="grid gap-1.5">
                                         <Label htmlFor={`dur-${i}`}>
-                                            {t.duration} (days)
+                                            {t.duration} ({t.days_label})
                                         </Label>
                                         <Input
                                             id={`dur-${i}`}
@@ -330,7 +338,7 @@ export default function PrescriptionCreate({
                                     </div>
                                     <div className="grid gap-1.5">
                                         <Label htmlFor={`route-${i}`}>
-                                            Route
+                                            {t.route_label}
                                         </Label>
                                         <select
                                             id={`route-${i}`}
@@ -344,7 +352,7 @@ export default function PrescriptionCreate({
                                         >
                                             {ROUTES.map((r) => (
                                                 <option key={r} value={r}>
-                                                    {r}
+                                                    {enumLabel(t.route_opts, r)}
                                                 </option>
                                             ))}
                                         </select>
@@ -360,7 +368,7 @@ export default function PrescriptionCreate({
                                             onClick={() => removeItem(i)}
                                         >
                                             <X className="size-3.5" />
-                                            Remove
+                                            {t.remove_label}
                                         </Button>
                                     </div>
                                 )}
@@ -370,7 +378,9 @@ export default function PrescriptionCreate({
 
                     <SectionCard bodyClassName="space-y-4 p-5">
                         <div className="grid gap-2">
-                            <Label htmlFor="diagnosis_related">Diagnosis</Label>
+                            <Label htmlFor="diagnosis_related">
+                                {t.diagnosis_label}
+                            </Label>
                             <Input
                                 id="diagnosis_related"
                                 value={data.diagnosis_related}
@@ -381,7 +391,7 @@ export default function PrescriptionCreate({
                             <InputError message={err.diagnosis_related} />
                         </div>
                         <div className="grid gap-2">
-                            <Label htmlFor="notes">Notes</Label>
+                            <Label htmlFor="notes">{t.notes_label}</Label>
                             <textarea
                                 id="notes"
                                 rows={3}
@@ -401,7 +411,7 @@ export default function PrescriptionCreate({
                         className="bg-olive-600 text-white hover:bg-olive-700"
                     >
                         {processing && <Spinner />}
-                        Issue prescription
+                        {t.issue_prescription}
                     </Button>
                 </form>
             </div>

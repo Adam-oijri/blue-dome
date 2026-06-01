@@ -6,6 +6,7 @@ import { StatusPill } from '@/components/blue-dome/status-pill';
 import type { FieldChangeEntry } from '@/components/provenance-panel';
 import { ProvenancePanel } from '@/components/provenance-panel';
 import { Button } from '@/components/ui/button';
+import { enumLabel } from '@/lib/i18n/doctor';
 import { useDoctorLang } from '@/lib/i18n/doctor-context';
 import { useLocale } from '@/lib/i18n/use-locale';
 import medicalRecords from '@/routes/medical-records';
@@ -79,7 +80,8 @@ export default function MedicalRecordShow({
     const { t } = useDoctorLang();
     const { slug: locale } = useLocale();
 
-    const heading = record.title || record.record_type.replace(/_/g, ' ');
+    const heading =
+        record.title || enumLabel(t.record_type_opts, record.record_type);
     const hasClinical =
         clinical.content ||
         clinical.subjective ||
@@ -118,18 +120,24 @@ export default function MedicalRecordShow({
                                 tone={record.is_signed ? 'success' : 'warning'}
                                 withDot
                             >
-                                {record.is_signed ? 'signed' : 'unsigned'}
+                                {record.is_signed
+                                    ? t.signed_label
+                                    : t.unsigned_label}
                             </StatusPill>
                             {record.is_confidential && (
                                 <StatusPill tone="danger">
                                     <ShieldAlert className="size-3" />
-                                    confidential
+                                    {t.confidential_label}
                                 </StatusPill>
                             )}
                         </div>
                         <div className="mt-2 grid gap-1 text-[13px] text-muted-foreground">
                             <span className="capitalize">
-                                {record.record_type.replace(/_/g, ' ')} ·{' '}
+                                {enumLabel(
+                                    t.record_type_opts,
+                                    record.record_type,
+                                )}{' '}
+                                ·{' '}
                                 {record.record_date
                                     ?.slice(0, 16)
                                     .replace('T', ' ') ?? '—'}
@@ -141,9 +149,9 @@ export default function MedicalRecordShow({
                                     : ''}
                             </span>
                             <span>
-                                Author: {personName(record.author)}
+                                {t.record_author}: {personName(record.author)}
                                 {record.is_signed && record.signer
-                                    ? ` · Signed by ${personName(record.signer)}`
+                                    ? ` · ${t.signed_by} ${personName(record.signer)}`
                                     : ''}
                             </span>
                         </div>
@@ -163,7 +171,7 @@ export default function MedicalRecordShow({
                                     })}
                                 >
                                     <Edit3 className="size-3.5" />
-                                    Edit
+                                    {t.edit}
                                 </Link>
                             </Button>
                         )}
@@ -180,14 +188,10 @@ export default function MedicalRecordShow({
                                     })}
                                     method="post"
                                     as="button"
-                                    onBefore={() =>
-                                        confirm(
-                                            'Sign this record? Signed records cannot be edited.',
-                                        )
-                                    }
+                                    onBefore={() => confirm(t.sign_confirm)}
                                 >
                                     <Check className="size-3.5" />
-                                    Sign
+                                    {t.sign_label}
                                 </Link>
                             </Button>
                         )}
@@ -196,32 +200,35 @@ export default function MedicalRecordShow({
 
                 <SectionCard
                     titleIcon={<FileText className="size-4" />}
-                    title="Clinical notes"
+                    title={t.clinical_notes}
                     bodyClassName="space-y-4 p-5"
                 >
                     {hasClinical ? (
                         <>
                             <ClinicalBlock
-                                label="Subjective"
+                                label={t.subjective_label}
                                 value={clinical.subjective}
                             />
                             <ClinicalBlock
-                                label="Objective"
+                                label={t.objective_label}
                                 value={clinical.objective}
                             />
                             <ClinicalBlock
-                                label="Assessment"
+                                label={t.assessment_label}
                                 value={clinical.assessment}
                             />
-                            <ClinicalBlock label="Plan" value={clinical.plan} />
                             <ClinicalBlock
-                                label="Notes"
+                                label={t.plan_label}
+                                value={clinical.plan}
+                            />
+                            <ClinicalBlock
+                                label={t.notes_field}
                                 value={clinical.content}
                             />
                         </>
                     ) : (
                         <p className="py-6 text-center text-sm text-muted-foreground">
-                            No clinical content recorded.
+                            {t.no_clinical_content}
                         </p>
                     )}
                 </SectionCard>

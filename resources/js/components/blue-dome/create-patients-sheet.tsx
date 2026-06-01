@@ -13,18 +13,15 @@ import {
     SheetTitle,
     SheetTrigger,
 } from '@/components/ui/sheet';
+import { enumLabel } from '@/lib/i18n/doctor';
+import { useDoctorLang } from '@/lib/i18n/doctor-context';
 import { useLocale } from '@/lib/i18n/use-locale';
 import patients from '@/routes/patients';
 
 const FIELD_CLASS =
     'border-input focus-visible:border-ring focus-visible:ring-ring/50 h-9 w-full rounded-md border bg-transparent px-3 text-sm outline-none focus-visible:ring-[3px]';
 
-const GENDER_OPTIONS: ReadonlyArray<readonly [string, string]> = [
-    ['', '—'],
-    ['male', 'Male'],
-    ['female', 'Female'],
-    ['other', 'Other'],
-];
+const GENDER_VALUES: ReadonlyArray<string> = ['male', 'female', 'other'];
 
 const BLOOD_TYPE_OPTIONS: ReadonlyArray<string> = [
     'A+',
@@ -44,6 +41,7 @@ const BLOOD_TYPE_OPTIONS: ReadonlyArray<string> = [
  * from fixed enum lists.
  */
 export function CreatePatientsSheet({ children }: { children: ReactNode }) {
+    const { t } = useDoctorLang();
     const { slug: locale } = useLocale();
     const [open, setOpen] = useState(false);
 
@@ -84,7 +82,7 @@ export function CreatePatientsSheet({ children }: { children: ReactNode }) {
             <SheetTrigger asChild>{children}</SheetTrigger>
             <SheetContent className="flex w-full flex-col sm:max-w-md">
                 <SheetHeader>
-                    <SheetTitle>New patient</SheetTitle>
+                    <SheetTitle>{t.new_patient}</SheetTitle>
                     <SheetDescription>
                         Add a patient to your clinic. Only the name is required;
                         everything else can be filled in later.
@@ -98,7 +96,9 @@ export function CreatePatientsSheet({ children }: { children: ReactNode }) {
                     <div className="flex-1 space-y-4 overflow-y-auto px-4 pb-4">
                         <div className="grid grid-cols-2 gap-3">
                             <div className="grid gap-2">
-                                <Label htmlFor="first_name">First name</Label>
+                                <Label htmlFor="first_name">
+                                    {t.first_name}
+                                </Label>
                                 <input
                                     id="first_name"
                                     value={form.data.first_name}
@@ -113,7 +113,9 @@ export function CreatePatientsSheet({ children }: { children: ReactNode }) {
                                 <InputError message={form.errors.first_name} />
                             </div>
                             <div className="grid gap-2">
-                                <Label htmlFor="last_name">Last name</Label>
+                                <Label htmlFor="last_name">
+                                    {t.last_name}
+                                </Label>
                                 <input
                                     id="last_name"
                                     value={form.data.last_name}
@@ -129,7 +131,7 @@ export function CreatePatientsSheet({ children }: { children: ReactNode }) {
                         <div className="grid grid-cols-2 gap-3">
                             <div className="grid gap-2">
                                 <Label htmlFor="date_of_birth">
-                                    Date of birth
+                                    {t.date_of_birth}
                                 </Label>
                                 <input
                                     id="date_of_birth"
@@ -148,7 +150,7 @@ export function CreatePatientsSheet({ children }: { children: ReactNode }) {
                                 />
                             </div>
                             <div className="grid gap-2">
-                                <Label htmlFor="gender">Gender</Label>
+                                <Label htmlFor="gender">{t.gender}</Label>
                                 <select
                                     id="gender"
                                     value={form.data.gender}
@@ -157,9 +159,10 @@ export function CreatePatientsSheet({ children }: { children: ReactNode }) {
                                     }
                                     className={FIELD_CLASS}
                                 >
-                                    {GENDER_OPTIONS.map(([value, label]) => (
+                                    <option value="">—</option>
+                                    {GENDER_VALUES.map((value) => (
                                         <option key={value} value={value}>
-                                            {label}
+                                            {enumLabel(t.gender_opts, value)}
                                         </option>
                                     ))}
                                 </select>
@@ -168,7 +171,7 @@ export function CreatePatientsSheet({ children }: { children: ReactNode }) {
                         </div>
 
                         <div className="grid gap-2">
-                            <Label htmlFor="phone_e164">Phone (E.164)</Label>
+                            <Label htmlFor="phone_e164">{t.phone_e164}</Label>
                             <input
                                 id="phone_e164"
                                 placeholder="+212600000000"
@@ -182,7 +185,7 @@ export function CreatePatientsSheet({ children }: { children: ReactNode }) {
                         </div>
 
                         <div className="grid gap-2">
-                            <Label htmlFor="email">Email</Label>
+                            <Label htmlFor="email">{t.email}</Label>
                             <input
                                 id="email"
                                 type="email"
@@ -197,7 +200,9 @@ export function CreatePatientsSheet({ children }: { children: ReactNode }) {
 
                         <div className="grid grid-cols-2 gap-3">
                             <div className="grid gap-2">
-                                <Label htmlFor="blood_type">Blood type</Label>
+                                <Label htmlFor="blood_type">
+                                    {t.blood_type}
+                                </Label>
                                 <select
                                     id="blood_type"
                                     value={form.data.blood_type}
@@ -219,7 +224,9 @@ export function CreatePatientsSheet({ children }: { children: ReactNode }) {
                                 <InputError message={form.errors.blood_type} />
                             </div>
                             <div className="grid gap-2">
-                                <Label htmlFor="national_id">National ID</Label>
+                                <Label htmlFor="national_id">
+                                    {t.national_id}
+                                </Label>
                                 <input
                                     id="national_id"
                                     value={form.data.national_id}

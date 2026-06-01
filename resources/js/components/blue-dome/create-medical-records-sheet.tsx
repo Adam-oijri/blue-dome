@@ -13,6 +13,8 @@ import {
     SheetTitle,
     SheetTrigger,
 } from '@/components/ui/sheet';
+import { enumLabel } from '@/lib/i18n/doctor';
+import { useDoctorLang } from '@/lib/i18n/doctor-context';
 import { useLocale } from '@/lib/i18n/use-locale';
 import medicalRecords from '@/routes/medical-records';
 
@@ -65,6 +67,7 @@ export function CreateMedicalRecordsSheet({
     children: ReactNode;
     patients: Array<{ id: string; [k: string]: unknown }>;
 }) {
+    const { t } = useDoctorLang();
     const { slug: locale } = useLocale();
     const [open, setOpen] = useState(false);
 
@@ -107,11 +110,8 @@ export function CreateMedicalRecordsSheet({
             <SheetTrigger asChild>{children}</SheetTrigger>
             <SheetContent className="flex w-full flex-col sm:max-w-lg">
                 <SheetHeader>
-                    <SheetTitle>New medical record</SheetTitle>
-                    <SheetDescription>
-                        Pick a patient and document the visit. SOAP notes are
-                        optional.
-                    </SheetDescription>
+                    <SheetTitle>{t.new_medical_record}</SheetTitle>
+                    <SheetDescription>{t.new_record_desc}</SheetDescription>
                 </SheetHeader>
 
                 <form
@@ -120,7 +120,7 @@ export function CreateMedicalRecordsSheet({
                 >
                     <div className="flex-1 space-y-4 overflow-y-auto px-4 pb-4">
                         <div className="grid gap-2">
-                            <Label htmlFor="patient_id">Patient</Label>
+                            <Label htmlFor="patient_id">{t.patients}</Label>
                             <select
                                 id="patient_id"
                                 value={form.data.patient_id}
@@ -129,7 +129,7 @@ export function CreateMedicalRecordsSheet({
                                 }
                                 className={FIELD_CLASS}
                             >
-                                <option value="">Select a patient…</option>
+                                <option value="">{t.select_patient_ph}</option>
                                 {patients.map((patient) => (
                                     <option key={patient.id} value={patient.id}>
                                         {patientLabel(patient)}
@@ -141,7 +141,9 @@ export function CreateMedicalRecordsSheet({
 
                         <div className="grid grid-cols-2 gap-3">
                             <div className="grid gap-2">
-                                <Label htmlFor="record_type">Type</Label>
+                                <Label htmlFor="record_type">
+                                    {t.type_label}
+                                </Label>
                                 <select
                                     id="record_type"
                                     value={form.data.record_type}
@@ -153,13 +155,11 @@ export function CreateMedicalRecordsSheet({
                                     }
                                     className={FIELD_CLASS}
                                 >
-                                    {RECORD_TYPE_OPTIONS.map(
-                                        ([value, label]) => (
-                                            <option key={value} value={value}>
-                                                {label}
-                                            </option>
-                                        ),
-                                    )}
+                                    {RECORD_TYPE_OPTIONS.map(([value]) => (
+                                        <option key={value} value={value}>
+                                            {enumLabel(t.record_type_opts, value)}
+                                        </option>
+                                    ))}
                                 </select>
                                 <InputError
                                     message={form.errors.record_type}
@@ -167,7 +167,7 @@ export function CreateMedicalRecordsSheet({
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="is_confidential">
-                                    Confidential
+                                    {t.confidential_field}
                                 </Label>
                                 <select
                                     id="is_confidential"
@@ -180,8 +180,8 @@ export function CreateMedicalRecordsSheet({
                                     }
                                     className={FIELD_CLASS}
                                 >
-                                    <option value="0">No</option>
-                                    <option value="1">Yes</option>
+                                    <option value="0">{t.no_label}</option>
+                                    <option value="1">{t.yes}</option>
                                 </select>
                                 <InputError
                                     message={form.errors.is_confidential}
@@ -190,7 +190,7 @@ export function CreateMedicalRecordsSheet({
                         </div>
 
                         <div className="grid gap-2">
-                            <Label htmlFor="title">Title</Label>
+                            <Label htmlFor="title">{t.title_label}</Label>
                             <input
                                 id="title"
                                 value={form.data.title}
@@ -203,7 +203,7 @@ export function CreateMedicalRecordsSheet({
                         </div>
 
                         <div className="grid gap-2">
-                            <Label htmlFor="record_date">Date</Label>
+                            <Label htmlFor="record_date">{t.date_label}</Label>
                             <input
                                 id="record_date"
                                 type="datetime-local"
@@ -217,7 +217,9 @@ export function CreateMedicalRecordsSheet({
                         </div>
 
                         <div className="grid gap-2">
-                            <Label htmlFor="subjective">Subjective</Label>
+                            <Label htmlFor="subjective">
+                                {t.subjective_label}
+                            </Label>
                             <textarea
                                 id="subjective"
                                 rows={3}
@@ -231,7 +233,9 @@ export function CreateMedicalRecordsSheet({
                         </div>
 
                         <div className="grid gap-2">
-                            <Label htmlFor="objective">Objective</Label>
+                            <Label htmlFor="objective">
+                                {t.objective_label}
+                            </Label>
                             <textarea
                                 id="objective"
                                 rows={3}
@@ -245,7 +249,9 @@ export function CreateMedicalRecordsSheet({
                         </div>
 
                         <div className="grid gap-2">
-                            <Label htmlFor="assessment">Assessment</Label>
+                            <Label htmlFor="assessment">
+                                {t.assessment_label}
+                            </Label>
                             <textarea
                                 id="assessment"
                                 rows={3}
@@ -259,7 +265,7 @@ export function CreateMedicalRecordsSheet({
                         </div>
 
                         <div className="grid gap-2">
-                            <Label htmlFor="plan">Plan</Label>
+                            <Label htmlFor="plan">{t.plan_label}</Label>
                             <textarea
                                 id="plan"
                                 rows={3}
@@ -273,7 +279,7 @@ export function CreateMedicalRecordsSheet({
                         </div>
 
                         <div className="grid gap-2">
-                            <Label htmlFor="content">Notes</Label>
+                            <Label htmlFor="content">{t.notes_field}</Label>
                             <textarea
                                 id="content"
                                 rows={3}
@@ -293,7 +299,7 @@ export function CreateMedicalRecordsSheet({
                             disabled={form.processing}
                             className="w-full bg-olive-600 text-white hover:bg-olive-700"
                         >
-                            Create record
+                            {t.create_label}
                         </Button>
                     </div>
                 </form>

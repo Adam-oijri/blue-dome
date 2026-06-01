@@ -13,6 +13,7 @@ import {
     SheetTitle,
     SheetTrigger,
 } from '@/components/ui/sheet';
+import { useDoctorLang } from '@/lib/i18n/doctor-context';
 import { useLocale } from '@/lib/i18n/use-locale';
 import appointments from '@/routes/appointments';
 
@@ -68,6 +69,7 @@ export function CreateAppointmentSheet({
     children: ReactNode;
     lockedPatient?: { id: string; name: string };
 }) {
+    const { t } = useDoctorLang();
     const { slug: locale } = useLocale();
     const userId = usePage().props.auth.user.id;
     const [open, setOpen] = useState(false);
@@ -144,7 +146,7 @@ export function CreateAppointmentSheet({
             <SheetTrigger asChild>{children}</SheetTrigger>
             <SheetContent className="w-full sm:max-w-md">
                 <SheetHeader>
-                    <SheetTitle>Schedule appointment</SheetTitle>
+                    <SheetTitle>{t.new_appointment}</SheetTitle>
                     <SheetDescription>
                         Pick a patient and a time slot. The appointment is
                         created under your name.
@@ -153,7 +155,7 @@ export function CreateAppointmentSheet({
 
                 <form onSubmit={submit} className="space-y-4 px-4 pb-4">
                     <div className="grid gap-2">
-                        <Label htmlFor="patient_id">Patient</Label>
+                        <Label htmlFor="patient_id">{t.col_patient}</Label>
                         {lockedPatient ? (
                             <input
                                 readOnly
@@ -271,7 +273,7 @@ export function CreateAppointmentSheet({
                         disabled={form.processing}
                         className="w-full bg-olive-600 text-white hover:bg-olive-700"
                     >
-                        Schedule
+                        {t.new_appointment}
                     </Button>
                 </form>
             </SheetContent>

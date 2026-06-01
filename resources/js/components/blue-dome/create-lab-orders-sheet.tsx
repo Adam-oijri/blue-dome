@@ -14,6 +14,8 @@ import {
     SheetTitle,
     SheetTrigger,
 } from '@/components/ui/sheet';
+import { enumLabel } from '@/lib/i18n/doctor';
+import { useDoctorLang } from '@/lib/i18n/doctor-context';
 import { useLocale } from '@/lib/i18n/use-locale';
 import labOrders from '@/routes/lab-orders';
 
@@ -34,11 +36,7 @@ const FIELD_CLASS =
 const TEXTAREA_CLASS =
     'border-input focus-visible:border-ring focus-visible:ring-ring/50 w-full rounded-md border bg-transparent px-3 py-2 text-sm outline-none focus-visible:ring-[3px]';
 
-const URGENCY_OPTIONS: ReadonlyArray<readonly [string, string]> = [
-    ['routine', 'Routine'],
-    ['urgent', 'Urgent'],
-    ['stat', 'STAT'],
-];
+const URGENCY_OPTIONS: ReadonlyArray<string> = ['routine', 'urgent', 'stat'];
 
 function emptyItem(): ItemForm {
     return {
@@ -76,6 +74,7 @@ export function CreateLabOrdersSheet({
     children: ReactNode;
     patients: Array<{ id: string; [k: string]: unknown }>;
 }) {
+    const { t } = useDoctorLang();
     const { slug: locale } = useLocale();
     const [open, setOpen] = useState(false);
 
@@ -143,7 +142,7 @@ export function CreateLabOrdersSheet({
             <SheetTrigger asChild>{children}</SheetTrigger>
             <SheetContent className="w-full sm:max-w-2xl">
                 <SheetHeader>
-                    <SheetTitle>New lab order</SheetTitle>
+                    <SheetTitle>{t.new_lab_order}</SheetTitle>
                     <SheetDescription>
                         Pick a patient and add the tests to order. At least one
                         test is required.
@@ -155,7 +154,7 @@ export function CreateLabOrdersSheet({
                     className="flex-1 space-y-4 overflow-y-auto px-4 pb-4"
                 >
                     <div className="grid gap-2">
-                        <Label htmlFor="patient_id">Patient</Label>
+                        <Label htmlFor="patient_id">{t.col_patient}</Label>
                         <select
                             id="patient_id"
                             value={form.data.patient_id}
@@ -189,7 +188,7 @@ export function CreateLabOrdersSheet({
                             <InputError message={err.order_date} />
                         </div>
                         <div className="grid gap-2">
-                            <Label htmlFor="urgency">Urgency</Label>
+                            <Label htmlFor="urgency">{t.urgency_col}</Label>
                             <select
                                 id="urgency"
                                 value={form.data.urgency}
@@ -198,9 +197,9 @@ export function CreateLabOrdersSheet({
                                 }
                                 className={FIELD_CLASS}
                             >
-                                {URGENCY_OPTIONS.map(([value, label]) => (
+                                {URGENCY_OPTIONS.map((value) => (
                                     <option key={value} value={value}>
-                                        {label}
+                                        {enumLabel(t.urgency_opts, value)}
                                     </option>
                                 ))}
                             </select>
@@ -282,7 +281,7 @@ export function CreateLabOrdersSheet({
 
                     <div className="space-y-3">
                         <div className="flex items-center justify-between">
-                            <Label>Tests</Label>
+                            <Label>{t.tests_col}</Label>
                             <Button
                                 type="button"
                                 variant="outline"
@@ -437,7 +436,7 @@ export function CreateLabOrdersSheet({
                                         onClick={() => removeItem(i)}
                                     >
                                         <X className="size-3.5" />
-                                        Remove
+                                        {t.delete_action}
                                     </Button>
                                 </div>
                             </div>
@@ -449,7 +448,7 @@ export function CreateLabOrdersSheet({
                         disabled={form.processing}
                         className="w-full bg-olive-600 text-white hover:bg-olive-700"
                     >
-                        Create lab order
+                        {t.new_lab_order}
                     </Button>
                 </form>
             </SheetContent>

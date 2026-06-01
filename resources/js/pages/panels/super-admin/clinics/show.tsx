@@ -112,9 +112,12 @@ export default function SuperAdminClinicShow({
                                 {status.replace('_', ' ')}
                             </StatusPill>
                             <span className="text-[13px] text-muted-foreground">
-                                {clinic.subscription_plan ?? 'free'} plan
+                                {t.clinics_plan_suffix.replace(
+                                    '{plan}',
+                                    clinic.subscription_plan ?? 'free',
+                                )}
                                 {clinic.subscription_expiry &&
-                                    ` · renews ${clinic.subscription_expiry}`}
+                                    ` · ${t.clinics_renews_inline.replace('{date}', clinic.subscription_expiry)}`}
                             </span>
                         </span>
                     }
@@ -133,7 +136,7 @@ export default function SuperAdminClinicShow({
                                     })}
                                 >
                                     <Pencil className="size-3.5" />
-                                    Edit
+                                    {t.clinics_action_edit}
                                 </Link>
                             </Button>
                             <Button
@@ -149,7 +152,7 @@ export default function SuperAdminClinicShow({
                                     })}
                                 >
                                     <MessageCircle className="size-3.5" />
-                                    WhatsApp
+                                    {t.clinics_action_whatsapp}
                                 </Link>
                             </Button>
                             <Button
@@ -165,7 +168,7 @@ export default function SuperAdminClinicShow({
                                     })}
                                 >
                                     <Mail className="size-3.5" />
-                                    Email
+                                    {t.clinics_action_email}
                                 </Link>
                             </Button>
                             {suspended ? (
@@ -182,7 +185,7 @@ export default function SuperAdminClinicShow({
                                         as="button"
                                     >
                                         <Play className="size-3.5" />
-                                        Restore clinic
+                                        {t.clinics_action_restore_clinic}
                                     </Link>
                                 </Button>
                             ) : (
@@ -200,7 +203,7 @@ export default function SuperAdminClinicShow({
                                         as="button"
                                     >
                                         <Pause className="size-3.5" />
-                                        Suspend clinic
+                                        {t.clinics_action_suspend_clinic}
                                     </Link>
                                 </Button>
                             )}
@@ -210,33 +213,36 @@ export default function SuperAdminClinicShow({
 
                 <div className="mb-5 grid grid-cols-2 gap-3 md:grid-cols-4">
                     <KpiCard
-                        label="Staff"
+                        label={t.clinics_kpi_staff}
                         value={`${clinic.users_count ?? 0} / ${clinic.max_users ?? '—'}`}
                         icon={Users}
                         tone="navy"
                     />
                     <KpiCard
-                        label="Patients"
+                        label={t.clinics_kpi_patients}
                         value={clinic.patients_count ?? 0}
                         icon={Users}
                         tone="navy"
                     />
                     <KpiCard
-                        label="Branches"
+                        label={t.clinics_kpi_branches}
                         value={clinic.max_branches ?? '—'}
                         icon={Building2}
                         tone="olive"
                     />
                     <KpiCard
-                        label="Storage cap"
-                        value={`${clinic.max_storage_mb ?? '—'} MB`}
+                        label={t.clinics_kpi_storage}
+                        value={t.clinics_storage_value.replace(
+                            '{value}',
+                            String(clinic.max_storage_mb ?? '—'),
+                        )}
                         icon={Shield}
                         tone="navy"
                     />
                 </div>
 
                 <SectionCard
-                    title="Operational management"
+                    title={t.clinics_ops_title}
                     titleIcon={<Boxes className="size-4" />}
                     bodyClassName="flex flex-wrap gap-2 p-5"
                     className="mb-5"
@@ -254,7 +260,7 @@ export default function SuperAdminClinicShow({
                             })}
                         >
                             <Users className="size-3.5" />
-                            Patients
+                            {t.clinics_ops_patients}
                         </Link>
                     </Button>
                     <Button
@@ -270,7 +276,7 @@ export default function SuperAdminClinicShow({
                             })}
                         >
                             <Calendar className="size-3.5" />
-                            Appointments
+                            {t.clinics_ops_appointments}
                         </Link>
                     </Button>
                     <Button
@@ -286,7 +292,7 @@ export default function SuperAdminClinicShow({
                             })}
                         >
                             <Receipt className="size-3.5" />
-                            Invoices
+                            {t.clinics_ops_invoices}
                         </Link>
                     </Button>
                     <Button
@@ -302,61 +308,68 @@ export default function SuperAdminClinicShow({
                             })}
                         >
                             <Boxes className="size-3.5" />
-                            Inventory
+                            {t.clinics_ops_inventory}
                         </Link>
                     </Button>
                 </SectionCard>
 
                 <div className="grid gap-5 lg:grid-cols-[1fr_320px]">
                     <SectionCard
-                        title="Clinic profile"
+                        title={t.clinics_profile_title}
                         titleIcon={<Building2 className="size-4" />}
                         bodyClassName="grid grid-cols-1 gap-x-6 gap-y-4 p-5 sm:grid-cols-2"
                     >
-                        <Field label="Name" value={clinic.name} />
-                        <Field label="Slug" value={clinic.slug ?? '—'} mono />
-                        <Field label="Country" value={clinic.country ?? '—'} />
+                        <Field label={t.clinics_field_name} value={clinic.name} />
                         <Field
-                            label="Timezone"
+                            label={t.clinics_field_slug}
+                            value={clinic.slug ?? '—'}
+                            mono
+                        />
+                        <Field
+                            label={t.clinics_field_country}
+                            value={clinic.country ?? '—'}
+                        />
+                        <Field
+                            label={t.clinics_field_timezone}
                             value={clinic.timezone ?? '—'}
                         />
                         <Field
-                            label="Currency"
+                            label={t.clinics_field_currency}
                             value={clinic.currency ?? '—'}
                         />
                         <Field
-                            label="Default locale"
+                            label={t.clinics_field_locale}
                             value={clinic.locale ?? '—'}
                         />
                         <Field
-                            label="Phone"
+                            label={t.clinics_field_phone}
                             value={clinic.phone ?? '—'}
                             icon={<Phone className="size-3.5" />}
                             mono
                         />
                         <Field
-                            label="Email"
+                            label={t.clinics_field_email}
                             value={clinic.email ?? '—'}
                             icon={<Mail className="size-3.5" />}
                             mono
                         />
                         <Field
-                            label="Address"
+                            label={t.clinics_field_address}
                             value={clinic.address ?? '—'}
                             className="sm:col-span-2"
                         />
                     </SectionCard>
 
                     <SectionCard
-                        title="Subscription"
+                        title={t.clinics_subscription_title}
                         bodyClassName="space-y-3 p-4 text-[13px]"
                     >
                         <Row
-                            label="Plan"
+                            label={t.clinics_sub_plan}
                             value={clinic.subscription_plan ?? '—'}
                         />
                         <Row
-                            label="Status"
+                            label={t.clinics_sub_status}
                             value={
                                 <StatusPill
                                     tone={STATUS_TONE[status] ?? 'neutral'}
@@ -367,11 +380,11 @@ export default function SuperAdminClinicShow({
                             }
                         />
                         <Row
-                            label="Renews"
+                            label={t.clinics_sub_renews}
                             value={clinic.subscription_expiry ?? '—'}
                         />
                         <Row
-                            label="Created"
+                            label={t.clinics_sub_created}
                             value={
                                 <span className="flex items-center gap-1.5">
                                     <Calendar className="size-3" />
@@ -381,7 +394,7 @@ export default function SuperAdminClinicShow({
                         />
                         <div className="border-t border-border pt-3">
                             <div className="mb-1.5 text-[11px] tracking-wider text-muted-foreground uppercase">
-                                Manager
+                                {t.clinics_manager}
                             </div>
                             {manager ? (
                                 <div className="flex items-center gap-2">
@@ -402,7 +415,7 @@ export default function SuperAdminClinicShow({
                                 </div>
                             ) : (
                                 <div className="text-center text-[12px] text-muted-foreground">
-                                    No manager assigned.
+                                    {t.clinics_no_manager}
                                 </div>
                             )}
                         </div>

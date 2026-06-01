@@ -17,6 +17,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import { enumLabel } from '@/lib/i18n/doctor';
 import { useDoctorLang } from '@/lib/i18n/doctor-context';
 import { useLocale } from '@/lib/i18n/use-locale';
 import { cn } from '@/lib/utils';
@@ -129,6 +130,13 @@ export default function InventoryIndex({
     const count = (status: ItemStatus): number =>
         rows.filter((r) => deriveStatus(r) === status).length;
 
+    const STATUS_LABEL: Record<ItemStatus, string> = {
+        ok: t.in_stock_label,
+        low: t.low_stock,
+        critical: t.critical_label,
+        expiring: t.expiring_soon,
+    };
+
     return (
         <>
             <Head title={t.inventory} />
@@ -136,12 +144,12 @@ export default function InventoryIndex({
             <div className="px-8 py-6 lg:px-10">
                 <PageHeader
                     title={t.inventory}
-                    description={`${inventory.total} items tracked`}
+                    description={`${inventory.total} ${t.items_tracked}`}
                     actions={
                         <>
                             <Button variant="outline" size="sm" className="gap-2">
                                 <AlertTriangle className="size-3.5" />
-                                Reorder list
+                                {t.reorder_list}
                             </Button>
                             {canEdit && (
                                 <CreateInventorySheet
@@ -153,7 +161,7 @@ export default function InventoryIndex({
                                         className="gap-2 bg-olive-600 text-white hover:bg-olive-700"
                                     >
                                         <Plus className="size-3.5" />
-                                        Add item
+                                        {t.add_item}
                                     </Button>
                                 </CreateInventorySheet>
                             )}
@@ -163,25 +171,25 @@ export default function InventoryIndex({
 
                 <div className="mb-6 grid grid-cols-2 gap-4 md:grid-cols-4">
                     <KpiCard
-                        label="Total items"
+                        label={t.total_items}
                         value={String(inventory.total)}
                         icon={Box}
                         tone="navy"
                     />
                     <KpiCard
-                        label="Low stock"
+                        label={t.low_stock}
                         value={String(count('low'))}
                         icon={AlertTriangle}
                         tone="warn"
                     />
                     <KpiCard
-                        label="Critical"
+                        label={t.critical_label}
                         value={String(count('critical'))}
                         icon={AlertTriangle}
                         tone="warn"
                     />
                     <KpiCard
-                        label="Expiring soon"
+                        label={t.expiring_soon}
                         value={String(count('expiring'))}
                         icon={Clock}
                         tone="warn"
@@ -189,7 +197,7 @@ export default function InventoryIndex({
                 </div>
 
                 <SectionCard
-                    title="Stock levels"
+                    title={t.stock_levels}
                     titleIcon={<Box className="size-4" />}
                     actions={
                         <>
@@ -199,12 +207,15 @@ export default function InventoryIndex({
                                     applyFilters({ category: e.target.value })
                                 }
                                 className={SELECT_CLASS}
-                                aria-label="Filter by category"
+                                aria-label={t.filter_by_category}
                             >
-                                <option value="">All categories</option>
-                                {CATEGORY_OPTIONS.map(([value, label]) => (
+                                <option value="">{t.all_categories}</option>
+                                {CATEGORY_OPTIONS.map(([value]) => (
                                     <option key={value} value={value}>
-                                        {label}
+                                        {enumLabel(
+                                            t.inventory_category_opts,
+                                            value,
+                                        )}
                                     </option>
                                 ))}
                             </select>
@@ -214,9 +225,9 @@ export default function InventoryIndex({
                                     applyFilters({ branch: e.target.value })
                                 }
                                 className={SELECT_CLASS}
-                                aria-label="Filter by branch"
+                                aria-label={t.filter_by_branch}
                             >
-                                <option value="">All branches</option>
+                                <option value="">{t.all_branches}</option>
                                 {branches.map((b) => (
                                     <option key={b.id} value={b.id}>
                                         {b.name}
@@ -231,22 +242,22 @@ export default function InventoryIndex({
                         <TableHeader>
                             <TableRow className="bg-muted/50">
                                 <TableHead className="px-5 py-2.5 text-[11px] tracking-wider uppercase">
-                                    Item
+                                    {t.item_col}
                                 </TableHead>
                                 <TableHead className="text-[11px] tracking-wider uppercase">
-                                    Category
+                                    {t.col_category}
                                 </TableHead>
                                 <TableHead className="text-[11px] tracking-wider uppercase">
-                                    Stock
+                                    {t.stock_col}
                                 </TableHead>
                                 <TableHead className="text-[11px] tracking-wider uppercase">
-                                    Min level
+                                    {t.min_level_col}
                                 </TableHead>
                                 <TableHead className="text-[11px] tracking-wider uppercase">
-                                    Expiry
+                                    {t.expiry_col}
                                 </TableHead>
                                 <TableHead className="text-[11px] tracking-wider uppercase">
-                                    Status
+                                    {t.col_status}
                                 </TableHead>
                                 <TableHead className="w-10" />
                             </TableRow>
@@ -258,7 +269,7 @@ export default function InventoryIndex({
                                         colSpan={7}
                                         className="px-5 py-10 text-center text-sm text-muted-foreground"
                                     >
-                                        No inventory items yet.
+                                        {t.no_inventory_items}
                                     </TableCell>
                                 </TableRow>
                             )}
@@ -286,7 +297,12 @@ export default function InventoryIndex({
                                             ) : null}
                                         </TableCell>
                                         <TableCell>
-                                            <StatusPill>{it.category}</StatusPill>
+                                            <StatusPill>
+                                                {enumLabel(
+                                                    t.inventory_category_opts,
+                                                    it.category,
+                                                )}
+                                            </StatusPill>
                                         </TableCell>
                                         <TableCell>
                                             <div className="flex items-center gap-3">
@@ -318,7 +334,7 @@ export default function InventoryIndex({
                                         </TableCell>
                                         <TableCell>
                                             <StatusPill tone={s.tone}>
-                                                {s.label}
+                                                {STATUS_LABEL[status]}
                                             </StatusPill>
                                         </TableCell>
                                         <TableCell>
@@ -328,7 +344,7 @@ export default function InventoryIndex({
                                                         variant="ghost"
                                                         size="icon"
                                                         className="size-7"
-                                                        aria-label="Edit item"
+                                                        aria-label={t.edit}
                                                     >
                                                         <Pencil className="size-3.5 text-muted-foreground" />
                                                     </Button>

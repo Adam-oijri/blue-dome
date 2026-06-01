@@ -5,6 +5,7 @@ import ClinicController from '@/actions/App/Http/Controllers/SuperAdmin/ClinicCo
 import { PageHeader } from '@/components/blue-dome/page-header';
 import { SectionCard } from '@/components/blue-dome/section-card';
 import { Button } from '@/components/ui/button';
+import { useSuperAdminLang } from '@/lib/i18n/super-admin-context';
 import { useLocale } from '@/lib/i18n/use-locale';
 import { ClinicFormFields } from '@/pages/panels/super-admin/clinics/clinic-form-fields';
 import type { ClinicFormData } from '@/pages/panels/super-admin/clinics/clinic-form-fields';
@@ -15,11 +16,14 @@ export default function SuperAdminClinicEdit({
 }: {
     clinic: ClinicFormData & { id: string; name: string };
 }) {
+    const { t } = useSuperAdminLang();
     const { slug: locale } = useLocale();
 
     return (
         <>
-            <Head title={`Edit — ${clinic.name}`} />
+            <Head
+                title={t.clinics_edit_title.replace('{name}', clinic.name)}
+            />
 
             <div className="px-6 py-5 lg:px-8">
                 <div className="mb-4 flex items-center gap-2 text-sm">
@@ -40,12 +44,14 @@ export default function SuperAdminClinicEdit({
                         </Link>
                     </Button>
                     <span className="text-muted-foreground">/</span>
-                    <span className="text-[13px] font-semibold">Edit</span>
+                    <span className="text-[13px] font-semibold">
+                        {t.clinics_edit_crumb}
+                    </span>
                 </div>
 
                 <PageHeader
-                    title={`Edit ${clinic.name}`}
-                    description="Update clinic profile, plan, and limits."
+                    title={t.clinics_edit_title.replace('{name}', clinic.name)}
+                    description={t.clinics_edit_desc}
                 />
 
                 <SectionCard className="mt-6">
@@ -62,7 +68,7 @@ export default function SuperAdminClinicEdit({
                                 clinic={clinic}
                                 processing={processing}
                                 errors={errors}
-                                submitLabel="Save changes"
+                                submitLabel={t.clinics_edit_submit}
                             />
                         )}
                     </Form>

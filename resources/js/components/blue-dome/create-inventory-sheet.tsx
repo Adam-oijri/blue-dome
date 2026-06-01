@@ -13,6 +13,8 @@ import {
     SheetTitle,
     SheetTrigger,
 } from '@/components/ui/sheet';
+import { enumLabel } from '@/lib/i18n/doctor';
+import { useDoctorLang } from '@/lib/i18n/doctor-context';
 import { useLocale } from '@/lib/i18n/use-locale';
 import inventory from '@/routes/inventory';
 
@@ -55,6 +57,7 @@ export function CreateInventorySheet({
     vendors: VendorOption[];
 }) {
     const { slug: locale } = useLocale();
+    const { t } = useDoctorLang();
     const [open, setOpen] = useState(false);
 
     const form = useForm({
@@ -104,9 +107,9 @@ export function CreateInventorySheet({
             <SheetTrigger asChild>{children}</SheetTrigger>
             <SheetContent className="flex w-full flex-col sm:max-w-lg">
                 <SheetHeader>
-                    <SheetTitle>Add inventory item</SheetTitle>
+                    <SheetTitle>{t.add_inventory_item}</SheetTitle>
                     <SheetDescription>
-                        Track stock, pricing, and storage for a clinic item.
+                        {t.add_inventory_item_desc}
                     </SheetDescription>
                 </SheetHeader>
 
@@ -116,7 +119,9 @@ export function CreateInventorySheet({
                 >
                     <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-4 pb-4">
                         <div className="grid gap-2">
-                            <Label htmlFor="item_name">Item name</Label>
+                            <Label htmlFor="item_name">
+                                {t.item_name_label}
+                            </Label>
                             <input
                                 id="item_name"
                                 value={form.data.item_name}
@@ -130,7 +135,9 @@ export function CreateInventorySheet({
 
                         <div className="grid grid-cols-2 gap-3">
                             <div className="grid gap-2">
-                                <Label htmlFor="category">Category</Label>
+                                <Label htmlFor="category">
+                                    {t.col_category}
+                                </Label>
                                 <select
                                     id="category"
                                     value={form.data.category}
@@ -139,16 +146,21 @@ export function CreateInventorySheet({
                                     }
                                     className={FIELD_CLASS}
                                 >
-                                    {CATEGORY_OPTIONS.map(([value, label]) => (
+                                    {CATEGORY_OPTIONS.map(([value]) => (
                                         <option key={value} value={value}>
-                                            {label}
+                                            {enumLabel(
+                                                t.inventory_category_opts,
+                                                value,
+                                            )}
                                         </option>
                                     ))}
                                 </select>
                                 <InputError message={form.errors.category} />
                             </div>
                             <div className="grid gap-2">
-                                <Label htmlFor="item_code">Item code</Label>
+                                <Label htmlFor="item_code">
+                                    {t.item_code_label}
+                                </Label>
                                 <input
                                     id="item_code"
                                     value={form.data.item_code}
@@ -167,7 +179,7 @@ export function CreateInventorySheet({
                         <div className="grid grid-cols-2 gap-3">
                             <div className="grid gap-2">
                                 <Label htmlFor="medication_id">
-                                    Medication
+                                    {t.medication}
                                 </Label>
                                 <select
                                     id="medication_id"
@@ -180,7 +192,7 @@ export function CreateInventorySheet({
                                     }
                                     className={FIELD_CLASS}
                                 >
-                                    <option value="">None</option>
+                                    <option value="">{t.none_label}</option>
                                     {medications.map((medication) => (
                                         <option
                                             key={medication.id}
@@ -195,7 +207,9 @@ export function CreateInventorySheet({
                                 />
                             </div>
                             <div className="grid gap-2">
-                                <Label htmlFor="supplier_id">Supplier</Label>
+                                <Label htmlFor="supplier_id">
+                                    {t.col_vendor}
+                                </Label>
                                 <select
                                     id="supplier_id"
                                     value={form.data.supplier_id}
@@ -207,7 +221,7 @@ export function CreateInventorySheet({
                                     }
                                     className={FIELD_CLASS}
                                 >
-                                    <option value="">None</option>
+                                    <option value="">{t.none_label}</option>
                                     {vendors.map((vendor) => (
                                         <option
                                             key={vendor.id}
@@ -224,7 +238,7 @@ export function CreateInventorySheet({
                         <div className="grid grid-cols-2 gap-3">
                             <div className="grid gap-2">
                                 <Label htmlFor="batch_number">
-                                    Batch number
+                                    {t.batch_number}
                                 </Label>
                                 <input
                                     id="batch_number"
@@ -243,7 +257,7 @@ export function CreateInventorySheet({
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="serial_number">
-                                    Serial number
+                                    {t.serial_number}
                                 </Label>
                                 <input
                                     id="serial_number"
@@ -264,7 +278,7 @@ export function CreateInventorySheet({
 
                         <div className="grid gap-2">
                             <Label htmlFor="expiration_date">
-                                Expiration date
+                                {t.expiration_date_label}
                             </Label>
                             <input
                                 id="expiration_date"
@@ -284,7 +298,7 @@ export function CreateInventorySheet({
                         <div className="grid grid-cols-3 gap-3">
                             <div className="grid gap-2">
                                 <Label htmlFor="quantity_in_stock">
-                                    Qty in stock
+                                    {t.qty_in_stock_short}
                                 </Label>
                                 <input
                                     id="quantity_in_stock"
@@ -306,7 +320,7 @@ export function CreateInventorySheet({
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="min_stock_level">
-                                    Min level
+                                    {t.min_level_value}
                                 </Label>
                                 <input
                                     id="min_stock_level"
@@ -328,7 +342,7 @@ export function CreateInventorySheet({
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="reorder_point">
-                                    Reorder pt
+                                    {t.reorder_pt_short}
                                 </Label>
                                 <input
                                     id="reorder_point"
@@ -352,7 +366,7 @@ export function CreateInventorySheet({
 
                         <div className="grid grid-cols-3 gap-3">
                             <div className="grid gap-2">
-                                <Label htmlFor="unit">Unit</Label>
+                                <Label htmlFor="unit">{t.unit_label}</Label>
                                 <input
                                     id="unit"
                                     value={form.data.unit}
@@ -365,7 +379,7 @@ export function CreateInventorySheet({
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="purchase_price">
-                                    Purchase price
+                                    {t.purchase_price_label}
                                 </Label>
                                 <input
                                     id="purchase_price"
@@ -387,7 +401,7 @@ export function CreateInventorySheet({
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="selling_price">
-                                    Selling price
+                                    {t.selling_price_label}
                                 </Label>
                                 <input
                                     id="selling_price"
@@ -411,7 +425,7 @@ export function CreateInventorySheet({
 
                         <div className="grid gap-2">
                             <Label htmlFor="location_in_clinic">
-                                Location in clinic
+                                {t.location_in_clinic}
                             </Label>
                             <input
                                 id="location_in_clinic"
@@ -442,7 +456,7 @@ export function CreateInventorySheet({
                                     }
                                     className="size-4 rounded border-input"
                                 />
-                                Requires refrigeration
+                                {t.requires_refrigeration_label}
                             </label>
                             <label className="flex items-center gap-2 text-sm">
                                 <input
@@ -456,7 +470,7 @@ export function CreateInventorySheet({
                                     }
                                     className="size-4 rounded border-input"
                                 />
-                                Active
+                                {t.active_label}
                             </label>
                         </div>
                         <InputError
@@ -465,7 +479,7 @@ export function CreateInventorySheet({
                         <InputError message={form.errors.is_active} />
 
                         <div className="grid gap-2">
-                            <Label htmlFor="notes">Notes</Label>
+                            <Label htmlFor="notes">{t.notes_label}</Label>
                             <textarea
                                 id="notes"
                                 rows={3}
@@ -485,7 +499,7 @@ export function CreateInventorySheet({
                             disabled={form.processing}
                             className="w-full bg-olive-600 text-white hover:bg-olive-700"
                         >
-                            Add item
+                            {t.add_item}
                         </Button>
                     </div>
                 </form>

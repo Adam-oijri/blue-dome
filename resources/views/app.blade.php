@@ -5,7 +5,7 @@
     $isLandingPage = isset($page['component']) && $page['component'] === 'welcome';
 @endphp
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" @class(['dark' => ! $isLandingPage && ($appearance ?? 'system') == 'dark'])>
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" dir="{{ request()->attributes->get('locale_entry')['dir'] ?? 'ltr' }}" @class(['dark' => ! $isLandingPage && ($appearance ?? 'system') == 'dark'])>
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">

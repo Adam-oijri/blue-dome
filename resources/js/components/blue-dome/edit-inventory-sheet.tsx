@@ -13,6 +13,8 @@ import {
     SheetTitle,
     SheetTrigger,
 } from '@/components/ui/sheet';
+import { enumLabel } from '@/lib/i18n/doctor';
+import { useDoctorLang } from '@/lib/i18n/doctor-context';
 import { useLocale } from '@/lib/i18n/use-locale';
 import inventory from '@/routes/inventory';
 
@@ -53,6 +55,7 @@ export function EditInventorySheet({
     item: InventoryEditable;
 }) {
     const { slug: locale } = useLocale();
+    const { t } = useDoctorLang();
     const [open, setOpen] = useState(false);
 
     const form = useForm({
@@ -93,16 +96,17 @@ export function EditInventorySheet({
             <SheetTrigger asChild>{children}</SheetTrigger>
             <SheetContent className="w-full sm:max-w-md">
                 <SheetHeader>
-                    <SheetTitle>Edit inventory item</SheetTitle>
+                    <SheetTitle>{t.edit_inventory_item}</SheetTitle>
                     <SheetDescription>
-                        Update item details. Stock quantity is adjusted through
-                        stock transactions.
+                        {t.edit_inventory_item_desc}
                     </SheetDescription>
                 </SheetHeader>
 
                 <form onSubmit={submit} className="space-y-4 px-4 pb-4">
                     <div className="grid gap-2">
-                        <Label htmlFor="edit_item_name">Item name</Label>
+                        <Label htmlFor="edit_item_name">
+                            {t.item_name_label}
+                        </Label>
                         <input
                             id="edit_item_name"
                             value={form.data.item_name}
@@ -116,7 +120,9 @@ export function EditInventorySheet({
 
                     <div className="grid grid-cols-2 gap-3">
                         <div className="grid gap-2">
-                            <Label htmlFor="edit_category">Category</Label>
+                            <Label htmlFor="edit_category">
+                                {t.col_category}
+                            </Label>
                             <select
                                 id="edit_category"
                                 value={form.data.category}
@@ -125,16 +131,21 @@ export function EditInventorySheet({
                                 }
                                 className={FIELD_CLASS}
                             >
-                                {CATEGORY_OPTIONS.map(([value, label]) => (
+                                {CATEGORY_OPTIONS.map(([value]) => (
                                     <option key={value} value={value}>
-                                        {label}
+                                        {enumLabel(
+                                            t.inventory_category_opts,
+                                            value,
+                                        )}
                                     </option>
                                 ))}
                             </select>
                             <InputError message={form.errors.category} />
                         </div>
                         <div className="grid gap-2">
-                            <Label htmlFor="edit_item_code">Item code</Label>
+                            <Label htmlFor="edit_item_code">
+                                {t.item_code_label}
+                            </Label>
                             <input
                                 id="edit_item_code"
                                 value={form.data.item_code}
@@ -150,7 +161,7 @@ export function EditInventorySheet({
                     <div className="grid grid-cols-2 gap-3">
                         <div className="grid gap-2">
                             <Label htmlFor="edit_min_stock_level">
-                                Min level
+                                {t.min_level_value}
                             </Label>
                             <input
                                 id="edit_min_stock_level"
@@ -170,7 +181,7 @@ export function EditInventorySheet({
                         </div>
                         <div className="grid gap-2">
                             <Label htmlFor="edit_expiration_date">
-                                Expiration date
+                                {t.expiration_date_label}
                             </Label>
                             <input
                                 id="edit_expiration_date"
@@ -197,12 +208,12 @@ export function EditInventorySheet({
                             }
                             className="size-4 rounded border-input"
                         />
-                        Active
+                        {t.active_label}
                     </label>
                     <InputError message={form.errors.is_active} />
 
                     <div className="grid gap-2">
-                        <Label htmlFor="edit_notes">Notes</Label>
+                        <Label htmlFor="edit_notes">{t.notes_label}</Label>
                         <textarea
                             id="edit_notes"
                             rows={3}
@@ -220,7 +231,7 @@ export function EditInventorySheet({
                         disabled={form.processing}
                         className="w-full bg-olive-600 text-white hover:bg-olive-700"
                     >
-                        Save changes
+                        {t.save_changes}
                     </Button>
                 </form>
             </SheetContent>

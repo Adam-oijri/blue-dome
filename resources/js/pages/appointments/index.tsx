@@ -1,6 +1,9 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { useState } from 'react';
 
+import { CreateAppointmentSheet } from '@/components/blue-dome/create-appointment-sheet';
+import { enumLabel } from '@/lib/i18n/doctor';
+import { useDoctorLang } from '@/lib/i18n/doctor-context';
 import { useLocale } from '@/lib/i18n/use-locale';
 import appointmentRoutes from '@/routes/appointments';
 
@@ -28,6 +31,7 @@ interface Props {
 }
 
 export default function AppointmentsIndex({ appointments, filters }: Props) {
+    const { t } = useDoctorLang();
     const { slug: locale } = useLocale();
     const [day, setDay] = useState(filters.day ?? '');
     const [status, setStatus] = useState(filters.status ?? '');
@@ -43,21 +47,25 @@ export default function AppointmentsIndex({ appointments, filters }: Props) {
 
     return (
         <>
-            <Head title="Appointments" />
+            <Head title={t.appointments} />
             <div className="flex h-full flex-col p-6">
                 <div className="mb-4 flex items-center justify-between">
                     <div>
-                        <h1 className="text-2xl font-semibold">Appointments</h1>
+                        <h1 className="text-2xl font-semibold">
+                            {t.appointments}
+                        </h1>
                         <p className="text-xs text-neutral-500">
                             {appointments.total} total
                         </p>
                     </div>
-                    <Link
-                        href={appointmentRoutes.create.url({ locale })}
-                        className="rounded bg-blue-600 px-3 py-2 text-sm text-white hover:bg-blue-700"
-                    >
-                        + Schedule
-                    </Link>
+                    <CreateAppointmentSheet>
+                        <button
+                            type="button"
+                            className="rounded bg-blue-600 px-3 py-2 text-sm text-white hover:bg-blue-700"
+                        >
+                            + {t.new_appointment}
+                        </button>
+                    </CreateAppointmentSheet>
                 </div>
 
                 <form onSubmit={apply} className="mb-4 flex gap-2 text-sm">
@@ -72,7 +80,7 @@ export default function AppointmentsIndex({ appointments, filters }: Props) {
                         onChange={(e) => setStatus(e.target.value)}
                         className="rounded border border-neutral-300 px-3 py-2"
                     >
-                        <option value="">All statuses</option>
+                        <option value="">{t.all_statuses}</option>
                         {[
                             'scheduled',
                             'confirmed',
@@ -83,7 +91,7 @@ export default function AppointmentsIndex({ appointments, filters }: Props) {
                             'no_show',
                         ].map((s) => (
                             <option key={s} value={s}>
-                                {s}
+                                {enumLabel(t.appt_status_opts, s)}
                             </option>
                         ))}
                     </select>
@@ -91,7 +99,7 @@ export default function AppointmentsIndex({ appointments, filters }: Props) {
                         type="submit"
                         className="rounded border border-neutral-300 px-3 py-2"
                     >
-                        Apply
+                        {t.apply}
                     </button>
                 </form>
 
@@ -99,11 +107,11 @@ export default function AppointmentsIndex({ appointments, filters }: Props) {
                     <thead className="border-b border-neutral-200 text-xs text-neutral-500 uppercase">
                         <tr>
                             <th className="px-3 py-2">#</th>
-                            <th className="px-3 py-2">When</th>
-                            <th className="px-3 py-2">Patient</th>
-                            <th className="px-3 py-2">Doctor</th>
-                            <th className="px-3 py-2">Status</th>
-                            <th className="px-3 py-2">Confirmed?</th>
+                            <th className="px-3 py-2">{t.col_when}</th>
+                            <th className="px-3 py-2">{t.col_patient}</th>
+                            <th className="px-3 py-2">{t.col_doctor}</th>
+                            <th className="px-3 py-2">{t.col_status}</th>
+                            <th className="px-3 py-2">{t.confirmed_q}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -113,7 +121,7 @@ export default function AppointmentsIndex({ appointments, filters }: Props) {
                                     colSpan={6}
                                     className="px-3 py-8 text-center text-neutral-400"
                                 >
-                                    No appointments yet.
+                                    {t.no_appointments}
                                 </td>
                             </tr>
                         )}
@@ -149,12 +157,14 @@ export default function AppointmentsIndex({ appointments, filters }: Props) {
                                         ? `Dr. ${a.doctor.last_name}`
                                         : '—'}
                                 </td>
-                                <td className="px-3 py-2">{a.status}</td>
+                                <td className="px-3 py-2">
+                                    {enumLabel(t.appt_status_opts, a.status)}
+                                </td>
                                 <td className="px-3 py-2">
                                     {a.confirmation_status ===
                                     'confirmed_by_patient' ? (
                                         <span className="rounded bg-emerald-50 px-2 py-0.5 text-xs text-emerald-700">
-                                            confirmed
+                                            {t.confirmed}
                                         </span>
                                     ) : (
                                         <span className="rounded bg-neutral-100 px-2 py-0.5 text-xs text-neutral-500">

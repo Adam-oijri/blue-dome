@@ -5,16 +5,18 @@ import ClinicController from '@/actions/App/Http/Controllers/SuperAdmin/ClinicCo
 import { PageHeader } from '@/components/blue-dome/page-header';
 import { SectionCard } from '@/components/blue-dome/section-card';
 import { Button } from '@/components/ui/button';
+import { useSuperAdminLang } from '@/lib/i18n/super-admin-context';
 import { useLocale } from '@/lib/i18n/use-locale';
 import { ClinicFormFields } from '@/pages/panels/super-admin/clinics/clinic-form-fields';
 import superAdmin from '@/routes/super-admin';
 
 export default function SuperAdminClinicCreate() {
+    const { t } = useSuperAdminLang();
     const { slug: locale } = useLocale();
 
     return (
         <>
-            <Head title="New clinic" />
+            <Head title={t.clinics_create_title} />
 
             <div className="px-6 py-5 lg:px-8">
                 <div className="mb-4 flex items-center gap-2 text-sm">
@@ -26,18 +28,18 @@ export default function SuperAdminClinicCreate() {
                     >
                         <Link href={superAdmin.clinics.index.url({ locale })}>
                             <ChevronLeft className="size-3.5" />
-                            Clinics
+                            {t.nav_clinics}
                         </Link>
                     </Button>
                     <span className="text-muted-foreground">/</span>
                     <span className="text-[13px] font-semibold">
-                        New clinic
+                        {t.clinics_action_new}
                     </span>
                 </div>
 
                 <PageHeader
-                    title="New clinic"
-                    description="Provision a new clinic tenant."
+                    title={t.clinics_create_title}
+                    description={t.clinics_create_desc}
                 />
 
                 <SectionCard className="mt-6">
@@ -50,7 +52,7 @@ export default function SuperAdminClinicCreate() {
                             <ClinicFormFields
                                 processing={processing}
                                 errors={errors}
-                                submitLabel="Create clinic"
+                                submitLabel={t.clinics_create_submit}
                             />
                         )}
                     </Form>

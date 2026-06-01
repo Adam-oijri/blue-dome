@@ -13,6 +13,8 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import { enumLabel } from '@/lib/i18n/doctor';
+import { useDoctorLang } from '@/lib/i18n/doctor-context';
 import { useLocale } from '@/lib/i18n/use-locale';
 import invoices from '@/routes/invoices';
 
@@ -63,14 +65,14 @@ type Invoice = {
     payments: Payment[];
 };
 
-const STATUS: Record<string, { tone: StatusTone; label: string }> = {
-    draft: { tone: 'neutral', label: 'Draft' },
-    pending: { tone: 'warning', label: 'Pending' },
-    partially_paid: { tone: 'info', label: 'Partial' },
-    paid: { tone: 'success', label: 'Paid' },
-    overdue: { tone: 'danger', label: 'Overdue' },
-    cancelled: { tone: 'neutral', label: 'Cancelled' },
-    refunded: { tone: 'info', label: 'Refunded' },
+const STATUS_TONE: Record<string, StatusTone> = {
+    draft: 'neutral',
+    pending: 'warning',
+    partially_paid: 'info',
+    paid: 'success',
+    overdue: 'danger',
+    cancelled: 'neutral',
+    refunded: 'info',
 };
 
 function num(value: Money | null): number {
@@ -92,11 +94,9 @@ function humanize(value: string | null): string {
 }
 
 export default function InvoiceShow({ invoice }: { invoice: Invoice }) {
+    const { t } = useDoctorLang();
     const { slug: locale } = useLocale();
-    const s = STATUS[invoice.status] ?? {
-        tone: 'neutral' as StatusTone,
-        label: invoice.status,
-    };
+    const statusTone = STATUS_TONE[invoice.status] ?? 'neutral';
 
     return (
         <>
@@ -108,33 +108,37 @@ export default function InvoiceShow({ invoice }: { invoice: Invoice }) {
                     className="mb-4 inline-flex items-center gap-1.5 text-[13px] text-muted-foreground hover:text-foreground"
                 >
                     <ArrowLeft className="size-3.5" />
-                    Back to invoices
+                    {t.back_to_invoices}
                 </Link>
 
                 <PageHeader
                     title={invoice.invoice_number ?? 'Invoice'}
                     description={`${personName(invoice.patient)}${invoice.patient?.patient_code ? ` · ${invoice.patient.patient_code}` : ''}`}
-                    actions={<StatusPill tone={s.tone}>{s.label}</StatusPill>}
+                    actions={
+                        <StatusPill tone={statusTone}>
+                            {enumLabel(t.invoice_status_opts, invoice.status)}
+                        </StatusPill>
+                    }
                 />
 
                 <div className="mb-6 grid grid-cols-2 gap-4 md:grid-cols-4">
-                    <SummaryStat label="Subtotal" value={money(invoice.subtotal, invoice.currency)} />
-                    <SummaryStat label="Total" value={money(invoice.total, invoice.currency)} />
-                    <SummaryStat label="Paid" value={money(invoice.paid_amount, invoice.currency)} />
+                    <SummaryStat label={t.subtotal} value={money(invoice.subtotal, invoice.currency)} />
+                    <SummaryStat label={t.col_total} value={money(invoice.total, invoice.currency)} />
+                    <SummaryStat label={t.paid_label} value={money(invoice.paid_amount, invoice.currency)} />
                     <SummaryStat
-                        label="Balance due"
+                        label={t.balance_due}
                         value={money(invoice.balance_due, invoice.currency)}
                         emphasize={num(invoice.balance_due) > 0}
                     />
                 </div>
 
                 <div className="mb-3 flex flex-wrap gap-x-8 gap-y-1 text-[12px] text-muted-foreground">
-                    <span>Issued: {invoice.invoice_date?.slice(0, 10) ?? '—'}</span>
-                    <span>Due: {invoice.due_date?.slice(0, 10) ?? '—'}</span>
+                    <span>{t.issued}: {invoice.invoice_date?.slice(0, 10) ?? '—'}</span>
+                    <span>{t.due}: {invoice.due_date?.slice(0, 10) ?? '—'}</span>
                 </div>
 
                 <SectionCard
-                    title="Line items"
+                    title={t.line_items}
                     titleIcon={<Receipt className="size-4" />}
                     bodyClassName="p-0"
                 >
@@ -142,19 +146,19 @@ export default function InvoiceShow({ invoice }: { invoice: Invoice }) {
                         <TableHeader>
                             <TableRow className="bg-muted/50">
                                 <TableHead className="px-5 py-2.5 text-[11px] tracking-wider uppercase">
-                                    Description
+                                    {t.col_description}
                                 </TableHead>
                                 <TableHead className="text-[11px] tracking-wider uppercase">
-                                    Qty
+                                    {t.col_qty}
                                 </TableHead>
                                 <TableHead className="text-[11px] tracking-wider uppercase">
-                                    Unit price
+                                    {t.col_unit_price}
                                 </TableHead>
                                 <TableHead className="text-[11px] tracking-wider uppercase">
-                                    Discount
+                                    {t.col_discount}
                                 </TableHead>
                                 <TableHead className="text-[11px] tracking-wider uppercase">
-                                    Line total
+                                    {t.col_total}
                                 </TableHead>
                             </TableRow>
                         </TableHeader>
@@ -165,7 +169,7 @@ export default function InvoiceShow({ invoice }: { invoice: Invoice }) {
                                         colSpan={5}
                                         className="py-10 text-center text-sm text-muted-foreground"
                                     >
-                                        No line items.
+                                        {t.no_line_items}
                                     </TableCell>
                                 </TableRow>
                             )}
@@ -209,7 +213,7 @@ export default function InvoiceShow({ invoice }: { invoice: Invoice }) {
 
                 <div className="mt-5">
                     <SectionCard
-                        title="Payments"
+                        title={t.payments_label}
                         titleIcon={<Wallet className="size-4" />}
                         bodyClassName="p-0"
                     >
@@ -217,19 +221,19 @@ export default function InvoiceShow({ invoice }: { invoice: Invoice }) {
                             <TableHeader>
                                 <TableRow className="bg-muted/50">
                                     <TableHead className="px-5 py-2.5 text-[11px] tracking-wider uppercase">
-                                        Payment
+                                        {t.payments_label}
                                     </TableHead>
                                     <TableHead className="text-[11px] tracking-wider uppercase">
-                                        Date
+                                        {t.col_date}
                                     </TableHead>
                                     <TableHead className="text-[11px] tracking-wider uppercase">
-                                        Method
+                                        {t.col_method}
                                     </TableHead>
                                     <TableHead className="text-[11px] tracking-wider uppercase">
-                                        Amount
+                                        {t.col_amount}
                                     </TableHead>
                                     <TableHead className="text-[11px] tracking-wider uppercase">
-                                        Status
+                                        {t.col_status}
                                     </TableHead>
                                 </TableRow>
                             </TableHeader>
@@ -240,7 +244,7 @@ export default function InvoiceShow({ invoice }: { invoice: Invoice }) {
                                             colSpan={5}
                                             className="py-10 text-center text-sm text-muted-foreground"
                                         >
-                                            No payments recorded.
+                                            {t.no_payments}
                                         </TableCell>
                                     </TableRow>
                                 )}
@@ -253,7 +257,7 @@ export default function InvoiceShow({ invoice }: { invoice: Invoice }) {
                                             {p.payment_date?.slice(0, 10) ?? '—'}
                                         </TableCell>
                                         <TableCell className="text-[12px]">
-                                            {humanize(p.payment_method)}
+                                            {enumLabel(t.payment_method_opts, p.payment_method)}
                                         </TableCell>
                                         <TableCell className="text-[13px] font-semibold tabular-nums">
                                             {money(p.amount, p.currency ?? invoice.currency)}
@@ -269,7 +273,7 @@ export default function InvoiceShow({ invoice }: { invoice: Invoice }) {
                                                           : 'warning'
                                                 }
                                             >
-                                                {humanize(p.payment_status)}
+                                                {enumLabel(t.payment_status_opts, p.payment_status)}
                                             </StatusPill>
                                         </TableCell>
                                     </TableRow>

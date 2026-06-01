@@ -4,6 +4,8 @@ import LabOrderController from '@/actions/App/Http/Controllers/LabOrderControlle
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import { enumLabel } from '@/lib/i18n/doctor';
+import { useDoctorLang } from '@/lib/i18n/doctor-context';
 import { useLocale } from '@/lib/i18n/use-locale';
 import documents from '@/routes/documents';
 
@@ -52,15 +54,16 @@ const STATUS_OPTIONS: ReadonlyArray<string> = [
 const URGENCY_OPTIONS: ReadonlyArray<string> = ['routine', 'urgent', 'stat'];
 
 export default function LabOrderEdit({ lab_order, images }: Props) {
+    const { t } = useDoctorLang();
     const { slug: locale } = useLocale();
 
     return (
         <>
-            <Head title="Edit lab order" />
+            <Head title={t.edit_lab_order} />
 
             <div className="mx-auto w-full max-w-2xl p-6">
                 <h1 className="mb-4 text-2xl font-semibold">
-                    Edit lab order
+                    {t.edit_lab_order}
                     {lab_order.lab_order_number
                         ? ` · ${lab_order.lab_order_number}`
                         : ''}
@@ -69,7 +72,7 @@ export default function LabOrderEdit({ lab_order, images }: Props) {
                 {images.length > 0 && (
                     <section className="mb-6">
                         <h2 className="mb-2 text-sm font-semibold">
-                            Attached images ({images.length})
+                            {t.attached_images} ({images.length})
                         </h2>
                         <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
                             {images.map((image) => {
@@ -121,7 +124,7 @@ export default function LabOrderEdit({ lab_order, images }: Props) {
                             <div className="grid grid-cols-2 gap-3">
                                 <div className="grid gap-2">
                                     <Label htmlFor="order_date">
-                                        Order date
+                                        {t.order_date}
                                     </Label>
                                     <input
                                         id="order_date"
@@ -136,7 +139,9 @@ export default function LabOrderEdit({ lab_order, images }: Props) {
                                     <InputError message={errors.order_date} />
                                 </div>
                                 <div className="grid gap-2">
-                                    <Label htmlFor="urgency">Urgency</Label>
+                                    <Label htmlFor="urgency">
+                                        {t.urgency_col}
+                                    </Label>
                                     <select
                                         id="urgency"
                                         name="urgency"
@@ -147,7 +152,10 @@ export default function LabOrderEdit({ lab_order, images }: Props) {
                                     >
                                         {URGENCY_OPTIONS.map((option) => (
                                             <option key={option} value={option}>
-                                                {option}
+                                                {enumLabel(
+                                                    t.urgency_opts,
+                                                    option,
+                                                )}
                                             </option>
                                         ))}
                                     </select>
@@ -157,7 +165,9 @@ export default function LabOrderEdit({ lab_order, images }: Props) {
 
                             <div className="grid grid-cols-2 gap-3">
                                 <div className="grid gap-2">
-                                    <Label htmlFor="status">Status</Label>
+                                    <Label htmlFor="status">
+                                        {t.col_status}
+                                    </Label>
                                     <select
                                         id="status"
                                         name="status"
@@ -166,7 +176,10 @@ export default function LabOrderEdit({ lab_order, images }: Props) {
                                     >
                                         {STATUS_OPTIONS.map((option) => (
                                             <option key={option} value={option}>
-                                                {option}
+                                                {enumLabel(
+                                                    t.lab_status_opts,
+                                                    option,
+                                                )}
                                             </option>
                                         ))}
                                     </select>
@@ -174,7 +187,7 @@ export default function LabOrderEdit({ lab_order, images }: Props) {
                                 </div>
                                 <div className="grid gap-2">
                                     <Label htmlFor="fasting_required">
-                                        Fasting required
+                                        {t.fasting_required}
                                     </Label>
                                     <select
                                         id="fasting_required"
@@ -186,8 +199,8 @@ export default function LabOrderEdit({ lab_order, images }: Props) {
                                         }
                                         className={FIELD_CLASS}
                                     >
-                                        <option value="0">No</option>
-                                        <option value="1">Yes</option>
+                                        <option value="0">{t.no_label}</option>
+                                        <option value="1">{t.yes}</option>
                                     </select>
                                     <InputError
                                         message={errors.fasting_required}
@@ -197,7 +210,7 @@ export default function LabOrderEdit({ lab_order, images }: Props) {
 
                             <div className="grid gap-2">
                                 <Label htmlFor="clinical_diagnosis">
-                                    Clinical diagnosis
+                                    {t.clinical_diagnosis}
                                 </Label>
                                 <textarea
                                     id="clinical_diagnosis"
@@ -214,7 +227,7 @@ export default function LabOrderEdit({ lab_order, images }: Props) {
                             </div>
 
                             <div className="grid gap-2">
-                                <Label htmlFor="notes">Notes</Label>
+                                <Label htmlFor="notes">{t.notes_label}</Label>
                                 <textarea
                                     id="notes"
                                     name="notes"
@@ -226,7 +239,7 @@ export default function LabOrderEdit({ lab_order, images }: Props) {
                             </div>
 
                             <div className="grid gap-2">
-                                <Label htmlFor="images">Add images</Label>
+                                <Label htmlFor="images">{t.add_images}</Label>
                                 <input
                                     id="images"
                                     name="images[]"
@@ -245,7 +258,7 @@ export default function LabOrderEdit({ lab_order, images }: Props) {
                                 disabled={processing}
                                 className="bg-olive-600 text-white hover:bg-olive-700"
                             >
-                                Save changes
+                                {t.save_changes}
                             </Button>
                         </>
                     )}

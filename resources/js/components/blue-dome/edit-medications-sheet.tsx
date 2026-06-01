@@ -13,16 +13,12 @@ import {
     SheetTitle,
     SheetTrigger,
 } from '@/components/ui/sheet';
+import { useDoctorLang } from '@/lib/i18n/doctor-context';
 import { useLocale } from '@/lib/i18n/use-locale';
 import medications from '@/routes/medications';
 
 const FIELD_CLASS =
     'border-input focus-visible:border-ring focus-visible:ring-ring/50 h-9 w-full rounded-md border bg-transparent px-3 text-sm outline-none focus-visible:ring-[3px]';
-
-const YES_NO_OPTIONS: ReadonlyArray<readonly [string, string]> = [
-    ['1', 'Yes'],
-    ['0', 'No'],
-];
 
 export type EditableMedication = {
     id: string;
@@ -50,7 +46,13 @@ export function EditMedicationsSheet({
     children: ReactNode;
 }) {
     const { slug: locale } = useLocale();
+    const { t } = useDoctorLang();
     const [open, setOpen] = useState(false);
+
+    const yesNoOptions: ReadonlyArray<readonly [string, string]> = [
+        ['1', t.yes],
+        ['0', t.no_label],
+    ];
 
     const form = useForm({
         trade_name: medication.trade_name ?? '',
@@ -85,7 +87,7 @@ export function EditMedicationsSheet({
             <SheetTrigger asChild>{children}</SheetTrigger>
             <SheetContent className="flex w-full flex-col sm:max-w-md">
                 <SheetHeader>
-                    <SheetTitle>Edit medication</SheetTitle>
+                    <SheetTitle>{t.edit_medication}</SheetTitle>
                     <SheetDescription>
                         Update the formulary entry for your clinic.
                     </SheetDescription>
@@ -94,7 +96,9 @@ export function EditMedicationsSheet({
                 <form onSubmit={submit} className="flex min-h-0 flex-1 flex-col">
                     <div className="flex-1 space-y-4 overflow-y-auto px-4 pb-4">
                         <div className="grid gap-2">
-                            <Label htmlFor="edit_trade_name">Trade name</Label>
+                            <Label htmlFor="edit_trade_name">
+                                {t.trade_name}
+                            </Label>
                             <input
                                 id="edit_trade_name"
                                 value={form.data.trade_name}
@@ -108,7 +112,7 @@ export function EditMedicationsSheet({
 
                         <div className="grid gap-2">
                             <Label htmlFor="edit_generic_name">
-                                Generic name
+                                {t.generic_name}
                             </Label>
                             <input
                                 id="edit_generic_name"
@@ -123,20 +127,24 @@ export function EditMedicationsSheet({
 
                         <div className="grid grid-cols-2 gap-3">
                             <div className="grid gap-2">
-                                <Label htmlFor="edit_form">Form</Label>
+                                <Label htmlFor="edit_form">
+                                    {t.form_label}
+                                </Label>
                                 <input
                                     id="edit_form"
                                     value={form.data.form}
                                     onChange={(e) =>
                                         form.setData('form', e.target.value)
                                     }
-                                    placeholder="e.g. tablet"
+                                    placeholder={t.eg_tablet}
                                     className={FIELD_CLASS}
                                 />
                                 <InputError message={form.errors.form} />
                             </div>
                             <div className="grid gap-2">
-                                <Label htmlFor="edit_strength">Strength</Label>
+                                <Label htmlFor="edit_strength">
+                                    {t.strength}
+                                </Label>
                                 <input
                                     id="edit_strength"
                                     value={form.data.strength}
@@ -151,7 +159,7 @@ export function EditMedicationsSheet({
 
                         <div className="grid gap-2">
                             <Label htmlFor="edit_manufacturer">
-                                Manufacturer
+                                {t.manufacturer}
                             </Label>
                             <input
                                 id="edit_manufacturer"
@@ -166,7 +174,9 @@ export function EditMedicationsSheet({
 
                         <div className="grid grid-cols-2 gap-3">
                             <div className="grid gap-2">
-                                <Label htmlFor="edit_category">Category</Label>
+                                <Label htmlFor="edit_category">
+                                    {t.col_category}
+                                </Label>
                                 <input
                                     id="edit_category"
                                     value={form.data.category}
@@ -179,7 +189,7 @@ export function EditMedicationsSheet({
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="edit_requires_prescription">
-                                    Requires prescription
+                                    {t.requires_prescription}
                                 </Label>
                                 <select
                                     id="edit_requires_prescription"
@@ -192,7 +202,7 @@ export function EditMedicationsSheet({
                                     }
                                     className={FIELD_CLASS}
                                 >
-                                    {YES_NO_OPTIONS.map(([value, label]) => (
+                                    {yesNoOptions.map(([value, label]) => (
                                         <option key={value} value={value}>
                                             {label}
                                         </option>
@@ -205,7 +215,9 @@ export function EditMedicationsSheet({
                         </div>
 
                         <div className="grid gap-2">
-                            <Label htmlFor="edit_is_active">Active</Label>
+                            <Label htmlFor="edit_is_active">
+                                {t.active_label}
+                            </Label>
                             <select
                                 id="edit_is_active"
                                 value={form.data.is_active}
@@ -214,7 +226,7 @@ export function EditMedicationsSheet({
                                 }
                                 className={FIELD_CLASS}
                             >
-                                {YES_NO_OPTIONS.map(([value, label]) => (
+                                {yesNoOptions.map(([value, label]) => (
                                     <option key={value} value={value}>
                                         {label}
                                     </option>
@@ -230,7 +242,7 @@ export function EditMedicationsSheet({
                             disabled={form.processing}
                             className="w-full bg-olive-600 text-white hover:bg-olive-700"
                         >
-                            Save changes
+                            {t.save_changes}
                         </Button>
                     </div>
                 </form>

@@ -26,6 +26,11 @@ export default defineConfig(({ mode }) => {
                 fonts: [
                     bunny('Instrument Sans', {
                         weights: [400, 500, 600],
+                        // Preload only the critical body weight; 500/600 load
+                        // on demand via @font-face (display: swap). Preloading
+                        // every variant made the browser warn that the
+                        // above-the-fold render never used most of them.
+                        preload: [{ weight: 400, style: 'normal' }],
                     }),
                 ],
             }),

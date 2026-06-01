@@ -22,6 +22,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import { enumLabel } from '@/lib/i18n/doctor';
 import { useDoctorLang } from '@/lib/i18n/doctor-context';
 import { useLocale } from '@/lib/i18n/use-locale';
 import { Pagination } from '@/pages/panels/super-admin/users';
@@ -129,7 +130,7 @@ export default function LabOrdersIndex({
                                 className="gap-2 bg-olive-600 text-white hover:bg-olive-700"
                             >
                                 <Plus className="size-3.5" />
-                                New lab order
+                                {t.new_lab_order}
                             </Button>
                         </CreateLabOrdersSheet>
                     }
@@ -137,25 +138,25 @@ export default function LabOrdersIndex({
 
                 <div className="mb-6 grid grid-cols-2 gap-4 md:grid-cols-4">
                     <KpiCard
-                        label="In progress"
+                        label={t.in_progress}
                         value={String(kpis.in_progress)}
                         icon={FlaskConical}
                         tone="navy"
                     />
                     <KpiCard
-                        label="Pending"
+                        label={t.pending}
                         value={String(kpis.pending)}
                         icon={Clock}
                         tone="warn"
                     />
                     <KpiCard
-                        label="Completed"
+                        label={t.completed}
                         value={String(kpis.completed)}
                         icon={FlaskConical}
                         tone="success"
                     />
                     <KpiCard
-                        label="Critical results"
+                        label={t.critical_results}
                         value={String(kpis.critical)}
                         icon={AlertTriangle}
                         tone="warn"
@@ -164,7 +165,7 @@ export default function LabOrdersIndex({
 
                 <div className="grid gap-5 lg:grid-cols-[1fr_360px]">
                     <SectionCard
-                        title="Recent orders"
+                        title={t.recent_orders}
                         titleIcon={<FlaskConical className="size-4" />}
                         bodyClassName="p-0"
                     >
@@ -172,22 +173,22 @@ export default function LabOrdersIndex({
                             <TableHeader>
                                 <TableRow className="bg-muted/50">
                                     <TableHead className="px-5 py-2.5 text-[11px] tracking-wider uppercase">
-                                        Order
+                                        {t.order_col}
                                     </TableHead>
                                     <TableHead className="text-[11px] tracking-wider uppercase">
-                                        Patient
+                                        {t.col_patient}
                                     </TableHead>
                                     <TableHead className="text-[11px] tracking-wider uppercase">
-                                        Tests
+                                        {t.tests_col}
                                     </TableHead>
                                     <TableHead className="text-[11px] tracking-wider uppercase">
-                                        Lab
+                                        {t.lab_col}
                                     </TableHead>
                                     <TableHead className="text-[11px] tracking-wider uppercase">
-                                        Urgency
+                                        {t.urgency_col}
                                     </TableHead>
                                     <TableHead className="text-[11px] tracking-wider uppercase">
-                                        Status
+                                        {t.col_status}
                                     </TableHead>
                                     <TableHead className="w-10" />
                                 </TableRow>
@@ -199,7 +200,7 @@ export default function LabOrdersIndex({
                                             colSpan={7}
                                             className="py-12 text-center text-sm text-muted-foreground"
                                         >
-                                            No lab orders yet.
+                                            {t.no_lab_orders}
                                         </TableCell>
                                     </TableRow>
                                 )}
@@ -241,34 +242,47 @@ export default function LabOrdersIndex({
                                                         tone="danger"
                                                         className="ms-1.5 text-[10px]"
                                                     >
-                                                        {o.abnormal_count} abn.
+                                                        {o.abnormal_count}{' '}
+                                                        {t.abnormal_short}
                                                     </StatusPill>
                                                 )}
                                             </TableCell>
                                             <TableCell className="text-[12px] text-muted-foreground">
                                                 {o.external_lab?.lab_name ??
-                                                    'In-house'}
+                                                    t.in_house}
                                             </TableCell>
                                             <TableCell>
                                                 {o.urgency === 'stat' && (
                                                     <StatusPill tone="danger">
-                                                        STAT
+                                                        {enumLabel(
+                                                            t.urgency_opts,
+                                                            o.urgency,
+                                                        )}
                                                     </StatusPill>
                                                 )}
                                                 {o.urgency === 'urgent' && (
                                                     <StatusPill tone="warning">
-                                                        Urgent
+                                                        {enumLabel(
+                                                            t.urgency_opts,
+                                                            o.urgency,
+                                                        )}
                                                     </StatusPill>
                                                 )}
                                                 {o.urgency === 'routine' && (
                                                     <StatusPill>
-                                                        Routine
+                                                        {enumLabel(
+                                                            t.urgency_opts,
+                                                            o.urgency,
+                                                        )}
                                                     </StatusPill>
                                                 )}
                                             </TableCell>
                                             <TableCell>
                                                 <StatusPill tone={s.tone}>
-                                                    {s.label}
+                                                    {enumLabel(
+                                                        t.lab_status_opts,
+                                                        o.status,
+                                                    )}
                                                 </StatusPill>
                                             </TableCell>
                                             <TableCell>
@@ -291,13 +305,13 @@ export default function LabOrdersIndex({
                     </SectionCard>
 
                     <SectionCard
-                        title="Critical results"
+                        title={t.critical_results}
                         titleIcon={<AlertTriangle className="size-4" />}
                         bodyClassName="space-y-2 p-4"
                     >
                         {critical_results.length === 0 && (
                             <p className="py-6 text-center text-[12px] text-muted-foreground">
-                                No critical results pending review.
+                                {t.no_critical_results}
                             </p>
                         )}
                         {critical_results.map((r) => (
@@ -317,7 +331,9 @@ export default function LabOrdersIndex({
                                     <StatusPill
                                         tone={r.is_critical ? 'danger' : 'warning'}
                                     >
-                                        {r.is_critical ? 'Critical' : 'High'}
+                                        {r.is_critical
+                                            ? t.result_critical
+                                            : t.result_high}
                                     </StatusPill>
                                 </div>
                                 <div className="mt-2 flex items-center gap-3 text-[12px]">

@@ -16,6 +16,7 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import { downloadCsv } from '@/lib/format';
+import { enumLabel } from '@/lib/i18n/doctor';
 import { useDoctorLang } from '@/lib/i18n/doctor-context';
 import { useLocale } from '@/lib/i18n/use-locale';
 import { cn } from '@/lib/utils';
@@ -135,7 +136,7 @@ export default function PatientsIndex({
                                 disabled={paginated.data.length === 0}
                             >
                                 <Download className="size-3.5" />
-                                Export
+                                {t.export_label}
                             </Button>
                             <CreatePatientsSheet>
                                 <Button
@@ -143,7 +144,7 @@ export default function PatientsIndex({
                                     className="gap-2 bg-olive-600 text-white hover:bg-olive-700"
                                 >
                                     <Plus className="size-3.5" />
-                                    New patient
+                                    {t.new_patient}
                                 </Button>
                             </CreatePatientsSheet>
                         </>
@@ -158,7 +159,7 @@ export default function PatientsIndex({
                                 type="search"
                                 value={query}
                                 onChange={(e) => setQuery(e.target.value)}
-                                placeholder="Search by name…"
+                                placeholder={t.search_by_name_ph}
                                 className="h-9 w-full rounded-md border border-transparent bg-muted ps-9 pe-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                             />
                         </div>
@@ -180,13 +181,13 @@ export default function PatientsIndex({
                                     {t.phone}
                                 </TableHead>
                                 <TableHead className="text-[11px] tracking-wider uppercase">
-                                    Clinic
+                                    {t.clinic_label}
                                 </TableHead>
                                 <TableHead className="text-[11px] tracking-wider uppercase">
-                                    Registered
+                                    {t.registered_label}
                                 </TableHead>
                                 <TableHead className="text-[11px] tracking-wider uppercase">
-                                    Status
+                                    {t.col_status}
                                 </TableHead>
                                 <TableHead className="w-12" />
                             </TableRow>
@@ -198,7 +199,7 @@ export default function PatientsIndex({
                                         colSpan={8}
                                         className="py-12 text-center text-sm text-muted-foreground"
                                     >
-                                        No patients found.
+                                        {t.no_patients_found}
                                     </TableCell>
                                 </TableRow>
                             )}
@@ -230,11 +231,12 @@ export default function PatientsIndex({
                                                     {fullName(p)}
                                                 </div>
                                                 <div className="text-[11px] text-muted-foreground">
-                                                    {p.gender === 'male'
-                                                        ? t.male
-                                                        : p.gender === 'female'
-                                                          ? t.female
-                                                          : (p.gender ?? '—')}
+                                                    {p.gender
+                                                        ? enumLabel(
+                                                              t.gender_opts,
+                                                              p.gender,
+                                                          )
+                                                        : '—'}
                                                 </div>
                                             </div>
                                         </Link>
@@ -265,8 +267,8 @@ export default function PatientsIndex({
                                             withDot
                                         >
                                             {p.is_active
-                                                ? 'active'
-                                                : 'inactive'}
+                                                ? t.active_label
+                                                : t.inactive_label}
                                         </StatusPill>
                                     </TableCell>
                                     <TableCell>

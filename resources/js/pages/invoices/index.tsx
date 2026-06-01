@@ -24,6 +24,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import { enumLabel } from '@/lib/i18n/doctor';
 import { useDoctorLang } from '@/lib/i18n/doctor-context';
 import { useLocale } from '@/lib/i18n/use-locale';
 import { cn } from '@/lib/utils';
@@ -57,22 +58,15 @@ type Paginated<T> = {
     links: Array<{ url: string | null; label: string; active: boolean }>;
 };
 
-const STATUS: Record<string, { tone: StatusTone; label: string }> = {
-    draft: { tone: 'neutral', label: 'Draft' },
-    pending: { tone: 'warning', label: 'Pending' },
-    partially_paid: { tone: 'info', label: 'Partial' },
-    paid: { tone: 'success', label: 'Paid' },
-    overdue: { tone: 'danger', label: 'Overdue' },
-    cancelled: { tone: 'neutral', label: 'Cancelled' },
-    refunded: { tone: 'info', label: 'Refunded' },
+const STATUS_TONE: Record<string, StatusTone> = {
+    draft: 'neutral',
+    pending: 'warning',
+    partially_paid: 'info',
+    paid: 'success',
+    overdue: 'danger',
+    cancelled: 'neutral',
+    refunded: 'info',
 };
-
-const FILTERS: Array<{ label: string; status: string | null }> = [
-    { label: 'All', status: null },
-    { label: 'Paid', status: 'paid' },
-    { label: 'Pending', status: 'pending' },
-    { label: 'Overdue', status: 'overdue' },
-];
 
 function money(value: string | number, currency: string | null): string {
     const n = typeof value === 'string' ? parseFloat(value) : value;
@@ -106,6 +100,19 @@ export default function InvoicesIndex({
     const { slug: locale } = useLocale();
     const [search, setSearch] = useState('');
 
+    const filterTabs: Array<{ label: string; status: string | null }> = [
+        { label: t.all_label, status: null },
+        { label: enumLabel(t.invoice_status_opts, 'paid'), status: 'paid' },
+        {
+            label: enumLabel(t.invoice_status_opts, 'pending'),
+            status: 'pending',
+        },
+        {
+            label: enumLabel(t.invoice_status_opts, 'overdue'),
+            status: 'overdue',
+        },
+    ];
+
     const setStatus = (status: string | null): void => {
         router.get(
             invoices.index.url({ locale }),
@@ -133,14 +140,14 @@ export default function InvoicesIndex({
             <div className="px-8 py-6 lg:px-10">
                 <PageHeader
                     title={t.invoices}
-                    description={`${invoiceList.total} invoices · ${money(kpis.outstanding, 'MAD')} outstanding`}
+                    description={`${invoiceList.total} ${t.invoices} · ${money(kpis.outstanding, 'MAD')} ${t.outstanding}`}
                     actions={
                         <CreateInvoicesSheet patients={patients}>
                             <Button
                                 size="sm"
                                 className="gap-2 bg-olive-600 text-white hover:bg-olive-700"
                             >
-                                New invoice
+                                {t.new_invoice}
                             </Button>
                         </CreateInvoicesSheet>
                     }
@@ -148,26 +155,26 @@ export default function InvoicesIndex({
 
                 <div className="mb-6 grid grid-cols-2 gap-4 md:grid-cols-4">
                     <KpiCard
-                        label="Invoiced (MTD)"
+                        label={t.invoiced_mtd}
                         value={money(kpis.invoiced_mtd, 'MAD')}
                         icon={CircleDollarSign}
                         tone="olive"
                     />
                     <KpiCard
-                        label="Collected (MTD)"
+                        label={t.collected_mtd}
                         value={money(kpis.collected_mtd, 'MAD')}
                         icon={Wallet}
                         tone="success"
                     />
                     <KpiCard
-                        label="Outstanding"
+                        label={t.outstanding}
                         value={money(kpis.outstanding, 'MAD')}
                         icon={Receipt}
                         tone="warn"
                     />
                     <KpiCard
-                        label="Overdue"
-                        value={`${kpis.overdue} invoices`}
+                        label={t.overdue}
+                        value={`${kpis.overdue} ${t.invoices}`}
                         icon={AlertTriangle}
                         tone="warn"
                     />
@@ -178,10 +185,10 @@ export default function InvoicesIndex({
                         <div className="flex items-center gap-2.5">
                             <h2 className="flex items-center gap-2.5 text-lg font-semibold">
                                 <Receipt className="size-4" />
-                                All invoices
+                                {t.all_invoices}
                             </h2>
                             <div className="ms-4 flex gap-1.5">
-                                {FILTERS.map((f) => {
+                                {filterTabs.map((f) => {
                                     const active =
                                         (filters.status ?? null) === f.status;
 
@@ -210,7 +217,7 @@ export default function InvoicesIndex({
                                 type="search"
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
-                                placeholder="Search this page..."
+                                placeholder={t.search_invoices_ph}
                                 className="h-8 w-full rounded-md border border-transparent bg-muted ps-8 pe-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                             />
                         </div>
@@ -223,19 +230,19 @@ export default function InvoicesIndex({
                                     Invoice
                                 </TableHead>
                                 <TableHead className="text-[11px] tracking-wider uppercase">
-                                    Patient
+                                    {t.col_patient}
                                 </TableHead>
                                 <TableHead className="text-[11px] tracking-wider uppercase">
-                                    Date
+                                    {t.col_date}
                                 </TableHead>
                                 <TableHead className="text-[11px] tracking-wider uppercase">
-                                    Amount
+                                    {t.col_amount}
                                 </TableHead>
                                 <TableHead className="text-[11px] tracking-wider uppercase">
-                                    Balance
+                                    {t.col_balance}
                                 </TableHead>
                                 <TableHead className="text-[11px] tracking-wider uppercase">
-                                    Status
+                                    {t.col_status}
                                 </TableHead>
                                 <TableHead className="w-10" />
                             </TableRow>
@@ -248,16 +255,15 @@ export default function InvoicesIndex({
                                         className="py-12 text-center text-sm text-muted-foreground"
                                     >
                                         {invoiceList.data.length === 0
-                                            ? 'No invoices yet.'
+                                            ? t.no_invoices
                                             : 'No invoices match your search.'}
                                     </TableCell>
                                 </TableRow>
                             )}
                             {rows.map((inv) => {
-                                const s = STATUS[inv.status] ?? {
-                                    tone: 'neutral' as StatusTone,
-                                    label: inv.status,
-                                };
+                                const tone =
+                                    STATUS_TONE[inv.status] ??
+                                    ('neutral' as StatusTone);
 
                                 return (
                                     <TableRow
@@ -288,8 +294,11 @@ export default function InvoicesIndex({
                                             {money(inv.balance_due, inv.currency)}
                                         </TableCell>
                                         <TableCell>
-                                            <StatusPill tone={s.tone}>
-                                                {s.label}
+                                            <StatusPill tone={tone}>
+                                                {enumLabel(
+                                                    t.invoice_status_opts,
+                                                    inv.status,
+                                                )}
                                             </StatusPill>
                                         </TableCell>
                                         <TableCell>

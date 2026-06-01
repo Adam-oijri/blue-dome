@@ -114,7 +114,12 @@ export default function DoctorDashboard({
     const { slug: locale } = useLocale();
 
     const statusLabel = (s: string): string => {
-        const map: Record<string, keyof DoctorDictionary> = {
+        type StringKey = {
+            [K in keyof DoctorDictionary]: DoctorDictionary[K] extends string
+                ? K
+                : never;
+        }[keyof DoctorDictionary];
+        const map: Record<string, StringKey> = {
             confirmed: 'confirmed',
             in_progress: 'in_progress',
             completed: 'completed',

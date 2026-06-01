@@ -1,11 +1,16 @@
 import { Form, Head } from '@inertiajs/react';
 
+import { enumLabel } from '@/lib/i18n/doctor';
+import { useDoctorLang } from '@/lib/i18n/doctor-context';
+
 export default function PatientCreate() {
+    const { t } = useDoctorLang();
+
     return (
         <>
-            <Head title="New patient" />
+            <Head title={t.new_patient} />
             <div className="flex h-full flex-col p-6">
-                <h1 className="mb-4 text-2xl font-semibold">New patient</h1>
+                <h1 className="mb-4 text-2xl font-semibold">{t.new_patient}</h1>
                 <Form
                     action="/patients"
                     method="post"
@@ -15,7 +20,7 @@ export default function PatientCreate() {
                         <>
                             <label className="flex flex-col gap-1">
                                 <span className="text-xs text-neutral-500 uppercase">
-                                    First name *
+                                    {t.first_name} {t.required_mark}
                                 </span>
                                 <input
                                     name="first_name"
@@ -30,7 +35,7 @@ export default function PatientCreate() {
                             </label>
                             <label className="flex flex-col gap-1">
                                 <span className="text-xs text-neutral-500 uppercase">
-                                    Last name *
+                                    {t.last_name} {t.required_mark}
                                 </span>
                                 <input
                                     name="last_name"
@@ -45,7 +50,7 @@ export default function PatientCreate() {
                             </label>
                             <label className="flex flex-col gap-1">
                                 <span className="text-xs text-neutral-500 uppercase">
-                                    Date of birth
+                                    {t.date_of_birth}
                                 </span>
                                 <input
                                     type="date"
@@ -60,21 +65,27 @@ export default function PatientCreate() {
                             </label>
                             <label className="flex flex-col gap-1">
                                 <span className="text-xs text-neutral-500 uppercase">
-                                    Gender
+                                    {t.gender}
                                 </span>
                                 <select
                                     name="gender"
                                     className="rounded border border-neutral-300 px-3 py-2"
                                 >
                                     <option value="">—</option>
-                                    <option value="male">Male</option>
-                                    <option value="female">Female</option>
-                                    <option value="other">Other</option>
+                                    <option value="male">
+                                        {enumLabel(t.gender_opts, 'male')}
+                                    </option>
+                                    <option value="female">
+                                        {enumLabel(t.gender_opts, 'female')}
+                                    </option>
+                                    <option value="other">
+                                        {enumLabel(t.gender_opts, 'other')}
+                                    </option>
                                 </select>
                             </label>
                             <label className="flex flex-col gap-1">
                                 <span className="text-xs text-neutral-500 uppercase">
-                                    Phone (E.164)
+                                    {t.phone_e164}
                                 </span>
                                 <input
                                     name="phone_e164"
@@ -89,7 +100,7 @@ export default function PatientCreate() {
                             </label>
                             <label className="flex flex-col gap-1">
                                 <span className="text-xs text-neutral-500 uppercase">
-                                    Email
+                                    {t.email}
                                 </span>
                                 <input
                                     type="email"
@@ -104,7 +115,7 @@ export default function PatientCreate() {
                             </label>
                             <label className="flex flex-col gap-1">
                                 <span className="text-xs text-neutral-500 uppercase">
-                                    Blood type
+                                    {t.blood_type}
                                 </span>
                                 <select
                                     name="blood_type"
@@ -120,16 +131,16 @@ export default function PatientCreate() {
                                         'AB-',
                                         'O+',
                                         'O-',
-                                    ].map((t) => (
-                                        <option key={t} value={t}>
-                                            {t}
+                                    ].map((bt) => (
+                                        <option key={bt} value={bt}>
+                                            {bt}
                                         </option>
                                     ))}
                                 </select>
                             </label>
                             <label className="flex flex-col gap-1">
                                 <span className="text-xs text-neutral-500 uppercase">
-                                    National ID
+                                    {t.national_id}
                                 </span>
                                 <input
                                     name="national_id"

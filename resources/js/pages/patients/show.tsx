@@ -15,6 +15,7 @@ import { StatusPill } from '@/components/blue-dome/status-pill';
 import type { FieldChangeEntry } from '@/components/provenance-panel';
 import { ProvenancePanel } from '@/components/provenance-panel';
 import { Button } from '@/components/ui/button';
+import { enumLabel } from '@/lib/i18n/doctor';
 import { useDoctorLang } from '@/lib/i18n/doctor-context';
 import { useLocale } from '@/lib/i18n/use-locale';
 import patients from '@/routes/patients';
@@ -132,12 +133,9 @@ export default function PatientShow({
     const { slug: locale } = useLocale();
     const name = fullName(patient);
 
-    const genderLabel =
-        patient.gender === 'male'
-            ? t.male
-            : patient.gender === 'female'
-              ? t.female
-              : (patient.gender ?? '—');
+    const genderLabel = patient.gender
+        ? enumLabel(t.gender_opts, patient.gender)
+        : '—';
 
     return (
         <>
@@ -181,7 +179,9 @@ export default function PatientShow({
                             <StatusPill
                                 tone={patient.is_active ? 'olive' : 'neutral'}
                             >
-                                {patient.is_active ? 'active' : 'inactive'}
+                                {patient.is_active
+                                    ? t.active_label
+                                    : t.inactive_label}
                             </StatusPill>
                         </div>
                         <div className="mt-2 flex flex-wrap gap-4 text-[13px] text-slate-300">
@@ -220,7 +220,7 @@ export default function PatientShow({
                                 })}
                             >
                                 <Edit3 className="size-3.5" />
-                                Edit
+                                {t.edit}
                             </Link>
                         </Button>
                         <CreateAppointmentSheet
@@ -261,12 +261,12 @@ export default function PatientShow({
                             >
                                 {!vital_signs || vital_signs.length === 0 ? (
                                     <div className="py-8 text-center text-sm text-muted-foreground">
-                                        No vital signs recorded.
+                                        {t.no_vital_signs}
                                     </div>
                                 ) : (
                                     <>
                                         <div className="mb-3 text-[12px] text-muted-foreground">
-                                            Last recorded{' '}
+                                            {t.last_recorded}{' '}
                                             {vital_signs[0].recorded_at
                                                 ?.slice(0, 16)
                                                 .replace('T', ' ') ?? '—'}
@@ -285,21 +285,21 @@ export default function PatientShow({
                                                 unit="mmHg"
                                             />
                                             <Metric
-                                                label="Heart rate"
+                                                label={t.heart_rate_label}
                                                 value={
                                                     vital_signs[0].heart_rate
                                                 }
                                                 unit="bpm"
                                             />
                                             <Metric
-                                                label="Temp"
+                                                label={t.temp_label}
                                                 value={
                                                     vital_signs[0].temperature_c
                                                 }
                                                 unit="°C"
                                             />
                                             <Metric
-                                                label="SpO₂"
+                                                label={t.spo2_label}
                                                 value={
                                                     vital_signs[0]
                                                         .oxygen_saturation
@@ -307,12 +307,12 @@ export default function PatientShow({
                                                 unit="%"
                                             />
                                             <Metric
-                                                label="Weight"
+                                                label={t.weight_label}
                                                 value={vital_signs[0].weight_kg}
                                                 unit="kg"
                                             />
                                             <Metric
-                                                label="BMI"
+                                                label={t.bmi}
                                                 value={vital_signs[0].bmi}
                                             />
                                         </div>
@@ -321,14 +321,14 @@ export default function PatientShow({
                             </Deferred>
                         </SectionCard>
 
-                        <SectionCard title="Clinical" bodyClassName="p-5">
+                        <SectionCard title={t.clinical_label} bodyClassName="p-5">
                             <div className="space-y-4">
                                 <div>
                                     <h3 className="mb-1.5 text-sm font-semibold">
                                         {t.allergies}
                                     </h3>
                                     <p className="text-[13px] text-muted-foreground">
-                                        {patient.allergies || 'None recorded'}
+                                        {patient.allergies || t.none_recorded}
                                     </p>
                                 </div>
                                 <div>
@@ -337,7 +337,7 @@ export default function PatientShow({
                                     </h3>
                                     <p className="text-[13px] text-muted-foreground">
                                         {patient.chronic_diseases ||
-                                            'None recorded'}
+                                            t.none_recorded}
                                     </p>
                                 </div>
                                 <div>
@@ -346,7 +346,7 @@ export default function PatientShow({
                                     </h3>
                                     <p className="text-[13px] text-muted-foreground">
                                         {patient.current_medications ||
-                                            'None recorded'}
+                                            t.none_recorded}
                                     </p>
                                 </div>
                             </div>
@@ -355,7 +355,7 @@ export default function PatientShow({
 
                     <div className="space-y-5">
                         <SectionCard
-                            title="Patient information"
+                            title={t.patient_information}
                             bodyClassName="px-5 py-3"
                         >
                             <div className="divide-y divide-border">
@@ -364,7 +364,7 @@ export default function PatientShow({
                                     value={`${ageFrom(patient.date_of_birth)} · ${genderLabel}`}
                                 />
                                 <InfoRow
-                                    label="Date of birth"
+                                    label={t.date_of_birth}
                                     value={
                                         patient.date_of_birth?.slice(0, 10) ??
                                         null
@@ -374,9 +374,12 @@ export default function PatientShow({
                                     label={t.phone}
                                     value={patient.phone}
                                 />
-                                <InfoRow label="Email" value={patient.email} />
                                 <InfoRow
-                                    label="Address"
+                                    label={t.email}
+                                    value={patient.email}
+                                />
+                                <InfoRow
+                                    label={t.address}
                                     value={
                                         [patient.address, patient.city]
                                             .filter(Boolean)
@@ -384,11 +387,11 @@ export default function PatientShow({
                                     }
                                 />
                                 <InfoRow
-                                    label="National ID"
+                                    label={t.national_id}
                                     value={national_id}
                                 />
                                 <InfoRow
-                                    label="Insurance"
+                                    label={t.insurance}
                                     value={
                                         [
                                             patient.insurance_company,
@@ -403,15 +406,15 @@ export default function PatientShow({
                                     value={patient.patient_code}
                                 />
                                 <InfoRow
-                                    label="Clinic"
+                                    label={t.clinic_label}
                                     value={patient.clinic?.name ?? null}
                                 />
                                 <InfoRow
-                                    label="Branch"
+                                    label={t.branch_label}
                                     value={patient.branch?.branch_name ?? null}
                                 />
                                 <InfoRow
-                                    label="Registered"
+                                    label={t.registered_label}
                                     value={
                                         patient.registration_date?.slice(
                                             0,

@@ -14,6 +14,8 @@ import {
     SheetTitle,
     SheetTrigger,
 } from '@/components/ui/sheet';
+import { enumLabel } from '@/lib/i18n/doctor';
+import { useSuperAdminLang } from '@/lib/i18n/super-admin-context';
 import { useLocale } from '@/lib/i18n/use-locale';
 import superAdmin from '@/routes/super-admin';
 
@@ -29,15 +31,15 @@ type LineItem = {
 const FIELD_CLASS =
     'border-input focus-visible:border-ring focus-visible:ring-ring/50 h-9 w-full rounded-md border bg-transparent px-3 text-sm outline-none focus-visible:ring-[3px]';
 
-const ITEM_TYPES: ReadonlyArray<readonly [string, string]> = [
-    ['consultation', 'Consultation'],
-    ['procedure', 'Procedure'],
-    ['lab_test', 'Lab test'],
-    ['imaging', 'Imaging'],
-    ['medication', 'Medication'],
-    ['vaccination', 'Vaccination'],
-    ['supplies', 'Supplies'],
-    ['other', 'Other'],
+const ITEM_TYPES: ReadonlyArray<string> = [
+    'consultation',
+    'procedure',
+    'lab_test',
+    'imaging',
+    'medication',
+    'vaccination',
+    'supplies',
+    'other',
 ];
 
 const emptyItem = (): LineItem => ({
@@ -71,8 +73,20 @@ export function CreateClinicInvoicesSheet({
     clinicId: string;
     patients: Array<{ id: string; [k: string]: unknown }>;
 }) {
+    const { t } = useSuperAdminLang();
     const { slug: locale } = useLocale();
     const [open, setOpen] = useState(false);
+
+    const itemTypeLabels: Record<string, string> = {
+        consultation: t.item_type_consultation,
+        procedure: t.item_type_procedure,
+        lab_test: t.item_type_lab_test,
+        imaging: t.item_type_imaging,
+        medication: t.item_type_medication,
+        vaccination: t.item_type_vaccination,
+        supplies: t.item_type_supplies,
+        other: t.item_type_other,
+    };
 
     const form = useForm<{
         patient_id: string;
@@ -153,11 +167,8 @@ export function CreateClinicInvoicesSheet({
             <SheetTrigger asChild>{children}</SheetTrigger>
             <SheetContent className="flex w-full flex-col sm:max-w-2xl">
                 <SheetHeader>
-                    <SheetTitle>New invoice</SheetTitle>
-                    <SheetDescription>
-                        Pick a patient and add one or more line items. The
-                        invoice is created under this clinic.
-                    </SheetDescription>
+                    <SheetTitle>{t.inv_sheet_title}</SheetTitle>
+                    <SheetDescription>{t.inv_sheet_desc}</SheetDescription>
                 </SheetHeader>
 
                 <form
@@ -166,7 +177,9 @@ export function CreateClinicInvoicesSheet({
                 >
                     <div className="grid gap-4 sm:grid-cols-2">
                         <div className="grid gap-2">
-                            <Label htmlFor="patient_id">Patient</Label>
+                            <Label htmlFor="patient_id">
+                                {t.inv_sheet_patient}
+                            </Label>
                             <select
                                 id="patient_id"
                                 value={form.data.patient_id}
@@ -175,7 +188,9 @@ export function CreateClinicInvoicesSheet({
                                 }
                                 className={FIELD_CLASS}
                             >
-                                <option value="">Select a patient…</option>
+                                <option value="">
+                                    {t.inv_sheet_patient_ph}
+                                </option>
                                 {patients.map((patient) => (
                                     <option key={patient.id} value={patient.id}>
                                         {patientLabel(patient)}
@@ -185,7 +200,9 @@ export function CreateClinicInvoicesSheet({
                             <InputError message={form.errors.patient_id} />
                         </div>
                         <div className="grid gap-2">
-                            <Label htmlFor="due_date">Due date</Label>
+                            <Label htmlFor="due_date">
+                                {t.inv_sheet_due_date}
+                            </Label>
                             <input
                                 id="due_date"
                                 type="date"
@@ -201,7 +218,7 @@ export function CreateClinicInvoicesSheet({
 
                     <div className="space-y-3">
                         <div className="flex items-center justify-between">
-                            <Label>Line items</Label>
+                            <Label>{t.inv_sheet_line_items}</Label>
                             <Button
                                 type="button"
                                 variant="outline"
@@ -210,7 +227,7 @@ export function CreateClinicInvoicesSheet({
                                 onClick={addItem}
                             >
                                 <Plus className="size-3.5" />
-                                Add item
+                                {t.inv_sheet_add_item}
                             </Button>
                         </div>
                         {form.data.items.map((item, i) => (
@@ -230,14 +247,17 @@ export function CreateClinicInvoicesSheet({
                                         }
                                         className={FIELD_CLASS}
                                     >
-                                        {ITEM_TYPES.map(([value, label]) => (
+                                        {ITEM_TYPES.map((value) => (
                                             <option key={value} value={value}>
-                                                {label}
+                                                {enumLabel(
+                                                    itemTypeLabels,
+                                                    value,
+                                                )}
                                             </option>
                                         ))}
                                     </select>
                                     <input
-                                        placeholder="Description"
+                                        placeholder={t.inv_sheet_description_ph}
                                         value={item.description}
                                         onChange={(e) =>
                                             setItem(
@@ -251,7 +271,7 @@ export function CreateClinicInvoicesSheet({
                                     <input
                                         type="number"
                                         step="0.01"
-                                        placeholder="Qty"
+                                        placeholder={t.inv_sheet_qty_ph}
                                         value={item.quantity}
                                         onChange={(e) =>
                                             setItem(i, 'quantity', e.target.value)
@@ -261,7 +281,7 @@ export function CreateClinicInvoicesSheet({
                                     <input
                                         type="number"
                                         step="0.01"
-                                        placeholder="Price"
+                                        placeholder={t.inv_sheet_price_ph}
                                         value={item.unit_price}
                                         onChange={(e) =>
                                             setItem(
@@ -299,12 +319,13 @@ export function CreateClinicInvoicesSheet({
                         ))}
                         <InputError message={form.errors.items} />
                         <div className="text-end text-[13px] font-semibold">
-                            Subtotal: {total.toFixed(2)} {form.data.currency}
+                            {t.inv_sheet_subtotal}: {total.toFixed(2)}{' '}
+                            {form.data.currency}
                         </div>
                     </div>
 
                     <div className="grid gap-2">
-                        <Label htmlFor="notes">Notes</Label>
+                        <Label htmlFor="notes">{t.inv_sheet_notes}</Label>
                         <textarea
                             id="notes"
                             rows={2}
@@ -322,7 +343,7 @@ export function CreateClinicInvoicesSheet({
                         disabled={form.processing}
                         className="w-full bg-navy-900 text-white hover:bg-navy-800"
                     >
-                        Create invoice
+                        {t.inv_sheet_submit}
                     </Button>
                 </form>
             </SheetContent>

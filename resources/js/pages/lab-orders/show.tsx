@@ -15,6 +15,8 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import { enumLabel } from '@/lib/i18n/doctor';
+import { useDoctorLang } from '@/lib/i18n/doctor-context';
 import { useLocale } from '@/lib/i18n/use-locale';
 import documents from '@/routes/documents';
 import labOrders from '@/routes/lab-orders';
@@ -85,11 +87,12 @@ function personName(person: Person): string {
 }
 
 export default function LabOrderShow({ lab_order, images, provenance }: Props) {
+    const { t } = useDoctorLang();
     const { slug: locale } = useLocale();
 
     return (
         <>
-            <Head title={lab_order.lab_order_number ?? 'Lab order'} />
+            <Head title={lab_order.lab_order_number ?? t.lab_order_label} />
 
             <div className="px-8 py-6 lg:px-10">
                 <div className="mb-4 flex items-center gap-3 text-sm">
@@ -101,7 +104,7 @@ export default function LabOrderShow({ lab_order, images, provenance }: Props) {
                     >
                         <Link href={labOrders.index.url({ locale })}>
                             <ChevronLeft className="size-3.5" />
-                            Lab orders
+                            {t.lab_orders}
                         </Link>
                     </Button>
                     <span className="text-muted-foreground">/</span>
@@ -120,29 +123,34 @@ export default function LabOrderShow({ lab_order, images, provenance }: Props) {
                                 tone={STATUS_TONE[lab_order.status] ?? 'neutral'}
                                 withDot
                             >
-                                {lab_order.status}
+                                {enumLabel(t.lab_status_opts, lab_order.status)}
                             </StatusPill>
                             {lab_order.urgency && lab_order.urgency !== 'routine' && (
                                 <StatusPill tone="warning">
-                                    {lab_order.urgency}
+                                    {enumLabel(
+                                        t.urgency_opts,
+                                        lab_order.urgency,
+                                    )}
                                 </StatusPill>
                             )}
                         </div>
                         <div className="mt-2 grid gap-1 text-[13px] text-muted-foreground">
                             <span>
-                                Patient: {personName(lab_order.patient ?? null)}
+                                {t.col_patient}:{' '}
+                                {personName(lab_order.patient ?? null)}
                                 {lab_order.patient?.patient_code
                                     ? ` · ${lab_order.patient.patient_code}`
                                     : ''}
                             </span>
                             <span>
-                                Doctor: {personName(lab_order.doctor ?? null)}
+                                {t.doctor_label}:{' '}
+                                {personName(lab_order.doctor ?? null)}
                             </span>
                             <span>
-                                Ordered{' '}
+                                {t.ordered_label}{' '}
                                 {lab_order.order_date?.slice(0, 10) ?? '—'}
                                 {lab_order.fasting_required
-                                    ? ' · Fasting required'
+                                    ? ` · ${t.fasting_required}`
                                     : ''}
                                 {lab_order.external_lab?.lab_name
                                     ? ` · ${lab_order.external_lab.lab_name}`
@@ -163,7 +171,7 @@ export default function LabOrderShow({ lab_order, images, provenance }: Props) {
                             })}
                         >
                             <Edit3 className="size-3.5" />
-                            Edit
+                            {t.edit}
                         </Link>
                     </Button>
                 </div>
@@ -173,7 +181,7 @@ export default function LabOrderShow({ lab_order, images, provenance }: Props) {
                         {lab_order.clinical_diagnosis && (
                             <div className="rounded-lg border border-border bg-card p-4">
                                 <div className="mb-1 text-[11px] font-medium tracking-wider text-muted-foreground uppercase">
-                                    Clinical diagnosis
+                                    {t.clinical_diagnosis}
                                 </div>
                                 {lab_order.clinical_diagnosis}
                             </div>
@@ -181,7 +189,7 @@ export default function LabOrderShow({ lab_order, images, provenance }: Props) {
                         {lab_order.notes && (
                             <div className="rounded-lg border border-border bg-card p-4">
                                 <div className="mb-1 text-[11px] font-medium tracking-wider text-muted-foreground uppercase">
-                                    Notes
+                                    {t.notes_label}
                                 </div>
                                 {lab_order.notes}
                             </div>
@@ -199,19 +207,19 @@ export default function LabOrderShow({ lab_order, images, provenance }: Props) {
                         <TableHeader>
                             <TableRow className="bg-muted/50">
                                 <TableHead className="px-5 py-2.5 text-[11px] tracking-wider uppercase">
-                                    Test
+                                    {t.test_col}
                                 </TableHead>
                                 <TableHead className="text-[11px] tracking-wider uppercase">
-                                    Category
+                                    {t.col_category}
                                 </TableHead>
                                 <TableHead className="text-[11px] tracking-wider uppercase">
-                                    Specimen
+                                    {t.specimen_col}
                                 </TableHead>
                                 <TableHead className="text-[11px] tracking-wider uppercase">
-                                    Normal range
+                                    {t.normal_range_col}
                                 </TableHead>
                                 <TableHead className="text-[11px] tracking-wider uppercase">
-                                    Result
+                                    {t.result_col}
                                 </TableHead>
                             </TableRow>
                         </TableHeader>
@@ -222,7 +230,7 @@ export default function LabOrderShow({ lab_order, images, provenance }: Props) {
                                         colSpan={5}
                                         className="py-8 text-center text-sm text-muted-foreground"
                                     >
-                                        No tests on this order.
+                                        {t.no_tests_on_order}
                                     </TableCell>
                                 </TableRow>
                             )}
@@ -249,7 +257,7 @@ export default function LabOrderShow({ lab_order, images, provenance }: Props) {
                                     <TableCell className="text-[12px]">
                                         {item.result ?? (
                                             <span className="text-muted-foreground">
-                                                Pending
+                                                {t.pending}
                                             </span>
                                         )}
                                     </TableCell>
@@ -260,12 +268,12 @@ export default function LabOrderShow({ lab_order, images, provenance }: Props) {
                 </SectionCard>
 
                 <SectionCard
-                    title={`Images (${images.length})`}
+                    title={`${t.images_label} (${images.length})`}
                     className="mb-5"
                 >
                     {images.length === 0 ? (
                         <p className="text-[13px] text-muted-foreground">
-                            No images attached.
+                            {t.no_images}
                         </p>
                     ) : (
                         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">

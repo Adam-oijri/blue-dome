@@ -17,6 +17,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import { useDoctorLang } from '@/lib/i18n/doctor-context';
 import { useLocale } from '@/lib/i18n/use-locale';
 import { Pagination } from '@/pages/panels/super-admin/users';
 import medications from '@/routes/medications';
@@ -38,6 +39,7 @@ export default function MedicationsIndex({
     medications: Paginated<MedicationRow>;
     filters: { q: string | null };
 }) {
+    const { t } = useDoctorLang();
     const { slug: locale } = useLocale();
     const [q, setQ] = useState(filters.q ?? '');
 
@@ -67,11 +69,11 @@ export default function MedicationsIndex({
 
     return (
         <>
-            <Head title="Medications" />
+            <Head title={t.medications} />
 
             <div className="px-8 py-6 lg:px-10">
                 <PageHeader
-                    title="Medications"
+                    title={t.medications}
                     description={`${medicationList.total} in formulary`}
                     actions={
                         <CreateMedicationsSheet>
@@ -80,14 +82,14 @@ export default function MedicationsIndex({
                                 className="gap-2 bg-olive-600 text-white hover:bg-olive-700"
                             >
                                 <Plus className="size-3.5" />
-                                New medication
+                                {t.new_medication}
                             </Button>
                         </CreateMedicationsSheet>
                     }
                 />
 
                 <SectionCard
-                    title="Formulary"
+                    title={t.formulary}
                     titleIcon={<Pill className="size-4" />}
                     actions={
                         <form onSubmit={search} className="relative max-w-[240px]">
@@ -96,7 +98,7 @@ export default function MedicationsIndex({
                                 type="search"
                                 value={q}
                                 onChange={(e) => setQ(e.target.value)}
-                                placeholder="Search medications..."
+                                placeholder={t.search_medications_ph}
                                 className="h-8 w-full rounded-md border border-transparent bg-muted ps-8 pe-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                             />
                         </form>
@@ -107,19 +109,19 @@ export default function MedicationsIndex({
                         <TableHeader>
                             <TableRow className="bg-muted/50">
                                 <TableHead className="px-5 py-2.5 text-[11px] tracking-wider uppercase">
-                                    Medication
+                                    {t.medication}
                                 </TableHead>
                                 <TableHead className="text-[11px] tracking-wider uppercase">
-                                    Form · Strength
+                                    {`${t.form_label} · ${t.strength}`}
                                 </TableHead>
                                 <TableHead className="text-[11px] tracking-wider uppercase">
-                                    Category
+                                    {t.col_category}
                                 </TableHead>
                                 <TableHead className="text-[11px] tracking-wider uppercase">
-                                    Dispensing
+                                    {t.dispensing}
                                 </TableHead>
                                 <TableHead className="text-[11px] tracking-wider uppercase">
-                                    Status
+                                    {t.col_status}
                                 </TableHead>
                                 <TableHead className="w-24" />
                             </TableRow>
@@ -131,7 +133,7 @@ export default function MedicationsIndex({
                                         colSpan={6}
                                         className="py-12 text-center text-sm text-muted-foreground"
                                     >
-                                        No medications in the formulary yet.
+                                        {t.no_medications}
                                     </TableCell>
                                 </TableRow>
                             )}
@@ -167,8 +169,8 @@ export default function MedicationsIndex({
                                             }
                                         >
                                             {med.requires_prescription
-                                                ? 'Rx'
-                                                : 'OTC'}
+                                                ? t.rx_badge
+                                                : t.otc}
                                         </StatusPill>
                                     </TableCell>
                                     <TableCell>
@@ -181,8 +183,8 @@ export default function MedicationsIndex({
                                             withDot
                                         >
                                             {med.is_active
-                                                ? 'active'
-                                                : 'inactive'}
+                                                ? t.active_label
+                                                : t.inactive_label}
                                         </StatusPill>
                                     </TableCell>
                                     <TableCell>
@@ -194,7 +196,7 @@ export default function MedicationsIndex({
                                                     variant="ghost"
                                                     size="icon"
                                                     className="size-7"
-                                                    aria-label="Edit medication"
+                                                    aria-label={t.edit_medication}
                                                 >
                                                     <Pencil className="size-3.5" />
                                                 </Button>
@@ -203,7 +205,7 @@ export default function MedicationsIndex({
                                                 variant="ghost"
                                                 size="icon"
                                                 className="size-7 text-danger hover:text-danger"
-                                                aria-label="Delete medication"
+                                                aria-label={t.delete_action}
                                                 onClick={() => destroy(med)}
                                             >
                                                 <Trash2 className="size-3.5" />

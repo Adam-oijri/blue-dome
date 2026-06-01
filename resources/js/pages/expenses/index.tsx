@@ -15,6 +15,8 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import { enumLabel } from '@/lib/i18n/doctor';
+import { useDoctorLang } from '@/lib/i18n/doctor-context';
 import { Pagination } from '@/pages/panels/super-admin/users';
 
 type VendorOption = {
@@ -69,14 +71,16 @@ export default function ExpensesIndex({
     vendors: VendorOption[];
     filters: { category: string | null };
 }) {
+    const { t } = useDoctorLang();
+
     return (
         <>
-            <Head title="Expenses" />
+            <Head title={t.expenses} />
 
             <div className="px-8 py-6 lg:px-10">
                 <PageHeader
-                    title="Expenses"
-                    description={`${expenses.total} expenses`}
+                    title={t.expenses}
+                    description={`${expenses.total} ${t.expenses}`}
                     actions={
                         <CreateExpensesSheet vendors={vendors}>
                             <Button
@@ -84,14 +88,14 @@ export default function ExpensesIndex({
                                 className="gap-2 bg-olive-600 text-white hover:bg-olive-700"
                             >
                                 <Plus className="size-3.5" />
-                                New expense
+                                {t.new_expense}
                             </Button>
                         </CreateExpensesSheet>
                     }
                 />
 
                 <SectionCard
-                    title="All expenses"
+                    title={t.all_expenses}
                     titleIcon={<Wallet className="size-4" />}
                     bodyClassName="p-0"
                 >
@@ -99,22 +103,22 @@ export default function ExpensesIndex({
                         <TableHeader>
                             <TableRow className="bg-muted/50">
                                 <TableHead className="px-5 py-2.5 text-[11px] tracking-wider uppercase">
-                                    Expense
+                                    {t.expense_col}
                                 </TableHead>
                                 <TableHead className="text-[11px] tracking-wider uppercase">
-                                    Date
+                                    {t.col_date}
                                 </TableHead>
                                 <TableHead className="text-[11px] tracking-wider uppercase">
-                                    Category
+                                    {t.col_category}
                                 </TableHead>
                                 <TableHead className="text-[11px] tracking-wider uppercase">
-                                    Vendor
+                                    {t.col_vendor}
                                 </TableHead>
                                 <TableHead className="text-[11px] tracking-wider uppercase">
-                                    Amount
+                                    {t.col_amount}
                                 </TableHead>
                                 <TableHead className="text-[11px] tracking-wider uppercase">
-                                    Status
+                                    {t.col_status}
                                 </TableHead>
                             </TableRow>
                         </TableHeader>
@@ -125,7 +129,7 @@ export default function ExpensesIndex({
                                         colSpan={6}
                                         className="py-12 text-center text-sm text-muted-foreground"
                                     >
-                                        No expenses yet.
+                                        {t.no_expenses}
                                     </TableCell>
                                 </TableRow>
                             )}
@@ -153,7 +157,10 @@ export default function ExpensesIndex({
                                                 'neutral'
                                             }
                                         >
-                                            {humanize(e.payment_status)}
+                                            {enumLabel(
+                                                t.payment_status_opts,
+                                                e.payment_status,
+                                            )}
                                         </StatusPill>
                                     </TableCell>
                                 </TableRow>

@@ -1,5 +1,7 @@
 import { Form, Head } from '@inertiajs/react';
 
+import { useDoctorLang } from '@/lib/i18n/doctor-context';
+
 interface Patient {
     id: string;
     first_name: string;
@@ -23,12 +25,16 @@ export default function PatientEdit({
     national_id,
     insurance_number,
 }: Props) {
+    const { t } = useDoctorLang();
+
     return (
         <>
-            <Head title={`Edit ${patient.first_name} ${patient.last_name}`} />
+            <Head
+                title={`${t.edit} ${patient.first_name} ${patient.last_name}`}
+            />
             <div className="flex h-full flex-col p-6">
                 <h1 className="mb-4 text-2xl font-semibold">
-                    Edit {patient.first_name} {patient.last_name}
+                    {t.edit} {patient.first_name} {patient.last_name}
                 </h1>
                 <Form
                     action={`/patients/${patient.id}`}
@@ -39,7 +45,7 @@ export default function PatientEdit({
                         <>
                             <label className="flex flex-col gap-1">
                                 <span className="text-xs text-neutral-500 uppercase">
-                                    First name *
+                                    {t.first_name} {t.required_mark}
                                 </span>
                                 <input
                                     name="first_name"
@@ -55,7 +61,7 @@ export default function PatientEdit({
                             </label>
                             <label className="flex flex-col gap-1">
                                 <span className="text-xs text-neutral-500 uppercase">
-                                    Last name *
+                                    {t.last_name} {t.required_mark}
                                 </span>
                                 <input
                                     name="last_name"
@@ -71,7 +77,7 @@ export default function PatientEdit({
                             </label>
                             <label className="flex flex-col gap-1">
                                 <span className="text-xs text-neutral-500 uppercase">
-                                    Date of birth
+                                    {t.date_of_birth}
                                 </span>
                                 <input
                                     type="date"
@@ -82,7 +88,7 @@ export default function PatientEdit({
                             </label>
                             <label className="flex flex-col gap-1">
                                 <span className="text-xs text-neutral-500 uppercase">
-                                    Phone (E.164)
+                                    {t.phone_e164}
                                 </span>
                                 <input
                                     name="phone_e164"
@@ -92,7 +98,7 @@ export default function PatientEdit({
                             </label>
                             <label className="flex flex-col gap-1">
                                 <span className="text-xs text-neutral-500 uppercase">
-                                    Email
+                                    {t.email}
                                 </span>
                                 <input
                                     type="email"
@@ -103,7 +109,7 @@ export default function PatientEdit({
                             </label>
                             <label className="flex flex-col gap-1">
                                 <span className="text-xs text-neutral-500 uppercase">
-                                    Blood type
+                                    {t.blood_type}
                                 </span>
                                 <select
                                     name="blood_type"
@@ -120,16 +126,16 @@ export default function PatientEdit({
                                         'AB-',
                                         'O+',
                                         'O-',
-                                    ].map((t) => (
-                                        <option key={t} value={t}>
-                                            {t}
+                                    ].map((bt) => (
+                                        <option key={bt} value={bt}>
+                                            {bt}
                                         </option>
                                     ))}
                                 </select>
                             </label>
                             <label className="flex flex-col gap-1">
                                 <span className="text-xs text-neutral-500 uppercase">
-                                    National ID
+                                    {t.national_id}
                                 </span>
                                 <input
                                     name="national_id"
@@ -139,7 +145,7 @@ export default function PatientEdit({
                             </label>
                             <label className="flex flex-col gap-1">
                                 <span className="text-xs text-neutral-500 uppercase">
-                                    Insurance #
+                                    {t.insurance_number}
                                 </span>
                                 <input
                                     name="insurance_number"
@@ -154,7 +160,7 @@ export default function PatientEdit({
                                     disabled={processing}
                                     className="rounded bg-blue-600 px-4 py-2 text-white disabled:opacity-50"
                                 >
-                                    Save changes
+                                    {t.save_changes}
                                 </button>
                             </div>
                         </>

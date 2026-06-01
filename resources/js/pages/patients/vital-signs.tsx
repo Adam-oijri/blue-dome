@@ -9,6 +9,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import { useDoctorLang } from '@/lib/i18n/doctor-context';
 
 interface VitalSign {
     id: string;
@@ -46,10 +47,12 @@ const INPUT_CLASS = 'rounded border border-input px-2 py-1';
 const LABEL_CLASS = 'text-xs text-muted-foreground uppercase';
 
 export default function PatientVitalSigns({ patient, vital_signs }: Props) {
+    const { t } = useDoctorLang();
+
     return (
         <>
             <Head
-                title={`Vital signs — ${patient.first_name} ${patient.last_name}`}
+                title={`${t.vital_signs} — ${patient.first_name} ${patient.last_name}`}
             />
             <div className="flex h-full flex-col p-6">
                 <div className="mb-4">
@@ -57,16 +60,17 @@ export default function PatientVitalSigns({ patient, vital_signs }: Props) {
                         href={`/patients/${patient.id}`}
                         className="text-xs text-muted-foreground hover:text-foreground hover:underline"
                     >
-                        ← Back to patient
+                        ← {t.back_to_patient}
                     </Link>
                     <h1 className="text-2xl font-semibold">
-                        Vital signs — {patient.first_name} {patient.last_name}
+                        {t.vital_signs} — {patient.first_name}{' '}
+                        {patient.last_name}
                     </h1>
                 </div>
 
                 <section className="mb-6 rounded border border-border p-4">
                     <h2 className="mb-3 text-sm font-semibold text-muted-foreground uppercase">
-                        Record new reading
+                        {t.record_new_reading}
                     </h2>
                     <Form
                         action={`/patients/${patient.id}/vital-signs`}
@@ -77,7 +81,7 @@ export default function PatientVitalSigns({ patient, vital_signs }: Props) {
                             <>
                                 <label className="flex flex-col gap-1">
                                     <span className={LABEL_CLASS}>
-                                        Temp (°C)
+                                        {t.temp_c}
                                     </span>
                                     <input
                                         type="number"
@@ -92,7 +96,9 @@ export default function PatientVitalSigns({ patient, vital_signs }: Props) {
                                     )}
                                 </label>
                                 <label className="flex flex-col gap-1">
-                                    <span className={LABEL_CLASS}>BP sys</span>
+                                    <span className={LABEL_CLASS}>
+                                        {t.bp_sys}
+                                    </span>
                                     <input
                                         type="number"
                                         name="blood_pressure_sys"
@@ -100,7 +106,9 @@ export default function PatientVitalSigns({ patient, vital_signs }: Props) {
                                     />
                                 </label>
                                 <label className="flex flex-col gap-1">
-                                    <span className={LABEL_CLASS}>BP dia</span>
+                                    <span className={LABEL_CLASS}>
+                                        {t.bp_dia}
+                                    </span>
                                     <input
                                         type="number"
                                         name="blood_pressure_dia"
@@ -108,7 +116,9 @@ export default function PatientVitalSigns({ patient, vital_signs }: Props) {
                                     />
                                 </label>
                                 <label className="flex flex-col gap-1">
-                                    <span className={LABEL_CLASS}>HR</span>
+                                    <span className={LABEL_CLASS}>
+                                        {t.hr_label}
+                                    </span>
                                     <input
                                         type="number"
                                         name="heart_rate"
@@ -117,7 +127,7 @@ export default function PatientVitalSigns({ patient, vital_signs }: Props) {
                                 </label>
                                 <label className="flex flex-col gap-1">
                                     <span className={LABEL_CLASS}>
-                                        Weight (kg)
+                                        {t.weight_kg}
                                     </span>
                                     <input
                                         type="number"
@@ -128,7 +138,7 @@ export default function PatientVitalSigns({ patient, vital_signs }: Props) {
                                 </label>
                                 <label className="flex flex-col gap-1">
                                     <span className={LABEL_CLASS}>
-                                        Height (cm)
+                                        {t.height_cm}
                                     </span>
                                     <input
                                         type="number"
@@ -138,7 +148,9 @@ export default function PatientVitalSigns({ patient, vital_signs }: Props) {
                                     />
                                 </label>
                                 <label className="col-span-3 flex flex-col gap-1">
-                                    <span className={LABEL_CLASS}>Notes</span>
+                                    <span className={LABEL_CLASS}>
+                                        {t.notes_label}
+                                    </span>
                                     <textarea
                                         name="notes"
                                         rows={2}
@@ -151,7 +163,7 @@ export default function PatientVitalSigns({ patient, vital_signs }: Props) {
                                         disabled={processing}
                                         className="bg-olive-600 text-white hover:bg-olive-700"
                                     >
-                                        Record
+                                        {t.record_action}
                                     </Button>
                                 </div>
                             </>
@@ -161,7 +173,7 @@ export default function PatientVitalSigns({ patient, vital_signs }: Props) {
 
                 <section>
                     <h2 className="mb-3 text-sm font-semibold text-muted-foreground uppercase">
-                        History ({vital_signs.total})
+                        {t.history_label} ({vital_signs.total})
                     </h2>
                     {vital_signs.data.length === 0 ? (
                         <p className="text-xs text-muted-foreground">
@@ -172,22 +184,22 @@ export default function PatientVitalSigns({ patient, vital_signs }: Props) {
                             <TableHeader>
                                 <TableRow className="bg-muted/50">
                                     <TableHead className="px-2 py-1 text-[11px] tracking-wider uppercase">
-                                        When
+                                        {t.col_when}
                                     </TableHead>
                                     <TableHead className="px-2 py-1 text-[11px] tracking-wider uppercase">
-                                        Temp
+                                        {t.temp_c}
                                     </TableHead>
                                     <TableHead className="px-2 py-1 text-[11px] tracking-wider uppercase">
-                                        BP
+                                        {t.col_bp}
                                     </TableHead>
                                     <TableHead className="px-2 py-1 text-[11px] tracking-wider uppercase">
-                                        HR
+                                        {t.hr_label}
                                     </TableHead>
                                     <TableHead className="px-2 py-1 text-[11px] tracking-wider uppercase">
-                                        BMI
+                                        {t.bmi}
                                     </TableHead>
                                     <TableHead className="px-2 py-1 text-[11px] tracking-wider uppercase">
-                                        Pain
+                                        {t.pain}
                                     </TableHead>
                                 </TableRow>
                             </TableHeader>

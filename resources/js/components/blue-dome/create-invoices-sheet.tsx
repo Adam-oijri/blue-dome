@@ -14,6 +14,7 @@ import {
     SheetTitle,
     SheetTrigger,
 } from '@/components/ui/sheet';
+import { useDoctorLang } from '@/lib/i18n/doctor-context';
 import { useLocale } from '@/lib/i18n/use-locale';
 import invoices from '@/routes/invoices';
 
@@ -68,6 +69,7 @@ export function CreateInvoicesSheet({
     children: ReactNode;
     patients: Option[];
 }) {
+    const { t } = useDoctorLang();
     const { slug: locale } = useLocale();
     const [open, setOpen] = useState(false);
 
@@ -138,7 +140,7 @@ export function CreateInvoicesSheet({
             <SheetTrigger asChild>{children}</SheetTrigger>
             <SheetContent className="flex w-full flex-col sm:max-w-2xl">
                 <SheetHeader>
-                    <SheetTitle>New invoice</SheetTitle>
+                    <SheetTitle>{t.new_invoice}</SheetTitle>
                     <SheetDescription>
                         Pick a patient and add at least one line item. The
                         invoice is billed under your clinic.
@@ -152,7 +154,9 @@ export function CreateInvoicesSheet({
                     <div className="space-y-4 px-4 pb-4">
                         <div className="grid gap-4 sm:grid-cols-2">
                             <div className="grid gap-2">
-                                <Label htmlFor="patient_id">Patient</Label>
+                                <Label htmlFor="patient_id">
+                                    {t.col_patient}
+                                </Label>
                                 <select
                                     id="patient_id"
                                     value={form.data.patient_id}
@@ -177,7 +181,7 @@ export function CreateInvoicesSheet({
                                 <InputError message={form.errors.patient_id} />
                             </div>
                             <div className="grid gap-2">
-                                <Label htmlFor="due_date">Due date</Label>
+                                <Label htmlFor="due_date">{t.due}</Label>
                                 <input
                                     id="due_date"
                                     type="date"
@@ -215,7 +219,7 @@ export function CreateInvoicesSheet({
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="discount_percentage">
-                                    Discount %
+                                    {t.col_discount} %
                                 </Label>
                                 <input
                                     id="discount_percentage"
@@ -240,7 +244,7 @@ export function CreateInvoicesSheet({
 
                         <div className="space-y-3">
                             <div className="flex items-center justify-between">
-                                <Label>Line items</Label>
+                                <Label>{t.line_items}</Label>
                                 <Button
                                     type="button"
                                     variant="outline"
@@ -289,7 +293,7 @@ export function CreateInvoicesSheet({
                                     </div>
                                     <div className="grid gap-1">
                                         <input
-                                            placeholder="Description"
+                                            placeholder={t.col_description}
                                             value={item.description}
                                             onChange={(e) =>
                                                 setItem(
@@ -311,7 +315,7 @@ export function CreateInvoicesSheet({
                                         <input
                                             type="number"
                                             step="0.01"
-                                            placeholder="Qty"
+                                            placeholder={t.col_qty}
                                             value={item.quantity}
                                             onChange={(e) =>
                                                 setItem(
@@ -330,7 +334,7 @@ export function CreateInvoicesSheet({
                                         <input
                                             type="number"
                                             step="0.01"
-                                            placeholder="Price"
+                                            placeholder={t.col_unit_price}
                                             value={item.unit_price}
                                             onChange={(e) =>
                                                 setItem(
@@ -360,7 +364,7 @@ export function CreateInvoicesSheet({
                         </div>
 
                         <div className="grid gap-2">
-                            <Label htmlFor="notes">Notes</Label>
+                            <Label htmlFor="notes">{t.notes_label}</Label>
                             <textarea
                                 id="notes"
                                 rows={3}
@@ -378,7 +382,7 @@ export function CreateInvoicesSheet({
                             disabled={form.processing}
                             className="w-full bg-olive-600 text-white hover:bg-olive-700"
                         >
-                            Create invoice
+                            {t.new_invoice}
                         </Button>
                     </div>
                 </form>

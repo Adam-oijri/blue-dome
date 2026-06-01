@@ -14,6 +14,8 @@ import {
     SheetTitle,
     SheetTrigger,
 } from '@/components/ui/sheet';
+import { enumLabel } from '@/lib/i18n/doctor';
+import { useDoctorLang } from '@/lib/i18n/doctor-context';
 import { useLocale } from '@/lib/i18n/use-locale';
 import prescriptions from '@/routes/prescriptions';
 
@@ -102,6 +104,7 @@ export function CreatePrescriptionsSheet({
     patients: Array<{ id: string; [k: string]: unknown }>;
     medicationSuggestions?: string[];
 }) {
+    const { t } = useDoctorLang();
     const { slug: locale } = useLocale();
     const [open, setOpen] = useState(false);
 
@@ -167,9 +170,9 @@ export function CreatePrescriptionsSheet({
             <SheetTrigger asChild>{children}</SheetTrigger>
             <SheetContent className="flex w-full flex-col sm:max-w-2xl">
                 <SheetHeader>
-                    <SheetTitle>Issue prescription</SheetTitle>
+                    <SheetTitle>{t.issue_prescription}</SheetTitle>
                     <SheetDescription>
-                        Pick a patient and add one or more medications.
+                        {t.issue_prescription_desc}
                     </SheetDescription>
                 </SheetHeader>
 
@@ -180,7 +183,9 @@ export function CreatePrescriptionsSheet({
                     <div className="flex-1 space-y-4 overflow-y-auto px-4 pb-4">
                         <div className="grid gap-3 sm:grid-cols-2">
                             <div className="grid gap-2">
-                                <Label htmlFor="patient_id">Patient</Label>
+                                <Label htmlFor="patient_id">
+                                    {t.col_patient}
+                                </Label>
                                 <select
                                     id="patient_id"
                                     value={form.data.patient_id}
@@ -193,7 +198,7 @@ export function CreatePrescriptionsSheet({
                                     className={FIELD_CLASS}
                                 >
                                     <option value="">
-                                        Select a patient…
+                                        {t.select_patient_ph}
                                     </option>
                                     {patients.map((patient) => (
                                         <option
@@ -207,7 +212,7 @@ export function CreatePrescriptionsSheet({
                                 <InputError message={form.errors.patient_id} />
                             </div>
                             <div className="grid gap-2">
-                                <Label htmlFor="status">Status</Label>
+                                <Label htmlFor="status">{t.col_status}</Label>
                                 <select
                                     id="status"
                                     value={form.data.status}
@@ -218,7 +223,10 @@ export function CreatePrescriptionsSheet({
                                 >
                                     {STATUS_OPTIONS.map((status) => (
                                         <option key={status} value={status}>
-                                            {status}
+                                            {enumLabel(
+                                                t.prescription_status_opts,
+                                                status,
+                                            )}
                                         </option>
                                     ))}
                                 </select>
@@ -226,7 +234,7 @@ export function CreatePrescriptionsSheet({
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="prescription_date">
-                                    Issued
+                                    {t.issued}
                                 </Label>
                                 <input
                                     id="prescription_date"
@@ -245,7 +253,9 @@ export function CreatePrescriptionsSheet({
                                 />
                             </div>
                             <div className="grid gap-2">
-                                <Label htmlFor="expiry_date">Expires</Label>
+                                <Label htmlFor="expiry_date">
+                                    {t.expires_label}
+                                </Label>
                                 <input
                                     id="expiry_date"
                                     type="date"
@@ -269,7 +279,7 @@ export function CreatePrescriptionsSheet({
                                 ))}
                             </datalist>
                             <div className="flex items-center justify-between">
-                                <Label>Medications</Label>
+                                <Label>{t.rx_meds_locked}</Label>
                                 <Button
                                     type="button"
                                     variant="outline"
@@ -278,7 +288,7 @@ export function CreatePrescriptionsSheet({
                                     onClick={addItem}
                                 >
                                     <Plus className="size-3.5" />
-                                    Add
+                                    {t.add_label}
                                 </Button>
                             </div>
 
@@ -294,7 +304,7 @@ export function CreatePrescriptionsSheet({
                                     <div className="grid gap-3 sm:grid-cols-2">
                                         <div className="grid gap-1.5 sm:col-span-2">
                                             <Label htmlFor={`med-${i}`}>
-                                                Medication
+                                                {t.medication}
                                             </Label>
                                             <input
                                                 id={`med-${i}`}
@@ -306,7 +316,7 @@ export function CreatePrescriptionsSheet({
                                                             e.target.value,
                                                     })
                                                 }
-                                                placeholder="Medication name"
+                                                placeholder={t.medication_name_ph}
                                                 className={FIELD_CLASS}
                                             />
                                             <InputError
@@ -319,7 +329,7 @@ export function CreatePrescriptionsSheet({
                                         </div>
                                         <div className="grid gap-1.5">
                                             <Label htmlFor={`dose-${i}`}>
-                                                Dosage
+                                                {t.dosage}
                                             </Label>
                                             <input
                                                 id={`dose-${i}`}
@@ -339,12 +349,14 @@ export function CreatePrescriptionsSheet({
                                         </div>
                                         <div className="grid gap-1.5">
                                             <Label htmlFor={`freq-${i}`}>
-                                                Frequency
+                                                {t.frequency}
                                             </Label>
                                             <input
                                                 id={`freq-${i}`}
                                                 value={item.frequency_text}
-                                                placeholder="e.g. Twice daily"
+                                                placeholder={
+                                                    t.freq_twice_daily_ph
+                                                }
                                                 onChange={(e) =>
                                                     updateItem(i, {
                                                         frequency_text:
@@ -363,7 +375,7 @@ export function CreatePrescriptionsSheet({
                                         </div>
                                         <div className="grid gap-1.5">
                                             <Label htmlFor={`dur-${i}`}>
-                                                Duration (days)
+                                                {t.duration} ({t.days_label})
                                             </Label>
                                             <input
                                                 id={`dur-${i}`}
@@ -388,7 +400,7 @@ export function CreatePrescriptionsSheet({
                                         </div>
                                         <div className="grid gap-1.5">
                                             <Label htmlFor={`route-${i}`}>
-                                                Route
+                                                {t.route_label}
                                             </Label>
                                             <select
                                                 id={`route-${i}`}
@@ -405,7 +417,10 @@ export function CreatePrescriptionsSheet({
                                                         key={route}
                                                         value={route}
                                                     >
-                                                        {route}
+                                                        {enumLabel(
+                                                            t.route_opts,
+                                                            route,
+                                                        )}
                                                     </option>
                                                 ))}
                                             </select>
@@ -449,7 +464,7 @@ export function CreatePrescriptionsSheet({
                                             onClick={() => removeItem(i)}
                                         >
                                             <X className="size-3.5" />
-                                            Remove
+                                            {t.remove_label}
                                         </Button>
                                     </div>
                                 </div>
@@ -457,7 +472,9 @@ export function CreatePrescriptionsSheet({
                         </div>
 
                         <div className="grid gap-2">
-                            <Label htmlFor="diagnosis_related">Diagnosis</Label>
+                            <Label htmlFor="diagnosis_related">
+                                {t.diagnosis_label}
+                            </Label>
                             <input
                                 id="diagnosis_related"
                                 value={form.data.diagnosis_related}
@@ -475,7 +492,7 @@ export function CreatePrescriptionsSheet({
                         </div>
 
                         <div className="grid gap-2">
-                            <Label htmlFor="notes">Notes</Label>
+                            <Label htmlFor="notes">{t.notes_label}</Label>
                             <textarea
                                 id="notes"
                                 rows={3}
@@ -495,7 +512,7 @@ export function CreatePrescriptionsSheet({
                             disabled={form.processing}
                             className="w-full bg-olive-600 text-white hover:bg-olive-700"
                         >
-                            Issue prescription
+                            {t.issue_prescription}
                         </Button>
                     </div>
                 </form>

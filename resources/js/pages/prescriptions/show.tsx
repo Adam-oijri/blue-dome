@@ -15,6 +15,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import { enumLabel } from '@/lib/i18n/doctor';
 import { useDoctorLang } from '@/lib/i18n/doctor-context';
 import { useLocale } from '@/lib/i18n/use-locale';
 import prescriptions from '@/routes/prescriptions';
@@ -151,7 +152,10 @@ export default function PrescriptionShow({
                                 }
                                 withDot
                             >
-                                {prescription.status}
+                                {enumLabel(
+                                    t.prescription_status_opts,
+                                    prescription.status,
+                                )}
                             </StatusPill>
                         </div>
                         <div className="mt-2 grid gap-1 text-[13px] text-muted-foreground">
@@ -161,13 +165,15 @@ export default function PrescriptionShow({
                                     ? ` · ${prescription.patient.patient_code}`
                                     : ''}
                             </span>
-                            <span>Doctor: {doctorName}</span>
                             <span>
-                                Issued{' '}
+                                {t.doctor_label}: {doctorName}
+                            </span>
+                            <span>
+                                {t.issued}{' '}
                                 {prescription.prescription_date?.slice(0, 10) ??
                                     '—'}
                                 {prescription.expiry_date
-                                    ? ` · Expires ${prescription.expiry_date.slice(0, 10)}`
+                                    ? ` · ${t.expires_label} ${prescription.expiry_date.slice(0, 10)}`
                                     : ''}
                             </span>
                         </div>
@@ -185,14 +191,14 @@ export default function PrescriptionShow({
                             })}
                         >
                             <Edit3 className="size-3.5" />
-                            Edit
+                            {t.edit}
                         </Link>
                     </Button>
                 </div>
 
                 <SectionCard
                     titleIcon={<Pill className="size-4" />}
-                    title="Medications"
+                    title={t.rx_meds_locked}
                     bodyClassName="p-0"
                 >
                     <Table>
@@ -211,10 +217,10 @@ export default function PrescriptionShow({
                                     {t.duration}
                                 </TableHead>
                                 <TableHead className="text-[11px] tracking-wider uppercase">
-                                    Route
+                                    {t.route_label}
                                 </TableHead>
                                 <TableHead className="text-[11px] tracking-wider uppercase">
-                                    Qty
+                                    {t.col_qty}
                                 </TableHead>
                             </TableRow>
                         </TableHeader>
@@ -225,7 +231,7 @@ export default function PrescriptionShow({
                                         colSpan={6}
                                         className="py-8 text-center text-sm text-muted-foreground"
                                     >
-                                        No medications on this prescription.
+                                        {t.no_rx_medications}
                                     </TableCell>
                                 </TableRow>
                             )}
@@ -261,11 +267,13 @@ export default function PrescriptionShow({
                                     </TableCell>
                                     <TableCell className="text-[13px]">
                                         {item.duration_days
-                                            ? `${item.duration_days} days`
+                                            ? `${item.duration_days} ${t.days_label}`
                                             : '—'}
                                     </TableCell>
                                     <TableCell className="text-[12px] text-muted-foreground">
-                                        {item.route ?? '—'}
+                                        {item.route
+                                            ? enumLabel(t.route_opts, item.route)
+                                            : '—'}
                                     </TableCell>
                                     <TableCell className="text-[13px] tabular-nums">
                                         {item.quantity != null
@@ -283,7 +291,7 @@ export default function PrescriptionShow({
                         {prescription.diagnosis_related && (
                             <div>
                                 <h3 className="mb-1 text-sm font-semibold">
-                                    Diagnosis
+                                    {t.diagnosis_label}
                                 </h3>
                                 <p className="text-[13px] text-muted-foreground">
                                     {prescription.diagnosis_related}
@@ -293,7 +301,7 @@ export default function PrescriptionShow({
                         {prescription.notes && (
                             <div>
                                 <h3 className="mb-1 text-sm font-semibold">
-                                    Notes
+                                    {t.notes_label}
                                 </h3>
                                 <p className="text-[13px] text-muted-foreground">
                                     {prescription.notes}

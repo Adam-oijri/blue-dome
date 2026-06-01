@@ -73,6 +73,8 @@ const DOCTOR_PAGE_PREFIXES = [
     'invoices/',
     'inventory/',
     'medications/',
+    'expenses/',
+    'vendors/',
 ];
 
 createInertiaApp({

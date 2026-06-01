@@ -11,6 +11,7 @@ import {
     SheetTitle,
     SheetTrigger,
 } from '@/components/ui/sheet';
+import { useSuperAdminLang } from '@/lib/i18n/super-admin-context';
 import { useLocale } from '@/lib/i18n/use-locale';
 import { ClinicFormFields } from '@/pages/panels/super-admin/clinics/clinic-form-fields';
 
@@ -20,6 +21,7 @@ import { ClinicFormFields } from '@/pages/panels/super-admin/clinics/clinic-form
  * content unmounts on close, so the form resets naturally on reopen.
  */
 export function CreateClinicsSheet({ children }: { children: ReactNode }) {
+    const { t } = useSuperAdminLang();
     const { slug: locale } = useLocale();
     const [open, setOpen] = useState(false);
 
@@ -28,9 +30,9 @@ export function CreateClinicsSheet({ children }: { children: ReactNode }) {
             <SheetTrigger asChild>{children}</SheetTrigger>
             <SheetContent className="w-full overflow-y-auto sm:max-w-2xl">
                 <SheetHeader>
-                    <SheetTitle>New clinic</SheetTitle>
+                    <SheetTitle>{t.clinics_create_title}</SheetTitle>
                     <SheetDescription>
-                        Provision a new clinic tenant.
+                        {t.clinics_create_desc}
                     </SheetDescription>
                 </SheetHeader>
 
@@ -44,7 +46,7 @@ export function CreateClinicsSheet({ children }: { children: ReactNode }) {
                         <ClinicFormFields
                             processing={processing}
                             errors={errors}
-                            submitLabel="Create clinic"
+                            submitLabel={t.clinics_create_submit}
                         />
                     )}
                 </Form>

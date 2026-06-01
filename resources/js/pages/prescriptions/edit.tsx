@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
+import { enumLabel } from '@/lib/i18n/doctor';
 import { useDoctorLang } from '@/lib/i18n/doctor-context';
 import { useLocale } from '@/lib/i18n/use-locale';
 import prescriptions from '@/routes/prescriptions';
@@ -56,7 +57,7 @@ export default function PrescriptionEdit({
     return (
         <>
             <Head
-                title={`Edit ${prescription.prescription_number ?? t.prescriptions}`}
+                title={`${t.edit} ${prescription.prescription_number ?? t.prescriptions}`}
             />
 
             <div className="px-8 py-6 lg:px-10">
@@ -79,12 +80,12 @@ export default function PrescriptionEdit({
                         </Link>
                     </Button>
                     <span className="text-muted-foreground">/</span>
-                    <span className="text-[13px] font-medium">Edit</span>
+                    <span className="text-[13px] font-medium">{t.edit}</span>
                 </div>
 
                 <PageHeader
-                    title="Edit prescription"
-                    description="Medications are fixed once issued — edit status and metadata here."
+                    title={t.edit_prescription}
+                    description={t.edit_prescription_desc}
                 />
 
                 <SectionCard className="mt-6">
@@ -100,7 +101,9 @@ export default function PrescriptionEdit({
                             <>
                                 <div className="grid gap-5 sm:grid-cols-2">
                                     <div className="grid gap-2">
-                                        <Label htmlFor="status">Status</Label>
+                                        <Label htmlFor="status">
+                                            {t.col_status}
+                                        </Label>
                                         <select
                                             id="status"
                                             name="status"
@@ -109,7 +112,10 @@ export default function PrescriptionEdit({
                                         >
                                             {STATUSES.map((s) => (
                                                 <option key={s} value={s}>
-                                                    {s}
+                                                    {enumLabel(
+                                                        t.prescription_status_opts,
+                                                        s,
+                                                    )}
                                                 </option>
                                             ))}
                                         </select>
@@ -117,7 +123,7 @@ export default function PrescriptionEdit({
                                     </div>
                                     <div className="grid gap-2">
                                         <Label htmlFor="prescription_date">
-                                            Issued
+                                            {t.issued}
                                         </Label>
                                         <Input
                                             id="prescription_date"
@@ -136,7 +142,7 @@ export default function PrescriptionEdit({
                                     </div>
                                     <div className="grid gap-2">
                                         <Label htmlFor="expiry_date">
-                                            Expires
+                                            {t.expires_label}
                                         </Label>
                                         <Input
                                             id="expiry_date"
@@ -157,7 +163,7 @@ export default function PrescriptionEdit({
 
                                 <div className="grid gap-2">
                                     <Label htmlFor="diagnosis_related">
-                                        Diagnosis
+                                        {t.diagnosis_label}
                                     </Label>
                                     <Input
                                         id="diagnosis_related"
@@ -172,7 +178,9 @@ export default function PrescriptionEdit({
                                 </div>
 
                                 <div className="grid gap-2">
-                                    <Label htmlFor="notes">Notes</Label>
+                                    <Label htmlFor="notes">
+                                        {t.notes_label}
+                                    </Label>
                                     <textarea
                                         id="notes"
                                         name="notes"
@@ -186,7 +194,7 @@ export default function PrescriptionEdit({
                                 {prescription.items.length > 0 && (
                                     <div className="rounded-lg border border-border bg-muted/40 p-4">
                                         <div className="mb-2 text-[11px] tracking-wider text-muted-foreground uppercase">
-                                            {t.medication} (read-only)
+                                            {t.rx_meds_locked} {t.read_only}
                                         </div>
                                         <ul className="space-y-1 text-[13px]">
                                             {prescription.items.map((item) => (
@@ -214,7 +222,7 @@ export default function PrescriptionEdit({
                                     className="bg-olive-600 text-white hover:bg-olive-700"
                                 >
                                     {processing && <Spinner />}
-                                    Save changes
+                                    {t.save_changes}
                                 </Button>
                             </>
                         )}

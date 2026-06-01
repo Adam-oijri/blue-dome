@@ -4,10 +4,15 @@ import {
     Calendar,
     FlaskConical,
     Home,
+    Package,
     Pill,
+    Receipt,
     Settings as SettingsIcon,
     Stethoscope,
+    Tablets,
+    Truck,
     Users,
+    Wallet,
 } from 'lucide-react';
 import type { ComponentType } from 'react';
 
@@ -30,10 +35,15 @@ import { useDoctorLang } from '@/lib/i18n/doctor-context';
 import { useLocale } from '@/lib/i18n/use-locale';
 import { cn } from '@/lib/utils';
 import doctor from '@/routes/doctor';
+import expenses from '@/routes/expenses';
+import inventory from '@/routes/inventory';
+import invoices from '@/routes/invoices';
 import labOrders from '@/routes/lab-orders';
 import medicalRecords from '@/routes/medical-records';
+import medications from '@/routes/medications';
 import patients from '@/routes/patients';
 import prescriptions from '@/routes/prescriptions';
+import vendors from '@/routes/vendors';
 
 type NavEntry = {
     key: string;
@@ -113,6 +123,36 @@ export function DoctorSidebar() {
     ];
 
     const admin: NavEntry[] = [
+        {
+            key: 'invoices',
+            label: t.invoices,
+            href: invoices.index.url({ locale }),
+            icon: Receipt,
+        },
+        {
+            key: 'inventory',
+            label: t.inventory,
+            href: inventory.index.url({ locale }),
+            icon: Package,
+        },
+        {
+            key: 'medications',
+            label: t.medications,
+            href: medications.index.url({ locale }),
+            icon: Tablets,
+        },
+        {
+            key: 'expenses',
+            label: t.expenses,
+            href: expenses.index.url({ locale }),
+            icon: Wallet,
+        },
+        {
+            key: 'vendors',
+            label: t.vendors,
+            href: vendors.index.url({ locale }),
+            icon: Truck,
+        },
         {
             key: 'settings',
             label: t.settings,

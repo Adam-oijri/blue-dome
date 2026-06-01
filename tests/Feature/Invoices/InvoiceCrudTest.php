@@ -27,7 +27,7 @@ it('blocks doctors from listing invoices', function () {
         ->assertForbidden();
 });
 
-it('lets the secretary create invoices, blocks others', function (string $role, bool $allowed) {
+it('lets the secretary and super_admin create invoices, blocks doctors', function (string $role, bool $allowed) {
     $actor = User::factory()->state(['role' => $role])->create(['clinic_id' => $this->clinic->id]);
 
     $response = $this->actingAs($actor)->post(route('invoices.store'), [
@@ -49,7 +49,7 @@ it('lets the secretary create invoices, blocks others', function (string $role, 
         $response->assertForbidden();
     }
 })->with([
-    ['super_admin', false],
+    ['super_admin', true],
     ['doctor', false],
     ['secretary', true],
 ]);

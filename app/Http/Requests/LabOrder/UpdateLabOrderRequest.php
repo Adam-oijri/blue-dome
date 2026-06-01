@@ -32,6 +32,8 @@ class UpdateLabOrderRequest extends FormRequest
                     ->where('clinic_id', $clinicId)
                     ->whereNull('deleted_at'),
             ],
+            'images' => ['nullable', 'array', 'max:10'],
+            'images.*' => ['file', 'image', 'mimes:jpg,jpeg,png,webp', 'max:10240'],
         ];
     }
 }

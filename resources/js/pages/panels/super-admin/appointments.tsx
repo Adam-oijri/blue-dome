@@ -1,11 +1,12 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { Calendar, CheckCircle2, Slash, XCircle } from 'lucide-react';
+import { Calendar, CheckCircle2, Download, Slash, XCircle } from 'lucide-react';
 
 import { KpiCard } from '@/components/blue-dome/kpi-card';
 import { PageHeader } from '@/components/blue-dome/page-header';
 import { SectionCard } from '@/components/blue-dome/section-card';
 import { StatusPill } from '@/components/blue-dome/status-pill';
 import type { StatusTone } from '@/components/blue-dome/status-pill';
+import { Button } from '@/components/ui/button';
 import {
     Table,
     TableBody,
@@ -54,6 +55,7 @@ interface Filters {
     clinic_id: string;
     from: string | null;
     to: string | null;
+    [key: string]: string | null;
 }
 
 interface Props {
@@ -104,6 +106,24 @@ export default function SuperAdminAppointmentsPage({
                 <PageHeader
                     title={t.appts_page_title}
                     description={t.appts_page_sub}
+                    actions={
+                        <Button
+                            asChild
+                            variant="outline"
+                            size="sm"
+                            className="gap-2"
+                        >
+                            <a
+                                href={superAdmin.appointments.export.url(
+                                    { locale },
+                                    { query: filters },
+                                )}
+                            >
+                                <Download className="size-3.5" />
+                                Export
+                            </a>
+                        </Button>
+                    }
                 />
 
                 <div className="mb-5 grid grid-cols-2 gap-3 md:grid-cols-4">

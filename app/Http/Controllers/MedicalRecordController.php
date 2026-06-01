@@ -6,6 +6,7 @@ use App\Http\Requests\MedicalRecord\StoreMedicalRecordRequest;
 use App\Http\Requests\MedicalRecord\UpdateMedicalRecordRequest;
 use App\Models\FieldChange;
 use App\Models\MedicalRecord;
+use App\Models\Patient;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -39,6 +40,10 @@ class MedicalRecordController extends Controller
 
         return Inertia::render('medical-records/index', [
             'records' => $query->paginate(25)->withQueryString(),
+            'patients' => Patient::query()
+                ->where('clinic_id', $request->user()->clinic_id)
+                ->orderBy('first_name')
+                ->get(['id', 'first_name', 'last_name', 'patient_code']),
             'filters' => [
                 'patient_id' => $patientId ?: null,
                 'record_type' => $type ?: null,
@@ -46,21 +51,25 @@ class MedicalRecordController extends Controller
         ]);
     }
 
-    public function create(): Response
+    public function create(Request $request): Response
     {
         $this->authorize('create', MedicalRecord::class);
 
-        return Inertia::render('medical-records/create');
+        return Inertia::render('medical-records/create', [
+            'patients' => Patient::query()
+                ->where('clinic_id', $request->user()->clinic_id)
+                ->orderBy('first_name')
+                ->get(['id', 'first_name', 'last_name', 'patient_code']),
+        ]);
     }
 
     public function store(StoreMedicalRecordRequest $request): RedirectResponse
     {
-        $record = MedicalRecord::create($request->validated() + [
+        MedicalRecord::create($request->validated() + [
             'clinic_id' => $request->user()->clinic_id,
         ]);
 
-        return redirect()
-            ->route('medical-records.show', $record)
+        return back()
             ->with('toast', ['type' => 'success', 'message' => __('medical_records.created')]);
     }
 

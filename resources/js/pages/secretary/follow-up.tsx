@@ -1,17 +1,11 @@
 import { Head } from '@inertiajs/react';
-import {
-    AlertTriangle,
-    Archive,
-    Check,
-    CheckCheck,
-    Phone,
-    RefreshCcw,
-} from 'lucide-react';
+import { AlertTriangle, Phone, PhoneCall } from 'lucide-react';
 
 import { KpiCard } from '@/components/blue-dome/kpi-card';
 import { PageHeader } from '@/components/blue-dome/page-header';
 import { SectionCard } from '@/components/blue-dome/section-card';
 import { StatusPill } from '@/components/blue-dome/status-pill';
+import type { StatusTone } from '@/components/blue-dome/status-pill';
 import { Button } from '@/components/ui/button';
 import {
     Table,
@@ -22,96 +16,77 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import { useSecretaryLang } from '@/lib/i18n/secretary-context';
-import { findPatient, localName } from '@/lib/mock/secretary';
 import { cn } from '@/lib/utils';
+import { Pagination } from '@/pages/panels/super-admin/users';
 
-type Priority = 'high' | 'med' | 'low';
+type Person = {
+    first_name: string | null;
+    last_name: string | null;
+    phone: string | null;
+    gender: string | null;
+};
 
-const CALLS: {
-    p: string;
-    reason: { en: string; fr: string; ar: string };
-    phone: string;
+type FollowUpRow = {
+    id: string;
+    patient?: Person | null;
+    reason: string | null;
+    priority: string | null;
+    status: string;
     attempts: number;
-    last: string;
-    priority: Priority;
-}[] = [
-    {
-        p: 'p8',
-        reason: {
-            en: 'WhatsApp failed ×2',
-            fr: 'Échec WhatsApp ×2',
-            ar: 'فشل واتساب ×2',
-        },
-        phone: '+212 6 22 81 49 30',
-        attempts: 0,
-        last: '—',
-        priority: 'high',
-    },
-    {
-        p: 'p10',
-        reason: {
-            en: 'WhatsApp failed ×3',
-            fr: 'Échec WhatsApp ×3',
-            ar: 'فشل واتساب ×3',
-        },
-        phone: '+212 6 18 32 71 04',
-        attempts: 1,
-        last: 'Yesterday 16:20',
-        priority: 'high',
-    },
-    {
-        p: 'p3',
-        reason: {
-            en: 'No WhatsApp reply 24h',
-            fr: 'Sans réponse 24h',
-            ar: 'بدون رد 24س',
-        },
-        phone: '+212 6 65 90 12 88',
-        attempts: 2,
-        last: 'Today 09:15',
-        priority: 'med',
-    },
-    {
-        p: 'p4',
-        reason: {
-            en: 'Reschedule needed',
-            fr: 'Reporter le RDV',
-            ar: 'إعادة جدولة',
-        },
-        phone: '+212 5 22 47 81 03',
-        attempts: 0,
-        last: '—',
-        priority: 'med',
-    },
-    {
-        p: 'p6',
-        reason: {
-            en: 'Test results — recall',
-            fr: 'Résultats — rappel',
-            ar: 'نتائج التحاليل',
-        },
-        phone: '+212 6 71 04 28 19',
-        attempts: 1,
-        last: 'Yesterday 14:00',
-        priority: 'high',
-    },
-    {
-        p: 'p9',
-        reason: {
-            en: 'Post-procedure check',
-            fr: 'Suivi post-procédure',
-            ar: 'متابعة بعد الإجراء',
-        },
-        phone: '+212 6 33 15 80 92',
-        attempts: 0,
-        last: '—',
-        priority: 'low',
-    },
-];
+    last_attempt_at: string | null;
+};
 
-export default function SecretaryFollowUp() {
-    // Phase 2 will wire follow_ups from FollowUpController@index.
-    const { t, lang } = useSecretaryLang();
+type Paginated<T> = {
+    data: T[];
+    total: number;
+    current_page: number;
+    last_page: number;
+    links: Array<{ url: string | null; label: string; active: boolean }>;
+};
+
+interface Props {
+    follow_ups: Paginated<FollowUpRow>;
+    kpis: {
+        due: number;
+        high_priority: number;
+        reached_today: number;
+    };
+}
+
+const STATUS_TONE: Record<string, StatusTone> = {
+    pending: 'neutral',
+    in_progress: 'info',
+    no_answer: 'warning',
+    wrong_number: 'danger',
+    rescheduled: 'navy',
+    completed: 'success',
+};
+
+const PRIORITY_TONE: Record<string, StatusTone> = {
+    emergency: 'danger',
+    high: 'danger',
+    normal: 'neutral',
+    low: 'neutral',
+};
+
+const PRIORITY_LABEL_KEY: Record<string, string> = {
+    emergency: 'fc_priority_emergency',
+    high: 'fc_priority_high',
+    normal: 'fc_priority_normal',
+    low: 'fc_priority_low',
+};
+
+const fullName = (p?: Person | null): string =>
+    p ? `${p.first_name ?? ''} ${p.last_name ?? ''}`.trim() || '—' : '—';
+
+const initials = (p?: Person | null): string =>
+    p
+        ? `${p.first_name?.[0] ?? ''}${p.last_name?.[0] ?? ''}`.toUpperCase() ||
+          '?'
+        : '?';
+
+export default function SecretaryFollowUp({ follow_ups, kpis }: Props) {
+    const { t } = useSecretaryLang();
 
     return (
         <>
@@ -120,140 +95,144 @@ export default function SecretaryFollowUp() {
             <div className="px-6 py-5 lg:px-8">
                 <PageHeader
                     title={t.nav_followups}
-                    description="6 patients to call today · 4 high priority · Average 1.8 attempts per patient"
                     actions={
-                        <Button variant="outline" size="sm" className="gap-2">
-                            <Archive className="size-3.5" />
-                            Export
+                        <Button
+                            size="sm"
+                            className="gap-2 bg-olive-600 text-white hover:bg-olive-700"
+                        >
+                            <Phone className="size-3.5" />
+                            {t.wr_action_call}
                         </Button>
                     }
                 />
 
-                <div className="mb-5 grid grid-cols-2 gap-3 md:grid-cols-4">
+                <div className="mb-5 grid grid-cols-2 gap-3 md:grid-cols-3">
                     <KpiCard
-                        label="Pending"
-                        value="6"
+                        label={t.nav_followups}
+                        value={kpis.due}
                         icon={Phone}
-                        tone="warn"
+                        tone="navy"
                     />
                     <KpiCard
-                        label="Completed today"
-                        value="11"
-                        icon={CheckCheck}
-                        tone="success"
-                        trend={{ value: '+27%', direction: 'up' }}
-                    />
-                    <KpiCard
-                        label="No answer"
-                        value="4"
+                        label={t.fc_kpi_high_priority}
+                        value={kpis.high_priority}
                         icon={AlertTriangle}
                         tone="warn"
                     />
                     <KpiCard
-                        label="Avg. attempts"
-                        value="1.8"
-                        icon={RefreshCcw}
-                        tone="navy"
+                        label={t.fc_kpi_reached_today}
+                        value={kpis.reached_today}
+                        icon={PhoneCall}
+                        tone="success"
                     />
                 </div>
 
-                <SectionCard
-                    title="Call queue"
-                    titleIcon={<Phone className="size-4" />}
-                    bodyClassName="p-0"
-                >
+                <SectionCard bodyClassName="p-0">
                     <Table>
                         <TableHeader>
                             <TableRow className="bg-muted/50">
                                 <TableHead className="px-5 py-2.5 text-[11px] tracking-wider uppercase">
-                                    Patient
+                                    {t.wr_col_patient}
                                 </TableHead>
                                 <TableHead className="text-[11px] tracking-wider uppercase">
-                                    Reason
+                                    {t.col_reason}
                                 </TableHead>
                                 <TableHead className="text-[11px] tracking-wider uppercase">
-                                    Phone
+                                    {t.col_priority}
                                 </TableHead>
                                 <TableHead className="text-[11px] tracking-wider uppercase">
-                                    Attempts
+                                    {t.wr_col_status}
                                 </TableHead>
                                 <TableHead className="text-[11px] tracking-wider uppercase">
-                                    Last try
+                                    {t.col_attempts}
                                 </TableHead>
-                                <TableHead className="w-44" />
+                                <TableHead className="w-32" />
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {CALLS.map((r, i) => {
-                                const p = findPatient(r.p);
-
-                                if (!p) {
-                                    return null;
-                                }
+                            {follow_ups.data.length === 0 && (
+                                <TableRow>
+                                    <TableCell
+                                        colSpan={6}
+                                        className="py-10 text-center text-sm text-muted-foreground"
+                                    >
+                                        {t.empty_none}
+                                    </TableCell>
+                                </TableRow>
+                            )}
+                            {follow_ups.data.map((c) => {
+                                const p = c.patient;
 
                                 return (
                                     <TableRow
-                                        key={i}
+                                        key={c.id}
                                         className="hover:bg-muted/50"
                                     >
                                         <TableCell className="px-5 py-3">
-                                            <div className="flex items-center gap-2.5">
+                                            <div className="flex items-center gap-3">
                                                 <div
                                                     className={cn(
                                                         'grid size-8 shrink-0 place-items-center rounded-full text-xs font-semibold text-white',
-                                                        p.gender === 'm'
+                                                        p?.gender === 'male'
                                                             ? 'bg-navy-700'
                                                             : 'bg-olive-600',
                                                     )}
                                                 >
-                                                    {p.initials}
+                                                    {initials(p)}
                                                 </div>
                                                 <div>
                                                     <div className="text-[13px] font-semibold">
-                                                        {localName(p, lang)}
+                                                        {fullName(p)}
                                                     </div>
-                                                    <div className="mt-0.5 flex flex-wrap items-center gap-1.5">
-                                                        {r.priority ===
-                                                            'high' && (
-                                                            <StatusPill tone="danger">
-                                                                Priority
-                                                            </StatusPill>
-                                                        )}
-                                                        <StatusPill tone="danger">
-                                                            {p.blood}
-                                                        </StatusPill>
+                                                    <div className="text-[11px] text-muted-foreground">
+                                                        {p?.phone ?? '—'}
                                                     </div>
                                                 </div>
                                             </div>
                                         </TableCell>
                                         <TableCell className="text-[13px]">
-                                            {r.reason[lang]}
+                                            {c.reason ?? '—'}
                                         </TableCell>
-                                        <TableCell className="font-mono text-[11px]">
-                                            {r.phone}
+                                        <TableCell>
+                                            <StatusPill
+                                                tone={
+                                                    PRIORITY_TONE[
+                                                        c.priority ?? 'normal'
+                                                    ] ?? 'neutral'
+                                                }
+                                            >
+                                                {t[
+                                                    PRIORITY_LABEL_KEY[
+                                                        c.priority ?? 'normal'
+                                                    ]
+                                                ] ??
+                                                    c.priority ??
+                                                    'normal'}
+                                            </StatusPill>
                                         </TableCell>
-                                        <TableCell className="text-[13px] font-semibold tabular-nums">
-                                            {r.attempts}
+                                        <TableCell>
+                                            <StatusPill
+                                                tone={
+                                                    STATUS_TONE[c.status] ??
+                                                    'neutral'
+                                                }
+                                                withDot
+                                            >
+                                                {t[`fc_status_${c.status}`] ??
+                                                    c.status}
+                                            </StatusPill>
                                         </TableCell>
-                                        <TableCell className="text-[12px] text-muted-foreground tabular-nums">
-                                            {r.last}
+                                        <TableCell className="text-[13px] tabular-nums">
+                                            {c.attempts}
                                         </TableCell>
                                         <TableCell>
                                             <div className="flex items-center justify-end gap-1.5">
                                                 <Button
+                                                    variant="ghost"
                                                     size="sm"
-                                                    className="h-7 gap-1 bg-navy-900 text-[11px] text-white hover:bg-navy-800"
+                                                    className="h-7"
                                                 >
-                                                    <Phone className="size-3" />
-                                                    Call
-                                                </Button>
-                                                <Button
-                                                    variant="outline"
-                                                    size="sm"
-                                                    className="h-7 gap-1 text-[11px]"
-                                                >
-                                                    <Check className="size-3" />
-                                                    Done
+                                                    {t.wr_action_call}
                                                 </Button>
                                             </div>
                                         </TableCell>
@@ -262,6 +241,7 @@ export default function SecretaryFollowUp() {
                             })}
                         </TableBody>
                     </Table>
+                    <Pagination paginated={follow_ups} t={t} />
                 </SectionCard>
             </div>
         </>

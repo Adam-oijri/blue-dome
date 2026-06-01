@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\Expense\StoreExpenseRequest;
 use App\Http\Requests\Expense\UpdateExpenseRequest;
 use App\Models\Expense;
+use App\Models\Vendor;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -32,6 +33,10 @@ class ExpenseController extends Controller
         return Inertia::render('expenses/index', [
             'expenses' => $query->paginate(25)->withQueryString(),
             'filters' => ['category' => $category ?: null],
+            'vendors' => Vendor::where('clinic_id', $request->user()->clinic_id)
+                ->where('is_active', true)
+                ->orderBy('vendor_name')
+                ->get(['id', 'vendor_name']),
         ]);
     }
 
@@ -44,13 +49,12 @@ class ExpenseController extends Controller
 
     public function store(StoreExpenseRequest $request): RedirectResponse
     {
-        $expense = Expense::create($request->validated() + [
+        Expense::create($request->validated() + [
             'clinic_id' => $request->user()->clinic_id,
             'currency' => $request->input('currency', 'MAD'),
         ]);
 
-        return redirect()
-            ->route('expenses.show', $expense)
+        return back()
             ->with('toast', ['type' => 'success', 'message' => __('expenses.created')]);
     }
 

@@ -1,19 +1,14 @@
-import { Head } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import {
-    Archive,
     Calendar as CalendarIcon,
     Check,
     ChevronLeft,
     ChevronRight,
     Clock,
-    MoreHorizontal,
-    Plus,
-    Printer,
-    Search,
     X,
 } from 'lucide-react';
-import { useState } from 'react';
 
+import { CreateAppointmentSheet } from '@/components/blue-dome/create-appointment-sheet';
 import { KpiCard } from '@/components/blue-dome/kpi-card';
 import { PageHeader } from '@/components/blue-dome/page-header';
 import { SectionCard } from '@/components/blue-dome/section-card';
@@ -28,154 +23,111 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import { fmtNumber } from '@/lib/format';
+import type { SecretaryDictionary } from '@/lib/i18n/secretary';
 import { useSecretaryLang } from '@/lib/i18n/secretary-context';
-import { findDoctor, findPatient, localName } from '@/lib/mock/secretary';
+import { useLocale } from '@/lib/i18n/use-locale';
 import { cn } from '@/lib/utils';
+import { appointments as appointmentsRoute } from '@/routes/secretary';
 
-type ApptStatus =
-    | 'scheduled'
-    | 'confirmed'
-    | 'arrived'
-    | 'in_progress'
-    | 'completed'
-    | 'cancelled';
+type Person = {
+    id: string;
+    first_name: string | null;
+    last_name: string | null;
+} | null;
 
-const APPT_DATA: {
-    time: string;
-    patient: string;
-    doctor: string;
-    type: string;
-    dur: number;
-    status: ApptStatus;
-}[] = [
-    {
-        time: '09:00',
-        patient: 'p1',
-        doctor: 'd1',
-        type: 'Follow-up',
-        dur: 30,
-        status: 'completed',
-    },
-    {
-        time: '09:30',
-        patient: 'p4',
-        doctor: 'd2',
-        type: 'Consultation',
-        dur: 30,
-        status: 'completed',
-    },
-    {
-        time: '10:00',
-        patient: 'p7',
-        doctor: 'd1',
-        type: 'Consultation',
-        dur: 30,
-        status: 'completed',
-    },
-    {
-        time: '10:30',
-        patient: 'p2',
-        doctor: 'd2',
-        type: 'Follow-up',
-        dur: 30,
-        status: 'completed',
-    },
-    {
-        time: '11:00',
-        patient: 'p9',
-        doctor: 'd1',
-        type: 'First visit',
-        dur: 45,
-        status: 'in_progress',
-    },
-    {
-        time: '11:00',
-        patient: 'p5',
-        doctor: 'd2',
-        type: 'Consultation',
-        dur: 30,
-        status: 'arrived',
-    },
-    {
-        time: '11:30',
-        patient: 'p4',
-        doctor: 'd1',
-        type: 'Follow-up',
-        dur: 30,
-        status: 'confirmed',
-    },
-    {
-        time: '12:00',
-        patient: 'p7',
-        doctor: 'd2',
-        type: 'Checkup',
-        dur: 30,
-        status: 'confirmed',
-    },
-    {
-        time: '14:00',
-        patient: 'p8',
-        doctor: 'd1',
-        type: 'Procedure',
-        dur: 60,
-        status: 'scheduled',
-    },
-    {
-        time: '14:30',
-        patient: 'p3',
-        doctor: 'd2',
-        type: 'Follow-up',
-        dur: 30,
-        status: 'confirmed',
-    },
-    {
-        time: '15:00',
-        patient: 'p6',
-        doctor: 'd1',
-        type: 'Consultation',
-        dur: 30,
-        status: 'confirmed',
-    },
-    {
-        time: '15:30',
-        patient: 'p10',
-        doctor: 'd2',
-        type: 'First visit',
-        dur: 45,
-        status: 'scheduled',
-    },
-    {
-        time: '16:00',
-        patient: 'p2',
-        doctor: 'd1',
-        type: 'Follow-up',
-        dur: 30,
-        status: 'cancelled',
-    },
-    {
-        time: '16:30',
-        patient: 'p5',
-        doctor: 'd2',
-        type: 'Consultation',
-        dur: 30,
-        status: 'confirmed',
-    },
-];
+type Patient = {
+    id: string;
+    first_name: string | null;
+    last_name: string | null;
+    gender: 'male' | 'female' | 'other' | null;
+    blood_type: string | null;
+    chronic_diseases: string | null;
+} | null;
 
-const STATUS: Record<ApptStatus, { tone: StatusTone; label: string }> = {
-    scheduled: { tone: 'neutral', label: 'Scheduled' },
-    confirmed: { tone: 'olive', label: 'Confirmed' },
-    arrived: { tone: 'info', label: 'Arrived' },
-    in_progress: { tone: 'info', label: 'In progress' },
-    completed: { tone: 'success', label: 'Completed' },
-    cancelled: { tone: 'danger', label: 'Cancelled' },
+type AppointmentRow = {
+    id: string;
+    patient_id: string;
+    doctor_id: string;
+    scheduled_start: string | null;
+    scheduled_end: string | null;
+    status: string;
+    type: string | null;
+    duration_minutes: number | null;
+    patient?: Patient;
+    doctor?: Person;
 };
 
-export default function SecretaryAppointments() {
-    const { t, lang } = useSecretaryLang();
-    const [filter, setFilter] = useState<'today' | 'tomorrow' | 'week'>(
-        'today',
-    );
+type Range = 'today' | 'tomorrow' | 'week';
+
+interface Props {
+    appointments: AppointmentRow[];
+    kpis: {
+        today_count: number;
+        pending: number;
+        confirmed: number;
+        cancelled: number;
+    };
+    filters: {
+        range: Range;
+    };
+}
+
+const STATUS_TONE: Record<string, StatusTone> = {
+    scheduled: 'navy',
+    confirmed: 'olive',
+    arrived: 'info',
+    in_progress: 'info',
+    completed: 'success',
+    cancelled: 'danger',
+    no_show: 'warning',
+    rescheduled: 'neutral',
+};
+
+const STATUS_LABEL_KEY: Record<string, string> = {
+    scheduled: 'ap_status_scheduled',
+    confirmed: 'sched_legend_confirmed',
+    arrived: 'wr_status_arrived',
+    in_progress: 'sched_legend_in_progress',
+    completed: 'sched_legend_completed',
+    cancelled: 'sched_legend_cancelled',
+    no_show: 'ap_status_no_show',
+    rescheduled: 'ap_status_rescheduled',
+};
+
+const fullName = (p?: Person | Patient): string =>
+    p ? `${p.first_name ?? ''} ${p.last_name ?? ''}`.trim() || '—' : '—';
+
+const initials = (p?: Person | Patient): string =>
+    p
+        ? `${p.first_name?.[0] ?? ''}${p.last_name?.[0] ?? ''}`.toUpperCase() ||
+          '?'
+        : '?';
+
+const timeOf = (iso: string | null): string => (iso ? iso.slice(11, 16) : '—');
+
+const isChronic = (p?: Patient): boolean =>
+    !!p?.chronic_diseases && p.chronic_diseases.trim().length > 0;
+
+export default function SecretaryAppointments({
+    appointments,
+    kpis,
+    filters,
+}: Props) {
+    const { t } = useSecretaryLang();
+    const { slug: locale } = useLocale();
+
+    const statusTone = (s: string): StatusTone => STATUS_TONE[s] ?? 'neutral';
+    const statusLabel = (s: string): string =>
+        STATUS_LABEL_KEY[s] ? t[STATUS_LABEL_KEY[s]] : s;
+
+    const setRange = (range: Range): void => {
+        router.get(
+            appointmentsRoute.url({ locale }),
+            { range },
+            { preserveState: true, preserveScroll: true, replace: true },
+        );
+    };
 
     return (
         <>
@@ -184,106 +136,79 @@ export default function SecretaryAppointments() {
             <div className="px-6 py-5 lg:px-8">
                 <PageHeader
                     title={t.nav_appointments}
-                    description="14 appointments today across 2 doctors · 6 confirmed · 8 to confirm"
+                    description={`${fmtNumber(Number(kpis.today_count))} · ${fmtNumber(Number(kpis.confirmed))} ${t.sched_legend_confirmed}`}
                     actions={
-                        <>
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                className="gap-2"
-                            >
-                                <Printer className="size-3.5" />
-                                Print
-                            </Button>
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                className="gap-2"
-                            >
-                                <Archive className="size-3.5" />
-                                Export
-                            </Button>
+                        <CreateAppointmentSheet>
                             <Button
                                 size="sm"
                                 className="gap-2 bg-olive-600 text-white hover:bg-olive-700"
                             >
-                                <Plus className="size-3.5" />
+                                <CalendarIcon className="size-3.5" />
                                 {t.new_appointment}
                             </Button>
-                        </>
+                        </CreateAppointmentSheet>
                     }
                 />
 
                 <div className="mb-5 grid grid-cols-2 gap-3 md:grid-cols-4">
                     <KpiCard
-                        label="Today's appointments"
-                        value="24"
+                        label={t.kpi_today}
+                        value={fmtNumber(Number(kpis.today_count))}
                         icon={CalendarIcon}
                         tone="navy"
-                        trend={{ value: '+3', direction: 'up' }}
                     />
                     <KpiCard
-                        label="Pending confirmations"
-                        value="7"
+                        label={t.kpi_pending}
+                        value={fmtNumber(Number(kpis.pending))}
                         icon={Clock}
                         tone="warn"
                     />
                     <KpiCard
-                        label="Confirmed"
-                        value="14"
+                        label={t.sched_legend_confirmed}
+                        value={fmtNumber(Number(kpis.confirmed))}
                         icon={Check}
-                        tone="olive"
+                        tone="success"
                     />
                     <KpiCard
-                        label="Cancelled"
-                        value="6"
+                        label={t.sched_legend_cancelled}
+                        value={fmtNumber(Number(kpis.cancelled))}
                         icon={X}
-                        tone="warn"
-                        trend={{ value: '-0.4%', direction: 'up' }}
+                        tone="olive"
                     />
                 </div>
 
                 <div className="grid gap-5 lg:grid-cols-[280px_minmax(0,1fr)]">
-                    <MiniCalendar />
+                    <MiniCalendar t={t} locale={locale} />
 
                     <SectionCard bodyClassName="p-0">
                         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-5 py-4">
                             <div className="flex items-center gap-1.5">
                                 {(
                                     [
-                                        ['today', 'Today', 14],
-                                        ['tomorrow', 'Tomorrow', 10],
-                                        ['week', 'Week', 62],
+                                        ['today', t.today],
+                                        ['tomorrow', t.ap_range_tomorrow],
+                                        ['week', t.ap_range_week],
                                     ] as const
-                                ).map(([id, label, ct]) => (
+                                ).map(([id, label]) => (
                                     <Button
                                         key={id}
                                         variant={
-                                            filter === id ? 'default' : 'ghost'
+                                            filters.range === id
+                                                ? 'default'
+                                                : 'ghost'
                                         }
                                         size="sm"
-                                        onClick={() => setFilter(id)}
+                                        onClick={() => setRange(id)}
                                         className={cn(
                                             'gap-1.5',
-                                            filter === id
+                                            filters.range === id
                                                 ? 'bg-navy-900 text-white hover:bg-navy-800'
                                                 : '',
                                         )}
                                     >
                                         {label}
-                                        <span className="text-[11px] tabular-nums opacity-70">
-                                            {ct}
-                                        </span>
                                     </Button>
                                 ))}
-                            </div>
-                            <div className="relative max-w-[260px] flex-1">
-                                <Search className="pointer-events-none absolute start-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
-                                <input
-                                    type="search"
-                                    placeholder="Search appointments…"
-                                    className="h-8 w-full rounded-md border border-transparent bg-muted ps-8 pe-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
-                                />
                             </div>
                         </div>
 
@@ -291,127 +216,89 @@ export default function SecretaryAppointments() {
                             <TableHeader>
                                 <TableRow className="bg-muted/50">
                                     <TableHead className="w-24 px-5 py-2.5 text-[11px] tracking-wider uppercase">
-                                        Time
+                                        {t.wr_col_arrived}
                                     </TableHead>
                                     <TableHead className="text-[11px] tracking-wider uppercase">
-                                        Patient
+                                        {t.wr_col_patient}
                                     </TableHead>
                                     <TableHead className="text-[11px] tracking-wider uppercase">
-                                        Doctor
+                                        {t.wr_col_doctor}
                                     </TableHead>
                                     <TableHead className="text-[11px] tracking-wider uppercase">
-                                        Type
+                                        {t.ap_col_type}
                                     </TableHead>
                                     <TableHead className="text-[11px] tracking-wider uppercase">
-                                        Duration
+                                        {t.ap_col_duration}
                                     </TableHead>
                                     <TableHead className="text-[11px] tracking-wider uppercase">
-                                        Status
+                                        {t.wr_col_status}
                                     </TableHead>
-                                    <TableHead className="w-24" />
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {APPT_DATA.map((r, i) => {
-                                    const p = findPatient(r.patient);
-                                    const d = findDoctor(r.doctor);
-
-                                    if (!p || !d) {
-                                        return null;
-                                    }
-
-                                    const s = STATUS[r.status];
-
-                                    return (
-                                        <TableRow
-                                            key={i}
-                                            className="hover:bg-muted/50"
+                                {appointments.length === 0 && (
+                                    <TableRow>
+                                        <TableCell
+                                            colSpan={6}
+                                            className="py-10 text-center text-sm text-muted-foreground"
                                         >
-                                            <TableCell className="px-5 py-3 text-[13px] font-semibold tabular-nums">
-                                                {r.time}
-                                            </TableCell>
-                                            <TableCell>
-                                                <div className="flex items-center gap-2.5">
-                                                    <div
-                                                        className={cn(
-                                                            'grid size-7 shrink-0 place-items-center rounded-full text-[10px] font-semibold text-white',
-                                                            p.gender === 'm'
-                                                                ? 'bg-navy-700'
-                                                                : 'bg-olive-600',
-                                                        )}
-                                                    >
-                                                        {p.initials}
+                                            {t.empty_none}
+                                        </TableCell>
+                                    </TableRow>
+                                )}
+                                {appointments.map((a) => (
+                                    <TableRow
+                                        key={a.id}
+                                        className="hover:bg-muted/50"
+                                    >
+                                        <TableCell className="px-5 py-3 text-[13px] font-semibold tabular-nums">
+                                            {timeOf(a.scheduled_start)}
+                                        </TableCell>
+                                        <TableCell>
+                                            <div className="flex items-center gap-2.5">
+                                                <div className="grid size-7 shrink-0 place-items-center rounded-full bg-navy-700 text-[10px] font-semibold text-white">
+                                                    {initials(a.patient)}
+                                                </div>
+                                                <div>
+                                                    <div className="text-[13px] font-semibold">
+                                                        {fullName(a.patient)}
                                                     </div>
-                                                    <div>
-                                                        <div className="text-[13px] font-semibold">
-                                                            {localName(p, lang)}
-                                                        </div>
-                                                        <div className="text-[11px] text-muted-foreground">
-                                                            {p.blood}
-                                                            {p.chronic &&
-                                                                ' · Chronic'}
-                                                        </div>
+                                                    <div className="text-[11px] text-muted-foreground">
+                                                        {a.patient
+                                                            ?.blood_type ?? '—'}
+                                                        {isChronic(a.patient) &&
+                                                            ` · ${t.pt_tag_chronic}`}
                                                     </div>
                                                 </div>
-                                            </TableCell>
-                                            <TableCell>
-                                                <div className="flex items-center gap-2">
-                                                    <div
-                                                        className={cn(
-                                                            'grid size-6 shrink-0 place-items-center rounded-full text-[10px] font-semibold text-white',
-                                                            d.hue === 'navy'
-                                                                ? 'bg-navy-700'
-                                                                : 'bg-olive-600',
-                                                        )}
-                                                    >
-                                                        {d.initials}
-                                                    </div>
-                                                    <span className="text-[12px]">
-                                                        {localName(
-                                                            d,
-                                                            lang,
-                                                        ).replace(
-                                                            /^(Dr\.|د\.)\s*/,
-                                                            '',
-                                                        )}
-                                                    </span>
+                                            </div>
+                                        </TableCell>
+                                        <TableCell>
+                                            <div className="flex items-center gap-2">
+                                                <div className="grid size-6 shrink-0 place-items-center rounded-full bg-navy-700 text-[10px] font-semibold text-white">
+                                                    {initials(a.doctor)}
                                                 </div>
-                                            </TableCell>
-                                            <TableCell className="text-[13px]">
-                                                {r.type}
-                                            </TableCell>
-                                            <TableCell className="text-[13px] tabular-nums">
-                                                {r.dur} {t.wr_min}
-                                            </TableCell>
-                                            <TableCell>
-                                                <StatusPill
-                                                    tone={s.tone}
-                                                    withDot
-                                                >
-                                                    {s.label}
-                                                </StatusPill>
-                                            </TableCell>
-                                            <TableCell>
-                                                <div className="flex items-center justify-end gap-1">
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        className="h-7"
-                                                    >
-                                                        View
-                                                    </Button>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        className="size-7"
-                                                    >
-                                                        <MoreHorizontal className="size-3.5" />
-                                                    </Button>
-                                                </div>
-                                            </TableCell>
-                                        </TableRow>
-                                    );
-                                })}
+                                                <span className="text-[12px]">
+                                                    {fullName(a.doctor)}
+                                                </span>
+                                            </div>
+                                        </TableCell>
+                                        <TableCell className="text-[13px]">
+                                            {a.type ?? '—'}
+                                        </TableCell>
+                                        <TableCell className="text-[13px] tabular-nums">
+                                            {a.duration_minutes ?? '—'}{' '}
+                                            {t.wr_min}
+                                        </TableCell>
+                                        <TableCell>
+                                            <StatusPill
+                                                tone={statusTone(a.status)}
+                                                withDot
+                                            >
+                                                {statusLabel(a.status)}
+                                            </StatusPill>
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
                             </TableBody>
                         </Table>
                     </SectionCard>
@@ -421,28 +308,31 @@ export default function SecretaryAppointments() {
     );
 }
 
-function MiniCalendar() {
-    const aprTail = [27, 28, 29, 30];
-    const mayDays: {
-        d: number;
-        today?: boolean;
-        selected?: boolean;
-        mark?: boolean;
-    }[] = [];
+function MiniCalendar({
+    t,
+    locale,
+}: {
+    t: SecretaryDictionary;
+    locale: string;
+}) {
+    const today = new Date();
+    const intlLocale =
+        t.dir === 'rtl' ? 'ar' : locale.endsWith('fr') ? 'fr-FR' : 'en-US';
+    const monthLabel = today.toLocaleDateString(intlLocale, {
+        month: 'long',
+        year: 'numeric',
+    });
+    const weekdayLetters = t.ap_weekday_letters.split(',');
+    const days: number[] = [];
 
     for (let d = 1; d <= 31; d++) {
-        mayDays.push({
-            d,
-            today: d === 5,
-            selected: d === 5,
-            mark: d % 3 === 0,
-        });
+        days.push(d);
     }
 
     return (
         <div className="self-start rounded-xl border border-border bg-card p-4">
             <div className="mb-3 flex items-center justify-between">
-                <span className="text-[13px] font-semibold">May 2026</span>
+                <span className="text-[13px] font-semibold">{monthLabel}</span>
                 <div className="flex items-center gap-1">
                     <Button variant="ghost" size="icon" className="size-6">
                         <ChevronLeft className="size-3" />
@@ -453,7 +343,7 @@ function MiniCalendar() {
                 </div>
             </div>
             <div className="grid grid-cols-7 gap-1 text-center text-[11px]">
-                {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((d, i) => (
+                {weekdayLetters.map((d, i) => (
                     <div
                         key={i}
                         className="py-1 font-semibold text-muted-foreground"
@@ -461,30 +351,17 @@ function MiniCalendar() {
                         {d}
                     </div>
                 ))}
-                {aprTail.map((d) => (
+                {days.map((d) => (
                     <div
-                        key={`apr-${d}`}
-                        className="py-1.5 text-muted-foreground/40 tabular-nums"
-                    >
-                        {d}
-                    </div>
-                ))}
-                {mayDays.map((c) => (
-                    <div
-                        key={c.d}
+                        key={d}
                         className={cn(
                             'relative grid place-items-center rounded py-1.5 tabular-nums',
-                            c.selected
+                            d === today.getDate()
                                 ? 'bg-olive-600 font-semibold text-white'
-                                : c.today
-                                  ? 'font-semibold text-olive-700'
-                                  : 'hover:bg-muted',
+                                : 'hover:bg-muted',
                         )}
                     >
-                        {c.d}
-                        {c.mark && !c.selected && (
-                            <span className="absolute bottom-0.5 size-1 rounded-full bg-olive-500" />
-                        )}
+                        {d}
                     </div>
                 ))}
             </div>

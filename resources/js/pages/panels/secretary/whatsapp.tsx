@@ -8,14 +8,35 @@ import { StatusPill } from '@/components/blue-dome/status-pill';
 import type { StatusTone } from '@/components/blue-dome/status-pill';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { fmtNumber } from '@/lib/format';
 import { useSecretaryLang } from '@/lib/i18n/secretary-context';
-import {
-    SECRETARY_MOCK,
-    findDoctor,
-    findPatient,
-    localName,
-} from '@/lib/mock/secretary';
-import { cn } from '@/lib/utils';
+
+type MessageRow = {
+    id: string;
+    recipient_name: string | null;
+    status: string;
+    retry_count: number;
+    sent_at: string | null;
+    created_at: string | null;
+};
+
+type TemplateRow = {
+    id: string;
+    template_name: string;
+    template_category: string | null;
+    whatsapp_template_status: string | null;
+};
+
+interface Props {
+    messages: MessageRow[];
+    templates: TemplateRow[];
+    kpis: {
+        sent: number;
+        delivered: number;
+        seen: number;
+        failed: number;
+    };
+}
 
 const WA_STATUS_TONE: Record<string, StatusTone> = {
     seen: 'info',
@@ -25,54 +46,25 @@ const WA_STATUS_TONE: Record<string, StatusTone> = {
     confirmed: 'success',
 };
 
-const TEMPLATES = [
-    {
-        name: 'appointment_reminder_24h',
-        body: 'Bonjour {{1}}, rappel de votre RDV…',
-        lang: 'fr-MA',
-        status: 'approved',
-        used: 1248,
-    },
-    {
-        name: 'appointment_reminder_24h_ar',
-        body: 'مرحبًا {{1}}، تذكير بموعدك…',
-        lang: 'ar-MA',
-        status: 'approved',
-        used: 890,
-    },
-    {
-        name: 'confirmation_request',
-        body: 'Veuillez confirmer votre RDV…',
-        lang: 'fr-MA',
-        status: 'approved',
-        used: 754,
-    },
-    {
-        name: 'directions_parking',
-        body: "Voici l'adresse et instructions…",
-        lang: 'fr-MA',
-        status: 'approved',
-        used: 421,
-    },
-    {
-        name: 'test_results_ready',
-        body: "Vos résultats d'analyse sont disponibles…",
-        lang: 'fr-MA',
-        status: 'pending',
-        used: 0,
-    },
-    {
-        name: 'post_visit_followup',
-        body: 'Comment vous sentez-vous depuis votre visite?',
-        lang: 'fr-MA',
-        status: 'approved',
-        used: 198,
-    },
-];
+const TEMPLATE_STATUS_TONE: Record<string, StatusTone> = {
+    approved: 'success',
+    pending: 'warning',
+    rejected: 'danger',
+    paused: 'neutral',
+    disabled: 'neutral',
+};
 
-export default function SecretaryWhatsApp() {
-    const { t, lang } = useSecretaryLang();
-    const all = SECRETARY_MOCK.whatsapp;
+const statusTone = (status: string): StatusTone =>
+    WA_STATUS_TONE[status] ?? 'neutral';
+
+const templateStatusTone = (status: string | null): StatusTone =>
+    status ? (TEMPLATE_STATUS_TONE[status] ?? 'neutral') : 'neutral';
+
+const timeOf = (row: MessageRow): string =>
+    (row.sent_at ?? row.created_at)?.slice(11, 16) ?? '—';
+
+export default function SecretaryWhatsApp({ messages, templates, kpis }: Props) {
+    const { t } = useSecretaryLang();
 
     return (
         <>
@@ -81,7 +73,6 @@ export default function SecretaryWhatsApp() {
             <div className="px-6 py-5 lg:px-8">
                 <PageHeader
                     title={t.nav_whatsapp}
-                    description="186 messages sent today · 93.5% delivery rate · 76.3% read rate"
                     actions={
                         <>
                             <Button
@@ -90,14 +81,14 @@ export default function SecretaryWhatsApp() {
                                 className="gap-2"
                             >
                                 <RefreshCcw className="size-3.5" />
-                                Sync
+                                {t.action_sync}
                             </Button>
                             <Button
                                 size="sm"
                                 className="gap-2 bg-olive-600 text-white hover:bg-olive-700"
                             >
                                 <Send className="size-3.5" />
-                                Send template
+                                {t.wa_send_template}
                             </Button>
                         </>
                     }
@@ -105,30 +96,28 @@ export default function SecretaryWhatsApp() {
 
                 <div className="mb-5 grid grid-cols-2 gap-3 md:grid-cols-4">
                     <KpiCard
-                        label="Sent today"
-                        value="186"
+                        label={t.wa_status_sent}
+                        value={fmtNumber(Number(kpis.sent))}
                         icon={Send}
                         tone="navy"
-                        trend={{ value: '+15%', direction: 'up' }}
                     />
                     <KpiCard
-                        label="Delivered"
-                        value="174"
+                        label={t.wa_status_delivered}
+                        value={fmtNumber(Number(kpis.delivered))}
                         icon={CheckCheck}
                         tone="navy"
                     />
                     <KpiCard
-                        label="Read"
-                        value="142"
+                        label={t.wa_status_seen}
+                        value={fmtNumber(Number(kpis.seen))}
                         icon={CheckCheck}
                         tone="success"
                     />
                     <KpiCard
-                        label="Failed"
-                        value="12"
+                        label={t.wa_status_failed}
+                        value={fmtNumber(Number(kpis.failed))}
                         icon={X}
                         tone="warn"
-                        trend={{ value: '-2.1%', direction: 'up' }}
                     />
                 </div>
 
@@ -136,10 +125,13 @@ export default function SecretaryWhatsApp() {
                     <Tabs defaultValue="outbox">
                         <TabsList className="h-auto w-full justify-start rounded-none border-b border-border bg-transparent p-0">
                             {[
-                                ['inbox', 'Inbox', 3],
-                                ['outbox', 'Outbox', 10],
-                                ['templates', 'Templates', TEMPLATES.length],
-                                ['log', 'Log', null],
+                                ['outbox', t.wa_tab_outbox, messages.length],
+                                [
+                                    'templates',
+                                    t.wa_tab_templates,
+                                    templates.length,
+                                ],
+                                ['inbox', t.wa_tab_inbox, null],
                             ].map(([id, label, ct]) => (
                                 <TabsTrigger
                                     key={id as string}
@@ -157,55 +149,38 @@ export default function SecretaryWhatsApp() {
                         </TabsList>
 
                         <TabsContent value="outbox" className="m-0">
+                            {messages.length === 0 && (
+                                <div className="py-16 text-center text-[13px] text-muted-foreground">
+                                    {t.empty_none}
+                                </div>
+                            )}
                             <ul className="divide-y divide-border">
-                                {all.map((row, i) => {
-                                    const p = findPatient(row.patient);
-                                    const d = findDoctor(row.doctor);
-
-                                    if (!p || !d) {
-                                        return null;
-                                    }
-
-                                    const stale = row.retries >= 2;
+                                {messages.map((row) => {
+                                    const stale = row.retry_count >= 2;
                                     const failed = row.status === 'failed';
+                                    const seen =
+                                        row.status === 'seen' ||
+                                        row.status === 'confirmed';
 
                                     return (
                                         <li
-                                            key={i}
+                                            key={row.id}
                                             className="space-y-2 px-5 py-3.5"
                                         >
                                             <div className="flex items-center gap-3">
-                                                <div
-                                                    className={cn(
-                                                        'grid size-9 shrink-0 place-items-center rounded-full text-[11px] font-semibold text-white',
-                                                        p.gender === 'm'
-                                                            ? 'bg-navy-700'
-                                                            : 'bg-olive-600',
-                                                    )}
-                                                >
-                                                    {p.initials}
-                                                </div>
                                                 <div className="min-w-0 flex-1">
                                                     <div className="text-[13px] font-semibold">
-                                                        {localName(p, lang)}
+                                                        {row.recipient_name ??
+                                                            t.unassigned}
                                                     </div>
                                                     <div className="text-[11px] text-muted-foreground">
-                                                        {localName(
-                                                            d,
-                                                            lang,
-                                                        ).replace(
-                                                            /^(Dr\.|د\.)\s*/,
-                                                            '',
-                                                        )}{' '}
-                                                        · {row.apptTime}
+                                                        {timeOf(row)}
                                                     </div>
                                                 </div>
                                                 <StatusPill
-                                                    tone={
-                                                        WA_STATUS_TONE[
-                                                            row.status
-                                                        ]
-                                                    }
+                                                    tone={statusTone(
+                                                        row.status,
+                                                    )}
                                                     withDot
                                                 >
                                                     {t[
@@ -215,18 +190,16 @@ export default function SecretaryWhatsApp() {
                                             </div>
                                             <div className="flex items-center justify-between text-[11px]">
                                                 <div className="flex items-center gap-1 text-muted-foreground">
-                                                    {row.status === 'failed' ? (
+                                                    {failed ? (
                                                         <X className="size-3 text-danger" />
-                                                    ) : row.status === 'seen' ||
-                                                      row.status ===
-                                                          'confirmed' ? (
+                                                    ) : seen ? (
                                                         <CheckCheck className="size-3 text-info" />
                                                     ) : (
                                                         <CheckCheck className="size-3 text-muted-foreground" />
                                                     )}
-                                                    Sent at {row.sentAt}
-                                                    {row.retries > 0 &&
-                                                        ` · retry ${row.retries}`}
+                                                    {t.wa_sent_at} {timeOf(row)}
+                                                    {row.retry_count > 0 &&
+                                                        ` · ${t.wa_retry} ${row.retry_count}`}
                                                 </div>
                                                 <div className="flex items-center gap-1.5">
                                                     {failed ? (
@@ -235,7 +208,7 @@ export default function SecretaryWhatsApp() {
                                                             className="h-7 gap-1 bg-olive-600 text-[11px] text-white hover:bg-olive-700"
                                                         >
                                                             <RefreshCcw className="size-3" />
-                                                            Resend
+                                                            {t.wa_resend}
                                                         </Button>
                                                     ) : (
                                                         <Button
@@ -244,7 +217,7 @@ export default function SecretaryWhatsApp() {
                                                             className="h-7 gap-1 text-[11px]"
                                                         >
                                                             <Send className="size-3" />
-                                                            Send template
+                                                            {t.wa_send_template}
                                                         </Button>
                                                     )}
                                                     {(failed || stale) && (
@@ -253,7 +226,7 @@ export default function SecretaryWhatsApp() {
                                                             size="sm"
                                                             className="h-7 gap-1 border-danger text-[11px] text-danger hover:bg-danger-soft"
                                                         >
-                                                            Move to call
+                                                            {t.wa_to_call}
                                                         </Button>
                                                     )}
                                                 </div>
@@ -265,43 +238,42 @@ export default function SecretaryWhatsApp() {
                         </TabsContent>
 
                         <TabsContent value="templates" className="m-0">
-                            <div className="grid grid-cols-[2fr_120px_120px_120px_80px] gap-4 border-b bg-muted/50 px-5 py-2.5 text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
-                                <div>Template</div>
-                                <div>Lang</div>
-                                <div>Status</div>
-                                <div>Used</div>
+                            <div className="grid grid-cols-[2fr_160px_120px_80px] gap-4 border-b bg-muted/50 px-5 py-2.5 text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
+                                <div>{t.wa_col_template}</div>
+                                <div>{t.wa_col_category}</div>
+                                <div>{t.col_status}</div>
                                 <div />
                             </div>
-                            {TEMPLATES.map((tp) => (
+                            {templates.length === 0 && (
+                                <div className="py-16 text-center text-[13px] text-muted-foreground">
+                                    {t.empty_none}
+                                </div>
+                            )}
+                            {templates.map((tp) => (
                                 <div
-                                    key={tp.name}
-                                    className="grid grid-cols-[2fr_120px_120px_120px_80px] items-center gap-4 border-b border-border px-5 py-3 last:border-b-0"
+                                    key={tp.id}
+                                    className="grid grid-cols-[2fr_160px_120px_80px] items-center gap-4 border-b border-border px-5 py-3 last:border-b-0"
                                 >
-                                    <div>
-                                        <div className="font-mono text-[12px] font-semibold">
-                                            {tp.name}
-                                        </div>
-                                        <div className="mt-0.5 truncate text-[11px] text-muted-foreground">
-                                            {tp.body}
-                                        </div>
+                                    <div className="font-mono text-[12px] font-semibold">
+                                        {tp.template_name}
                                     </div>
-                                    <div className="font-mono text-[12px]">
-                                        {tp.lang}
+                                    <div className="text-[12px] text-muted-foreground">
+                                        {tp.template_category ?? t.empty_none}
                                     </div>
                                     <div>
                                         <StatusPill
-                                            tone={
-                                                tp.status === 'approved'
-                                                    ? 'success'
-                                                    : 'warning'
-                                            }
+                                            tone={templateStatusTone(
+                                                tp.whatsapp_template_status,
+                                            )}
                                             withDot
                                         >
-                                            {tp.status}
+                                            {tp.whatsapp_template_status
+                                                ? (t[
+                                                      `wa_tpl_${tp.whatsapp_template_status}`
+                                                  ] ??
+                                                  tp.whatsapp_template_status)
+                                                : t.empty_none}
                                         </StatusPill>
-                                    </div>
-                                    <div className="text-[13px] font-semibold tabular-nums">
-                                        {tp.used.toLocaleString('en-US')}
                                     </div>
                                     <div className="text-end">
                                         <Button
@@ -309,7 +281,7 @@ export default function SecretaryWhatsApp() {
                                             size="sm"
                                             className="h-7"
                                         >
-                                            Edit
+                                            {t.action_edit}
                                         </Button>
                                     </div>
                                 </div>
@@ -318,14 +290,8 @@ export default function SecretaryWhatsApp() {
 
                         <TabsContent value="inbox" className="m-0">
                             <div className="flex items-center justify-center gap-2 py-16 text-center text-[13px] text-muted-foreground">
-                                <MessageCircle className="size-4" />3 new
-                                inbound replies — implementation coming
-                            </div>
-                        </TabsContent>
-
-                        <TabsContent value="log" className="m-0">
-                            <div className="py-16 text-center text-[13px] text-muted-foreground">
-                                Full message log — wiring pending
+                                <MessageCircle className="size-4" />
+                                {t.wa_inbox_coming}
                             </div>
                         </TabsContent>
                     </Tabs>

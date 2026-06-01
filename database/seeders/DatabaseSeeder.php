@@ -67,6 +67,7 @@ class DatabaseSeeder extends Seeder
             ]);
         }
 
+        $this->call(BranchSeeder::class);
         $this->call(MessageTemplateSeeder::class);
         $this->call(MedicationSeeder::class);
         $this->call(DrugInteractionSeeder::class);

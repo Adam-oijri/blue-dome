@@ -1,79 +1,39 @@
-import {
-    Bell,
-    Building2,
-    Check,
-    ChevronDown,
-    Plus,
-    Search,
-    Stethoscope,
-} from 'lucide-react';
+import { router } from '@inertiajs/react';
+import { Bell, Plus, Search } from 'lucide-react';
 import { useState } from 'react';
+import type { FormEvent } from 'react';
 
+import { CreateAppointmentSheet } from '@/components/blue-dome/create-appointment-sheet';
 import { Button } from '@/components/ui/button';
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { useSecretaryLang } from '@/lib/i18n/secretary-context';
-import {
-    SECRETARY_MOCK,
-    localName,
-    localSpecialty,
-} from '@/lib/mock/secretary';
-import type { BranchKey } from '@/lib/mock/secretary';
+import { useLocale } from '@/lib/i18n/use-locale';
 import { cn } from '@/lib/utils';
+import { patients as patientsRoute } from '@/routes/secretary';
 
-interface SecretaryTopbarProps {
-    branch: string;
-    onBranchChange: (id: string) => void;
-    selectedDoctors: string[];
-    onSelectedDoctorsChange: (ids: string[]) => void;
-}
-
-export function SecretaryTopbar({
-    branch,
-    onBranchChange,
-    selectedDoctors,
-    onSelectedDoctorsChange,
-}: SecretaryTopbarProps) {
-    const { t, lang } = useSecretaryLang();
+export function SecretaryTopbar() {
+    const { t } = useSecretaryLang();
+    const { slug: locale } = useLocale();
     const [searchQuery, setSearchQuery] = useState('');
 
-    const branchData = SECRETARY_MOCK.branches.find((b) => b.id === branch);
-    const docsAtBranch = SECRETARY_MOCK.doctors.filter(
-        (d) => d.branch === branch,
-    );
-    const allSelected = selectedDoctors.length === docsAtBranch.length;
+    // Global search resolves to the patient directory filtered by the query —
+    // the front desk's most common lookup.
+    const submitSearch = (event: FormEvent): void => {
+        event.preventDefault();
+        const q = searchQuery.trim();
 
-    const branchLabel = (key: BranchKey | undefined) => {
-        if (!key) {
-            return '';
+        if (q === '') {
+            return;
         }
 
-        return key === 'casa' ? t.branch_casa : t.branch_rabat;
-    };
-
-    const toggleDoctor = (id: string) => {
-        if (selectedDoctors.includes(id)) {
-            if (selectedDoctors.length === 1) {
-                return;
-            }
-
-            onSelectedDoctorsChange(selectedDoctors.filter((x) => x !== id));
-        } else {
-            onSelectedDoctorsChange([...selectedDoctors, id]);
-        }
+        router.get(patientsRoute.url({ locale }), { q });
     };
 
     return (
         <header className="flex h-[60px] shrink-0 items-center gap-3 border-b border-border bg-card px-6">
             <SidebarTrigger className="-ms-1 md:hidden" />
 
-            <div className="relative max-w-[320px] flex-1">
+            <form onSubmit={submitSearch} className="relative max-w-[320px] flex-1">
                 <Search className="pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                 <input
                     type="search"
@@ -85,112 +45,7 @@ export function SecretaryTopbar({
                         'focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50',
                     )}
                 />
-            </div>
-
-            <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="sm" className="gap-1.5">
-                        <Building2 className="size-3.5" />
-                        <span className="text-muted-foreground">
-                            {t.branch_label}:
-                        </span>
-                        <span className="font-semibold">
-                            {branchLabel(branchData?.key)}
-                        </span>
-                        <ChevronDown className="size-3" />
-                    </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="min-w-[220px]">
-                    {SECRETARY_MOCK.branches.map((b) => (
-                        <DropdownMenuItem
-                            key={b.id}
-                            onSelect={() => onBranchChange(b.id)}
-                            className="gap-2"
-                        >
-                            <span className="size-3.5 shrink-0">
-                                {b.id === branch && (
-                                    <Check className="size-3.5" />
-                                )}
-                            </span>
-                            <span className="flex-1">{branchLabel(b.key)}</span>
-                            {b.main && (
-                                <span className="text-[11px] text-olive-700">
-                                    Main
-                                </span>
-                            )}
-                        </DropdownMenuItem>
-                    ))}
-                </DropdownMenuContent>
-            </DropdownMenu>
-
-            <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="sm" className="gap-1.5">
-                        <Stethoscope className="size-3.5" />
-                        <span className="text-muted-foreground">
-                            {t.doctors_label}:
-                        </span>
-                        <span className="font-semibold">
-                            {allSelected
-                                ? t.doctors_all
-                                : `${selectedDoctors.length} of ${docsAtBranch.length}`}
-                        </span>
-                        <ChevronDown className="size-3" />
-                    </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="min-w-[260px]">
-                    <DropdownMenuItem
-                        onSelect={() =>
-                            onSelectedDoctorsChange(
-                                docsAtBranch.map((d) => d.id),
-                            )
-                        }
-                        className="gap-2"
-                    >
-                        <span className="size-3.5 shrink-0">
-                            {allSelected && <Check className="size-3.5" />}
-                        </span>
-                        <span className="flex-1 font-semibold">
-                            {t.doctors_all}
-                        </span>
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    {docsAtBranch.map((d) => {
-                        const on = selectedDoctors.includes(d.id);
-
-                        return (
-                            <DropdownMenuItem
-                                key={d.id}
-                                onSelect={(e) => {
-                                    e.preventDefault();
-                                    toggleDoctor(d.id);
-                                }}
-                                className="gap-2"
-                            >
-                                <span className="size-3.5 shrink-0">
-                                    {on && <Check className="size-3.5" />}
-                                </span>
-                                <span
-                                    className={cn(
-                                        'size-2.5 shrink-0 rounded-full',
-                                        d.hue === 'navy'
-                                            ? 'bg-navy-700'
-                                            : 'bg-olive-600',
-                                    )}
-                                />
-                                <div className="flex flex-1 flex-col">
-                                    <span className="text-[13px]">
-                                        {localName(d, lang)}
-                                    </span>
-                                    <span className="text-[11px] text-muted-foreground">
-                                        {localSpecialty(d, lang)}
-                                    </span>
-                                </div>
-                            </DropdownMenuItem>
-                        );
-                    })}
-                </DropdownMenuContent>
-            </DropdownMenu>
+            </form>
 
             <div className="ms-auto flex items-center gap-2">
                 <Button
@@ -202,10 +57,12 @@ export function SecretaryTopbar({
                     <Bell className="size-4" />
                 </Button>
 
-                <Button className="bg-olive-600 text-white hover:bg-olive-700">
-                    <Plus className="size-4" />
-                    {t.new_appointment}
-                </Button>
+                <CreateAppointmentSheet>
+                    <Button className="bg-olive-600 text-white hover:bg-olive-700">
+                        <Plus className="size-4" />
+                        {t.new_appointment}
+                    </Button>
+                </CreateAppointmentSheet>
             </div>
         </header>
     );

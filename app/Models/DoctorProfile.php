@@ -37,6 +37,10 @@ class DoctorProfile extends Model
             'languages_spoken' => 'array',
             'board_certifications' => 'array',
             'accepts_new_patients' => 'boolean',
+            'consultation_fee' => 'decimal:2',
+            'follow_up_fee' => 'decimal:2',
+            'emergency_fee' => 'decimal:2',
+            'consultation_duration' => 'integer',
         ];
     }
 

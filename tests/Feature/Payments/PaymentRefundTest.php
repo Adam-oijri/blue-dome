@@ -42,7 +42,7 @@ it('refunds a payment, sets status=refunded, and trigger zeroes paid_amount', fu
         ->and($this->invoice->fresh()->status)->toBe('pending');
 });
 
-it('only the secretary can refund a payment', function (string $role, bool $allowed) {
+it('lets the secretary and super_admin refund a payment', function (string $role, bool $allowed) {
     $payment = Payment::factory()->create([
         'invoice_id' => $this->invoice->id,
         'clinic_id' => $this->clinic->id,
@@ -64,7 +64,7 @@ it('only the secretary can refund a payment', function (string $role, bool $allo
         expect($payment->fresh()->payment_status)->toBe('completed');
     }
 })->with([
-    ['super_admin', false],
+    ['super_admin', true],
     ['doctor', false],
     ['secretary', true],
 ]);

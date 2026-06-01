@@ -1,24 +1,19 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import {
     Activity,
     Calendar as CalendarIcon,
     ChevronRight,
-    CircleDollarSign,
     Clock,
     Download,
-    Filter,
     FlaskConical,
     MessageCircle,
-    MessageSquare,
-    MoreVertical,
     Pill,
-    Plus,
     Sparkles,
     UserPlus,
     Users,
 } from 'lucide-react';
-import type { ComponentType } from 'react';
 
+import { CreateAppointmentSheet } from '@/components/blue-dome/create-appointment-sheet';
 import { KpiCard } from '@/components/blue-dome/kpi-card';
 import { PageHeader } from '@/components/blue-dome/page-header';
 import { SectionCard } from '@/components/blue-dome/section-card';
@@ -33,76 +28,107 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import { downloadCsv } from '@/lib/format';
+import type { DoctorDictionary } from '@/lib/i18n/doctor';
 import { useDoctorLang } from '@/lib/i18n/doctor-context';
 import { useLocale } from '@/lib/i18n/use-locale';
-import { DOCTOR_MOCK } from '@/lib/mock/doctor';
-import type { AppointmentStatus, KpiEntry } from '@/lib/mock/doctor';
 import { cn } from '@/lib/utils';
+import appointments from '@/routes/appointments';
 import doctor from '@/routes/doctor';
+import labOrders from '@/routes/lab-orders';
+import medicalRecords from '@/routes/medical-records';
+import patients from '@/routes/patients';
+import prescriptions from '@/routes/prescriptions';
 
-type IconComponent = ComponentType<{ className?: string }>;
-
-const KPI_ICONS: Record<KpiEntry['icon'], IconComponent> = {
-    users: Users,
-    msg: MessageSquare,
-    coin: CircleDollarSign,
-    clock: Clock,
+type Person = {
+    first_name: string | null;
+    last_name: string | null;
+    phone?: string | null;
 };
 
-const KPI_TONES: Record<
-    KpiEntry['color'],
-    'navy' | 'olive' | 'warn' | 'success'
-> = {
-    '': 'navy',
-    olive: 'olive',
-    warn: 'warn',
-    success: 'success',
+type ScheduleAppt = {
+    id: string;
+    patient?: Person | null;
+    scheduled_start: string | null;
+    status: string;
+    type: string | null;
 };
 
-const STATUS_TONE: Record<AppointmentStatus, StatusTone> = {
-    completed: 'success',
-    in_progress: 'info',
-    arrived: 'olive',
-    confirmed: 'navy',
-    pending: 'warning',
-    cancelled: 'danger',
+type PendingAppt = {
+    id: string;
+    patient?: Person | null;
+    scheduled_start: string | null;
 };
 
-const STATUS_BAR: Record<AppointmentStatus, string> = {
-    completed: 'bg-emerald-300',
-    in_progress: 'bg-olive-400',
-    arrived: 'bg-amber-300',
-    confirmed: 'bg-navy-100',
-    pending: 'bg-navy-100',
-    cancelled: 'bg-red-300',
+type RecentPatient = {
+    id: string;
+    first_name: string | null;
+    last_name: string | null;
+    phone: string | null;
+    gender: string | null;
+    blood_type: string | null;
+    last_visit: string | null;
 };
 
-const WHATSAPP_QUEUE: { name: string; time: string; state: 'sent' | 'seen' }[] =
-    [
-        { name: 'Omar Chraibi', time: 'Tomorrow 14:00', state: 'sent' },
-        { name: 'Latifa Ouazzani', time: 'Tomorrow 14:30', state: 'seen' },
-        { name: 'Karim Sabri', time: 'Tomorrow 15:30', state: 'sent' },
-    ];
-
-const QUICK_ACTIONS: { icon: IconComponent; label: string }[] = [
-    { icon: UserPlus, label: 'New patient' },
-    { icon: CalendarIcon, label: 'Book slot' },
-    { icon: Pill, label: 'Prescription' },
-    { icon: FlaskConical, label: 'Lab order' },
-];
-
-interface DoctorDashboardProps {
-    // Phase 2 will populate these from the controller. Optional for the UI port.
-    kpis?: KpiEntry[];
+interface Props {
+    kpis: {
+        today_count: number;
+        pending_confirmations: number;
+        completed_today: number;
+        week_upcoming: number;
+    };
+    today_schedule: ScheduleAppt[];
+    pending_confirmations_list: PendingAppt[];
+    recent_patients: RecentPatient[];
 }
 
-export default function DoctorDashboard({ kpis }: DoctorDashboardProps) {
-    const { t, lang } = useDoctorLang();
+const STATUS_TONE: Record<string, StatusTone> = {
+    scheduled: 'navy',
+    confirmed: 'info',
+    arrived: 'olive',
+    in_progress: 'olive',
+    completed: 'success',
+    cancelled: 'danger',
+    no_show: 'warning',
+    rescheduled: 'neutral',
+};
+
+const fullName = (p?: Person | null): string =>
+    p ? `${p.first_name ?? ''} ${p.last_name ?? ''}`.trim() || '—' : '—';
+
+const initials = (p?: Person | null): string =>
+    p
+        ? `${p.first_name?.[0] ?? ''}${p.last_name?.[0] ?? ''}`.toUpperCase() ||
+          '?'
+        : '?';
+
+const timeOf = (iso: string | null): string => (iso ? iso.slice(11, 16) : '—');
+
+export default function DoctorDashboard({
+    kpis,
+    today_schedule,
+    pending_confirmations_list,
+    recent_patients,
+}: Props) {
+    const { t } = useDoctorLang();
     const { slug: locale } = useLocale();
-    const resolvedKpis = kpis ?? DOCTOR_MOCK.kpis[lang];
-    const inProgress = DOCTOR_MOCK.schedule.find(
-        (s) => s.status === 'in_progress',
-    );
+
+    const statusLabel = (s: string): string => {
+        const map: Record<string, keyof DoctorDictionary> = {
+            confirmed: 'confirmed',
+            in_progress: 'in_progress',
+            completed: 'completed',
+            arrived: 'arrived',
+            cancelled: 'cancelled',
+            no_show: 'no_show',
+            scheduled: 'upcoming',
+        };
+        const key = map[s];
+
+        return key ? t[key] : s.replace('_', ' ');
+    };
+
+    const inProgress = today_schedule.find((a) => a.status === 'in_progress');
 
     return (
         <>
@@ -118,32 +144,59 @@ export default function DoctorDashboard({ kpis }: DoctorDashboardProps) {
                                 variant="outline"
                                 size="sm"
                                 className="gap-2"
+                                onClick={() =>
+                                    downloadCsv(
+                                        `today-schedule-${new Date().toISOString().slice(0, 10)}.csv`,
+                                        today_schedule.map((a) => ({
+                                            time: timeOf(a.scheduled_start),
+                                            patient: fullName(a.patient),
+                                            type: a.type ?? '',
+                                            status: a.status,
+                                        })),
+                                    )
+                                }
                             >
                                 <Download className="size-3.5" />
                                 Export
                             </Button>
-                            <Button
-                                size="sm"
-                                className="gap-2 bg-navy-900 text-white hover:bg-navy-800"
-                            >
-                                <Plus className="size-3.5" />
-                                {t.new_appointment}
-                            </Button>
+                            <CreateAppointmentSheet>
+                                <Button
+                                    size="sm"
+                                    className="gap-2 bg-navy-900 text-white hover:bg-navy-800"
+                                >
+                                    <UserPlus className="size-3.5" />
+                                    {t.new_appointment}
+                                </Button>
+                            </CreateAppointmentSheet>
                         </>
                     }
                 />
 
                 <div className="mb-6 grid grid-cols-2 gap-4 md:grid-cols-4">
-                    {resolvedKpis.map((kpi, i) => (
-                        <KpiCard
-                            key={i}
-                            label={kpi.label}
-                            value={kpi.value}
-                            icon={KPI_ICONS[kpi.icon]}
-                            tone={KPI_TONES[kpi.color]}
-                            trend={{ value: kpi.trend, direction: 'up' }}
-                        />
-                    ))}
+                    <KpiCard
+                        label={t.todays_patients}
+                        value={kpis.today_count}
+                        icon={Users}
+                        tone="navy"
+                    />
+                    <KpiCard
+                        label={t.pending_confirmations}
+                        value={kpis.pending_confirmations}
+                        icon={MessageCircle}
+                        tone="warn"
+                    />
+                    <KpiCard
+                        label={t.completed}
+                        value={kpis.completed_today}
+                        icon={Activity}
+                        tone="success"
+                    />
+                    <KpiCard
+                        label={t.upcoming}
+                        value={kpis.week_upcoming}
+                        icon={CalendarIcon}
+                        tone="olive"
+                    />
                 </div>
 
                 <div className="grid gap-5 lg:grid-cols-[1fr_360px]">
@@ -152,70 +205,62 @@ export default function DoctorDashboard({ kpis }: DoctorDashboardProps) {
                         titleIcon={<CalendarIcon className="size-4" />}
                         bodyClassName="p-0"
                         actions={
-                            <>
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="gap-2"
-                                >
-                                    <Filter className="size-3.5" />
-                                    All
-                                </Button>
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="gap-2"
-                                    asChild
-                                >
-                                    <Link
-                                        href={doctor.calendar.url({ locale })}
-                                    >
-                                        {t.view_calendar}
-                                        <ChevronRight className="size-3.5" />
-                                    </Link>
-                                </Button>
-                            </>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="gap-2"
+                                asChild
+                            >
+                                <Link href={doctor.calendar.url({ locale })}>
+                                    {t.view_calendar}
+                                    <ChevronRight className="size-3.5" />
+                                </Link>
+                            </Button>
                         }
                     >
-                        <ul className="divide-y divide-border">
-                            {DOCTOR_MOCK.schedule.map((apt, i) => (
-                                <li
-                                    key={i}
-                                    className="grid cursor-pointer items-center gap-4 px-5 py-3.5 hover:bg-muted/50"
-                                    style={{
-                                        gridTemplateColumns:
-                                            '72px 4px minmax(0, 1fr) auto',
-                                    }}
-                                >
-                                    <div className="text-xs font-medium text-muted-foreground tabular-nums">
-                                        <div className="text-[14px] font-semibold text-foreground">
-                                            {apt.time}
-                                        </div>
-                                        {apt.duration}
-                                    </div>
-                                    <div
-                                        className={cn(
-                                            'h-full self-stretch rounded',
-                                            STATUS_BAR[apt.status],
-                                        )}
-                                    />
-                                    <div className="min-w-0">
-                                        <div className="truncate text-[14px] font-semibold">
-                                            {apt.name[lang]}
-                                        </div>
-                                        <div className="truncate text-[12px] text-muted-foreground">
-                                            {apt.reason[lang]}
-                                        </div>
-                                    </div>
-                                    <StatusPill
-                                        tone={STATUS_TONE[apt.status]}
-                                        withDot
+                        {today_schedule.length === 0 ? (
+                            <div className="px-5 py-10 text-center text-sm text-muted-foreground">
+                                {t.no_appointments}
+                            </div>
+                        ) : (
+                            <div className="divide-y divide-border">
+                                {today_schedule.map((apt) => (
+                                    <Link
+                                        key={apt.id}
+                                        href={appointments.show.url({
+                                            locale,
+                                            appointment: apt.id,
+                                        })}
+                                        className="grid items-center gap-4 px-5 py-3.5 hover:bg-muted/50"
+                                        style={{
+                                            gridTemplateColumns:
+                                                '64px minmax(0, 1fr) auto',
+                                        }}
                                     >
-                                        {t[apt.status]}
-                                    </StatusPill>
-                                </li>
-                            ))}
-                        </ul>
+                                        <div className="text-[14px] font-semibold tabular-nums">
+                                            {timeOf(apt.scheduled_start)}
+                                        </div>
+                                        <div className="min-w-0">
+                                            <div className="truncate text-[14px] font-semibold">
+                                                {fullName(apt.patient)}
+                                            </div>
+                                            <div className="truncate text-[12px] text-muted-foreground">
+                                                {apt.type ?? ''}
+                                            </div>
+                                        </div>
+                                        <StatusPill
+                                            tone={
+                                                STATUS_TONE[apt.status] ??
+                                                'neutral'
+                                            }
+                                            withDot
+                                        >
+                                            {statusLabel(apt.status)}
+                                        </StatusPill>
+                                    </Link>
+                                ))}
+                            </div>
+                        )}
                     </SectionCard>
 
                     <div className="flex flex-col gap-4">
@@ -227,100 +272,106 @@ export default function DoctorDashboard({ kpis }: DoctorDashboardProps) {
                             >
                                 <div className="flex items-start gap-3">
                                     <div className="grid size-10 shrink-0 place-items-center rounded-full bg-navy-700 text-sm font-semibold text-white">
-                                        {inProgress.name.en
-                                            .split(' ')
-                                            .map((s) => s[0])
-                                            .join('')}
+                                        {initials(inProgress.patient)}
                                     </div>
                                     <div className="min-w-0 flex-1">
                                         <div className="text-[14px] font-semibold">
-                                            {inProgress.name[lang]}
+                                            {fullName(inProgress.patient)}
                                         </div>
                                         <div className="mt-0.5 truncate text-[12px] text-muted-foreground">
-                                            {inProgress.reason[lang]}
-                                        </div>
-                                        <div className="mt-2 flex items-center gap-3 text-[11px]">
-                                            <StatusPill tone="olive">
-                                                <Clock className="size-3" />
-                                                14 min
-                                            </StatusPill>
-                                            <span className="text-muted-foreground">
-                                                42y · M · B+
-                                            </span>
+                                            {inProgress.type ?? ''}
                                         </div>
                                     </div>
                                 </div>
-                                <div className="mt-4 flex gap-2">
+                                <div className="mt-4">
                                     <Button
+                                        asChild
                                         size="sm"
-                                        className="flex-1 gap-2 bg-navy-900 text-white hover:bg-navy-800"
+                                        className="w-full gap-2 bg-navy-900 text-white hover:bg-navy-800"
                                     >
-                                        <CalendarIcon className="size-3.5" />
-                                        Open visit
-                                    </Button>
-                                    <Button
-                                        variant="outline"
-                                        size="icon"
-                                        className="size-8"
-                                    >
-                                        <MoreVertical className="size-3.5" />
+                                        <Link
+                                            href={medicalRecords.create.url(
+                                                { locale },
+                                                {
+                                                    query: {
+                                                        appointment:
+                                                            inProgress.id,
+                                                    },
+                                                },
+                                            )}
+                                        >
+                                            <Clock className="size-3.5" />
+                                            {t.consultations}
+                                        </Link>
                                     </Button>
                                 </div>
                             </SectionCard>
                         )}
 
                         <SectionCard
-                            title="WhatsApp"
+                            title={t.pending_confirmations}
                             titleIcon={<MessageCircle className="size-4" />}
                             actions={
                                 <StatusPill tone="warning">
-                                    5 {t.pending}
+                                    {kpis.pending_confirmations} {t.pending}
                                 </StatusPill>
                             }
                             bodyClassName="p-0"
                         >
-                            <ul className="divide-y divide-border">
-                                {WHATSAPP_QUEUE.map((m, i) => (
-                                    <li
-                                        key={i}
-                                        className="flex items-center gap-2.5 px-4 py-3"
-                                    >
-                                        <div className="grid size-7 shrink-0 place-items-center rounded-full bg-olive-600 text-[11px] font-semibold text-white">
-                                            {m.name
-                                                .split(' ')
-                                                .map((s) => s[0])
-                                                .join('')}
-                                        </div>
-                                        <div className="min-w-0 flex-1">
-                                            <div className="truncate text-[13px] font-medium">
-                                                {m.name}
-                                            </div>
-                                            <div className="text-[11px] text-muted-foreground">
-                                                {m.time}
-                                            </div>
-                                        </div>
-                                        <StatusPill
-                                            tone={
-                                                m.state === 'seen'
-                                                    ? 'info'
-                                                    : 'olive'
-                                            }
-                                            className="text-[10px]"
+                            {pending_confirmations_list.length === 0 ? (
+                                <div className="px-4 py-8 text-center text-[13px] text-muted-foreground">
+                                    {t.all_confirmed}
+                                </div>
+                            ) : (
+                                <div className="divide-y divide-border">
+                                    {pending_confirmations_list.map((m) => (
+                                        <Link
+                                            key={m.id}
+                                            href={appointments.show.url({
+                                                locale,
+                                                appointment: m.id,
+                                            })}
+                                            className="flex items-center gap-2.5 px-4 py-3 hover:bg-muted/50"
                                         >
-                                            {m.state === 'seen'
-                                                ? '✓✓ Seen'
-                                                : '✓ Sent'}
-                                        </StatusPill>
-                                    </li>
-                                ))}
-                            </ul>
+                                            <div className="grid size-7 shrink-0 place-items-center rounded-full bg-olive-600 text-[11px] font-semibold text-white">
+                                                {initials(m.patient)}
+                                            </div>
+                                            <div className="min-w-0 flex-1">
+                                                <div className="truncate text-[13px] font-medium">
+                                                    {fullName(m.patient)}
+                                                </div>
+                                                <div className="text-[11px] text-muted-foreground tabular-nums">
+                                                    {m.scheduled_start
+                                                        ?.slice(0, 16)
+                                                        .replace('T', ' ') ??
+                                                        ''}
+                                                </div>
+                                            </div>
+                                            <StatusPill
+                                                tone="warning"
+                                                className="text-[10px]"
+                                            >
+                                                {t.pending}
+                                            </StatusPill>
+                                        </Link>
+                                    ))}
+                                </div>
+                            )}
                             <div className="border-t border-border p-3">
                                 <Button
                                     variant="ghost"
                                     size="sm"
                                     className="w-full"
+                                    asChild
                                 >
-                                    View all 5 →
+                                    <Link
+                                        href={doctor.confirmations.url({
+                                            locale,
+                                        })}
+                                    >
+                                        {t.confirmations}
+                                        <ChevronRight className="size-3.5" />
+                                    </Link>
                                 </Button>
                             </div>
                         </SectionCard>
@@ -330,16 +381,30 @@ export default function DoctorDashboard({ kpis }: DoctorDashboardProps) {
                             titleIcon={<Sparkles className="size-4" />}
                             bodyClassName="grid grid-cols-2 gap-2 p-4"
                         >
-                            {QUICK_ACTIONS.map((a) => (
+                            <QuickAction
+                                icon={UserPlus}
+                                label={t.patients}
+                                href={patients.create.url({ locale })}
+                            />
+                            <CreateAppointmentSheet>
                                 <Button
-                                    key={a.label}
                                     variant="outline"
                                     className="h-16 flex-col gap-1 text-xs"
                                 >
-                                    <a.icon className="size-[18px]" />
-                                    {a.label}
+                                    <CalendarIcon className="size-[18px]" />
+                                    {t.new_appointment}
                                 </Button>
-                            ))}
+                            </CreateAppointmentSheet>
+                            <QuickAction
+                                icon={Pill}
+                                label={t.prescriptions}
+                                href={prescriptions.create.url({ locale })}
+                            />
+                            <QuickAction
+                                icon={FlaskConical}
+                                label={t.lab_orders}
+                                href={labOrders.create.url({ locale })}
+                            />
                         </SectionCard>
                     </div>
                 </div>
@@ -348,9 +413,16 @@ export default function DoctorDashboard({ kpis }: DoctorDashboardProps) {
                     title={t.recent_patients}
                     titleIcon={<Users className="size-4" />}
                     actions={
-                        <Button variant="ghost" size="sm" className="gap-1">
-                            View all
-                            <ChevronRight className="size-3.5" />
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            className="gap-1"
+                            asChild
+                        >
+                            <Link href={patients.index.url({ locale })}>
+                                {t.patients}
+                                <ChevronRight className="size-3.5" />
+                            </Link>
                         </Button>
                     }
                     bodyClassName="p-0"
@@ -363,10 +435,7 @@ export default function DoctorDashboard({ kpis }: DoctorDashboardProps) {
                                     {t.patients}
                                 </TableHead>
                                 <TableHead className="text-[11px] tracking-wider uppercase">
-                                    {t.patient_id}
-                                </TableHead>
-                                <TableHead className="text-[11px] tracking-wider uppercase">
-                                    {t.age} / {t.gender}
+                                    {t.gender}
                                 </TableHead>
                                 <TableHead className="text-[11px] tracking-wider uppercase">
                                     {t.blood_type}
@@ -374,17 +443,32 @@ export default function DoctorDashboard({ kpis }: DoctorDashboardProps) {
                                 <TableHead className="text-[11px] tracking-wider uppercase">
                                     {t.last_visit}
                                 </TableHead>
-                                <TableHead className="text-[11px] tracking-wider uppercase">
-                                    {t.insurance}
-                                </TableHead>
                                 <TableHead className="w-12" />
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {DOCTOR_MOCK.patients.slice(0, 6).map((p) => (
+                            {recent_patients.length === 0 && (
+                                <TableRow>
+                                    <TableCell
+                                        colSpan={5}
+                                        className="py-10 text-center text-sm text-muted-foreground"
+                                    >
+                                        {t.no_appointments}
+                                    </TableCell>
+                                </TableRow>
+                            )}
+                            {recent_patients.map((p) => (
                                 <TableRow
                                     key={p.id}
                                     className="cursor-pointer hover:bg-muted/50"
+                                    onClick={() =>
+                                        router.visit(
+                                            patients.show.url({
+                                                locale,
+                                                patient: p.id,
+                                            }),
+                                        )
+                                    }
                                 >
                                     <TableCell className="px-5 py-3">
                                         <div className="flex items-center gap-3">
@@ -396,48 +480,36 @@ export default function DoctorDashboard({ kpis }: DoctorDashboardProps) {
                                                         : 'bg-olive-600',
                                                 )}
                                             >
-                                                {p.name.en
-                                                    .split(' ')
-                                                    .map((s) => s[0])
-                                                    .join('')}
+                                                {initials(p)}
                                             </div>
                                             <div className="min-w-0">
                                                 <div className="text-[13px] font-medium">
-                                                    {p.name[lang]}
+                                                    {fullName(p)}
                                                 </div>
                                                 <div className="text-[11px] text-muted-foreground">
-                                                    {p.phone}
+                                                    {p.phone ?? ''}
                                                 </div>
                                             </div>
-                                            {p.flag === 'new' && (
-                                                <StatusPill tone="olive">
-                                                    New
-                                                </StatusPill>
-                                            )}
-                                            {p.flag === 'chronic' && (
-                                                <StatusPill tone="warning">
-                                                    Chronic
-                                                </StatusPill>
-                                            )}
                                         </div>
                                     </TableCell>
-                                    <TableCell className="text-[12px] text-muted-foreground tabular-nums">
-                                        {p.id}
-                                    </TableCell>
-                                    <TableCell className="text-[13px] tabular-nums">
-                                        {p.age} ·{' '}
-                                        {p.gender === 'male' ? 'M' : 'F'}
+                                    <TableCell className="text-[13px]">
+                                        {p.gender
+                                            ? p.gender === 'male'
+                                                ? t.male
+                                                : t.female
+                                            : '—'}
                                     </TableCell>
                                     <TableCell>
-                                        <StatusPill tone="danger">
-                                            {p.blood}
-                                        </StatusPill>
+                                        {p.blood_type ? (
+                                            <StatusPill tone="danger">
+                                                {p.blood_type}
+                                            </StatusPill>
+                                        ) : (
+                                            '—'
+                                        )}
                                     </TableCell>
                                     <TableCell className="text-[12px] text-muted-foreground tabular-nums">
-                                        {p.last_visit}
-                                    </TableCell>
-                                    <TableCell className="text-[12px] text-muted-foreground">
-                                        {p.insurance}
+                                        {p.last_visit?.slice(0, 10) ?? '—'}
                                     </TableCell>
                                     <TableCell>
                                         <ChevronRight className="size-3.5 text-muted-foreground" />
@@ -449,5 +521,28 @@ export default function DoctorDashboard({ kpis }: DoctorDashboardProps) {
                 </SectionCard>
             </div>
         </>
+    );
+}
+
+function QuickAction({
+    icon: Icon,
+    label,
+    href,
+}: {
+    icon: React.ComponentType<{ className?: string }>;
+    label: string;
+    href: string;
+}) {
+    return (
+        <Button
+            variant="outline"
+            className="h-16 flex-col gap-1 text-xs"
+            asChild
+        >
+            <Link href={href}>
+                <Icon className="size-[18px]" />
+                {label}
+            </Link>
+        </Button>
     );
 }

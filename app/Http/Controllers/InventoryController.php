@@ -4,7 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\Inventory\StoreInventoryRequest;
 use App\Http\Requests\Inventory\UpdateInventoryRequest;
+use App\Models\Branch;
 use App\Models\Inventory;
+use App\Models\Medication;
+use App\Models\Vendor;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -18,7 +21,7 @@ class InventoryController extends Controller
         $this->authorize('viewAny', Inventory::class);
 
         $query = Inventory::query()
-            ->select(['id', 'clinic_id', 'item_code', 'item_name', 'category', 'quantity_in_stock', 'min_stock_level', 'expiration_date', 'unit', 'is_active'])
+            ->select(['id', 'clinic_id', 'item_code', 'item_name', 'category', 'quantity_in_stock', 'min_stock_level', 'expiration_date', 'unit', 'is_active', 'notes'])
             ->with(['supplier:id,vendor_name'])
             ->orderBy('item_name');
 
@@ -30,9 +33,28 @@ class InventoryController extends Controller
             $query->where('category', $category);
         }
 
+        if ($branch = $request->string('branch')->trim()->toString()) {
+            $query->where('branch_id', $branch);
+        }
+
+        $clinicId = $request->user()->clinic_id;
+
         return Inertia::render('inventory/index', [
             'inventory' => $query->paginate(25)->withQueryString(),
-            'filters' => ['category' => $category ?: null],
+            'medications' => Medication::query()
+                ->where('clinic_id', $clinicId)
+                ->where('is_active', true)
+                ->orderBy('trade_name')
+                ->get(['id', 'trade_name as name']),
+            'vendors' => Vendor::query()
+                ->where('clinic_id', $clinicId)
+                ->orderBy('vendor_name')
+                ->get(['id', 'vendor_name as name']),
+            'branches' => Branch::query()
+                ->where('clinic_id', $clinicId)
+                ->orderBy('branch_name')
+                ->get(['id', 'branch_name as name']),
+            'filters' => ['category' => $category ?: null, 'branch' => $branch ?: null],
         ]);
     }
 
@@ -45,13 +67,12 @@ class InventoryController extends Controller
 
     public function store(StoreInventoryRequest $request): RedirectResponse
     {
-        $inventory = Inventory::create($request->validated() + [
+        Inventory::create($request->validated() + [
             'clinic_id' => $request->user()->clinic_id,
             'currency' => $request->input('currency', 'MAD'),
         ]);
 
-        return redirect()
-            ->route('inventory.show', $inventory)
+        return back()
             ->with('toast', ['type' => 'success', 'message' => __('inventory.created')]);
     }
 
@@ -88,8 +109,7 @@ class InventoryController extends Controller
         unset($locale);
         $inventory->update($request->validated());
 
-        return redirect()
-            ->route('inventory.show', $inventory)
+        return back()
             ->with('toast', ['type' => 'success', 'message' => __('inventory.updated')]);
     }
 

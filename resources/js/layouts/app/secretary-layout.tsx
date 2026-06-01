@@ -1,5 +1,4 @@
 import { usePage } from '@inertiajs/react';
-import { useState } from 'react';
 import type { ReactNode } from 'react';
 
 import { SecretarySidebar } from '@/components/blue-dome/secretary-sidebar';
@@ -20,11 +19,6 @@ const SECRETARY_SIDEBAR_TOKENS: React.CSSProperties = {
 
 export default function SecretaryLayout({ children }: { children: ReactNode }) {
     const isOpen = usePage<{ sidebarOpen?: boolean }>().props.sidebarOpen;
-    const [branch, setBranch] = useState('b1');
-    const [selectedDoctors, setSelectedDoctors] = useState<string[]>([
-        'd1',
-        'd2',
-    ]);
 
     return (
         <SecretaryLangProvider>
@@ -34,12 +28,7 @@ export default function SecretaryLayout({ children }: { children: ReactNode }) {
             >
                 <SecretarySidebar />
                 <SidebarInset className="bg-background">
-                    <SecretaryTopbar
-                        branch={branch}
-                        onBranchChange={setBranch}
-                        selectedDoctors={selectedDoctors}
-                        onSelectedDoctorsChange={setSelectedDoctors}
-                    />
+                    <SecretaryTopbar />
                     <div className="flex-1 overflow-x-hidden">{children}</div>
                 </SidebarInset>
             </SidebarProvider>

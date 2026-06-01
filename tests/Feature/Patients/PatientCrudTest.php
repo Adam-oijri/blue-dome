@@ -9,12 +9,13 @@ use App\Models\User;
  *
  *   index   create   view   update   delete
  *   ─────   ──────   ────   ──────   ──────
- *   sa  ✓     ✗       ✓       ✗        ✗
+ *   sa  ✓     ✓       ✓       ✓        ✓
  *   dr  ✓     ✓       ✓       ✓        ✗
  *   sec ✓     ✓       ✓       ✓        ✓
  *
  * The secretary is the clinic manager and holds the full staff permission set.
- * Each test slice creates a fresh clinic + actor so RLS and policies stack.
+ * super_admin can manage operational data cross-tenant (Phase: super-admin
+ * operational management). Each test slice creates a fresh clinic + actor.
  */
 beforeEach(function () {
     $this->clinic = Clinic::factory()->create();
@@ -30,7 +31,7 @@ it('lets the right roles list patients', function (string $role) {
         ->assertSuccessful();
 })->with(['super_admin', 'doctor', 'secretary']);
 
-it('lets clinic staff create a patient but blocks super_admin', function (string $role, bool $allowed) {
+it('lets clinic staff and super_admin create a patient', function (string $role, bool $allowed) {
     $actor = User::factory()->state(['role' => $role])->create(['clinic_id' => $this->clinic->id]);
 
     $response = $this->actingAs($actor)
@@ -48,12 +49,12 @@ it('lets clinic staff create a patient but blocks super_admin', function (string
         $response->assertForbidden();
     }
 })->with([
-    ['super_admin', false],
+    ['super_admin', true],
     ['doctor', true],
     ['secretary', true],
 ]);
 
-it('only lets the secretary destroy a patient', function (string $role, bool $allowed) {
+it('lets secretary and super_admin destroy a patient', function (string $role, bool $allowed) {
     $actor = User::factory()->state(['role' => $role])->create(['clinic_id' => $this->clinic->id]);
     $patient = Patient::factory()->create(['clinic_id' => $this->clinic->id]);
 
@@ -67,12 +68,12 @@ it('only lets the secretary destroy a patient', function (string $role, bool $al
         expect($patient->fresh()->trashed())->toBeFalse();
     }
 })->with([
-    ['super_admin', false],
+    ['super_admin', true],
     ['doctor', false],
     ['secretary', true],
 ]);
 
-it('lets clinic staff update a patient but blocks super_admin', function (string $role, bool $allowed) {
+it('lets clinic staff and super_admin update a patient', function (string $role, bool $allowed) {
     $actor = User::factory()->state(['role' => $role])->create(['clinic_id' => $this->clinic->id]);
     $patient = Patient::factory()->create(['clinic_id' => $this->clinic->id, 'first_name' => 'Original']);
 
@@ -88,7 +89,7 @@ it('lets clinic staff update a patient but blocks super_admin', function (string
         expect($patient->fresh()->first_name)->toBe('Original');
     }
 })->with([
-    ['super_admin', false],
+    ['super_admin', true],
     ['doctor', true],
     ['secretary', true],
 ]);

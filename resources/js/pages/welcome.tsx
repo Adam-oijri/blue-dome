@@ -89,7 +89,7 @@ export default function Welcome({ canRegister = true }: WelcomeProps) {
                 />
 
                 <main>
-                    <Hero lang={lang} />
+                    <Hero lang={lang} canRegister={canRegister} />
                     <TrustStrip lang={lang} />
                     <Features lang={lang} />
                     <CompareSection lang={lang} />
@@ -98,9 +98,9 @@ export default function Welcome({ canRegister = true }: WelcomeProps) {
                     <StatsBand lang={lang} />
                     <Testimonial lang={lang} />
                     <SecuritySection lang={lang} />
-                    <Pricing lang={lang} />
+                    <Pricing lang={lang} canRegister={canRegister} />
                     <Faq lang={lang} />
-                    <FinalCta lang={lang} />
+                    <FinalCta lang={lang} canRegister={canRegister} />
                     <SiteFooter lang={lang} />
                 </main>
 

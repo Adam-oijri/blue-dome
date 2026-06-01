@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Patient;
 
 use App\Models\Patient;
+use Closure;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Str;
@@ -49,10 +50,23 @@ class UpdatePatientRequest extends FormRequest
             ],
             'national_id' => [
                 'nullable', 'string', 'max:255',
-                Rule::unique('patients', 'national_id')
-                    ->where('clinic_id', $clinicId)
-                    ->whereNull('deleted_at')
-                    ->ignore($ignoreId),
+                // national_id is encrypted; uniqueness is enforced via the
+                // deterministic blind-index column instead of the ciphertext.
+                function (string $attribute, mixed $value, Closure $fail) use ($clinicId, $ignoreId): void {
+                    if (! is_string($value) || trim($value) === '') {
+                        return;
+                    }
+
+                    $taken = Patient::query()
+                        ->where('clinic_id', $clinicId)
+                        ->where('national_id_hash', Patient::nationalIdHash($value))
+                        ->when($ignoreId, fn ($query) => $query->whereKeyNot($ignoreId))
+                        ->exists();
+
+                    if ($taken) {
+                        $fail(__('validation.unique', ['attribute' => $attribute]));
+                    }
+                },
             ],
             'passport_number' => ['nullable', 'string', 'max:100'],
             'blood_type' => ['nullable', 'in:A+,A-,B+,B-,AB+,AB-,O+,O-'],

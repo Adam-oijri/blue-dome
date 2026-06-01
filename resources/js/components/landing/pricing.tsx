@@ -5,7 +5,10 @@ import { FADE_UP, STAGGER } from '@/components/landing/shared/animations';
 import { TIERS } from '@/components/landing/shared/content';
 import type { SectionProps } from '@/components/landing/shared/types';
 
-export function Pricing({ lang }: SectionProps) {
+export function Pricing({
+    lang,
+    canRegister = false,
+}: SectionProps & { canRegister?: boolean }) {
     return (
         <section id="pricing" className="py-24 lg:py-32">
             <div className="mx-auto max-w-7xl px-6 lg:px-10">
@@ -44,6 +47,7 @@ export function Pricing({ lang }: SectionProps) {
                             key={tier.name.en}
                             tier={tier}
                             lang={lang}
+                            canRegister={canRegister}
                         />
                     ))}
                 </motion.div>

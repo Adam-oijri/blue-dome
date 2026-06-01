@@ -3,9 +3,7 @@
 namespace App\Http\Requests\Prescription;
 
 use App\Models\Prescription;
-use Illuminate\Contracts\Validation\Validator as ValidatorContract;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
 class StorePrescriptionRequest extends FormRequest
@@ -40,11 +38,14 @@ class StorePrescriptionRequest extends FormRequest
             'notes' => ['nullable', 'string'],
             'items' => ['required', 'array', 'min:1'],
             'items.*.medication_id' => [
-                'required', 'uuid',
+                'nullable', 'required_without:items.*.medication_name', 'uuid',
                 Rule::exists('medications', 'id')
                     ->where('clinic_id', $clinicId)
                     ->where('is_active', true)
                     ->whereNull('deleted_at'),
+            ],
+            'items.*.medication_name' => [
+                'nullable', 'required_without:items.*.medication_id', 'string', 'max:255',
             ],
             'items.*.dosage' => ['required', 'string', 'max:255'],
             'items.*.frequency_per_day' => ['nullable', 'integer', 'min:1', 'max:24'],
@@ -57,49 +58,6 @@ class StorePrescriptionRequest extends FormRequest
             'items.*.unit' => ['nullable', 'string', 'max:50'],
             'items.*.refills' => ['nullable', 'integer', 'min:0', 'max:12'],
             'items.*.start_date' => ['nullable', 'date'],
-        ];
-    }
-
-    /**
-     * @return array<int, \Closure>
-     */
-    public function after(): array
-    {
-        return [
-            function (ValidatorContract $validator): void {
-                if ($validator->errors()->isNotEmpty()) {
-                    return;
-                }
-
-                $items = (array) $this->input('items', []);
-                $medicationIds = array_values(array_unique(array_filter(
-                    array_map(static fn ($item) => is_array($item) ? ($item['medication_id'] ?? null) : null, $items)
-                )));
-
-                if (count($medicationIds) < 2) {
-                    return;
-                }
-
-                $placeholders = implode(',', array_fill(0, count($medicationIds), '?::uuid'));
-                $bindings = array_merge($medicationIds, $medicationIds);
-
-                $interaction = DB::selectOne(
-                    "SELECT severity FROM drug_interactions
-                     WHERE medication_id_1 IN ($placeholders)
-                       AND medication_id_2 IN ($placeholders)
-                       AND severity IN ('major', 'moderate')
-                     ORDER BY CASE severity WHEN 'major' THEN 1 WHEN 'moderate' THEN 2 END
-                     LIMIT 1",
-                    $bindings
-                );
-
-                if ($interaction !== null) {
-                    $validator->errors()->add(
-                        'items',
-                        __('prescriptions.drug_interaction_'.$interaction->severity)
-                    );
-                }
-            },
         ];
     }
 }

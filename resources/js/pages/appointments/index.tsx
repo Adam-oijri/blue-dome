@@ -1,6 +1,9 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { useState } from 'react';
 
+import { useLocale } from '@/lib/i18n/use-locale';
+import appointmentRoutes from '@/routes/appointments';
+
 interface AppointmentRow {
     id: string;
     appointment_number: string | null;
@@ -25,13 +28,14 @@ interface Props {
 }
 
 export default function AppointmentsIndex({ appointments, filters }: Props) {
+    const { slug: locale } = useLocale();
     const [day, setDay] = useState(filters.day ?? '');
     const [status, setStatus] = useState(filters.status ?? '');
 
     const apply = (e: React.FormEvent) => {
         e.preventDefault();
         router.get(
-            '/appointments',
+            appointmentRoutes.index.url({ locale }),
             { day: day || undefined, status: status || undefined },
             { preserveState: true, replace: true },
         );
@@ -49,7 +53,7 @@ export default function AppointmentsIndex({ appointments, filters }: Props) {
                         </p>
                     </div>
                     <Link
-                        href="/appointments/create"
+                        href={appointmentRoutes.create.url({ locale })}
                         className="rounded bg-blue-600 px-3 py-2 text-sm text-white hover:bg-blue-700"
                     >
                         + Schedule
@@ -127,7 +131,10 @@ export default function AppointmentsIndex({ appointments, filters }: Props) {
                                 <td className="px-3 py-2">
                                     {a.patient ? (
                                         <Link
-                                            href={`/appointments/${a.id}`}
+                                            href={appointmentRoutes.show.url({
+                                                locale,
+                                                appointment: a.id,
+                                            })}
                                             className="text-blue-600 hover:underline"
                                         >
                                             {a.patient.first_name}{' '}

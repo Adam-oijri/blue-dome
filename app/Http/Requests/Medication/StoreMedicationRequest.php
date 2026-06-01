@@ -31,7 +31,7 @@ class StoreMedicationRequest extends FormRequest
                     ->whereNull('deleted_at'),
             ],
             'generic_name' => ['nullable', 'string', 'max:255'],
-            'form' => ['nullable', 'in:tablet,capsule,syrup,injection,cream,drops,inhaler,spray,gel,suppository,other'],
+            'form' => ['nullable', 'string', 'max:50'],
             'strength' => ['nullable', 'string', 'max:100'],
             'manufacturer' => ['nullable', 'string', 'max:255'],
             'category' => ['nullable', 'string', 'max:100'],

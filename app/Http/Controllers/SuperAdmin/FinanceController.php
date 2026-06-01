@@ -8,6 +8,7 @@ use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class FinanceController extends Controller
 {
@@ -69,5 +70,20 @@ class FinanceController extends Controller
             'payment_methods' => $paymentMethods,
             'currency' => $currency,
         ]);
+    }
+
+    public function export(): StreamedResponse
+    {
+        $series = $this->metrics->monthlyRevenue();
+
+        return response()->streamDownload(function () use ($series): void {
+            $out = fopen('php://output', 'w');
+            fwrite($out, "\xEF\xBB\xBF");
+            fputcsv($out, ['Month', 'Revenue']);
+            foreach ($series as $row) {
+                fputcsv($out, [$row['month'], $row['amount']]);
+            }
+            fclose($out);
+        }, 'revenue-'.now()->format('Y-m-d').'.csv', ['Content-Type' => 'text/csv; charset=UTF-8']);
     }
 }

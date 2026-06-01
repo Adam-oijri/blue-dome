@@ -5,8 +5,15 @@ import { ArrowRight } from 'lucide-react';
 import { MagneticButton } from '@/components/landing/magnetic-button';
 import type { SectionProps } from '@/components/landing/shared/types';
 import { Button } from '@/components/ui/button';
+import { useLocale } from '@/lib/i18n/use-locale';
+import { login } from '@/routes';
 
-export function FinalCta({ lang }: SectionProps) {
+export function FinalCta({
+    lang,
+    canRegister = false,
+}: SectionProps & { canRegister?: boolean }) {
+    const { slug: locale } = useLocale();
+
     return (
         <section className="py-24 lg:py-32">
             <div className="mx-auto max-w-7xl px-6 lg:px-10">
@@ -73,7 +80,13 @@ export function FinalCta({ lang }: SectionProps) {
                                 size="lg"
                                 className="h-12 gap-2 bg-olive-500 px-7 text-white hover:bg-olive-600"
                             >
-                                <Link href="/register">
+                                <Link
+                                    href={
+                                        canRegister
+                                            ? '/register'
+                                            : login({ locale })
+                                    }
+                                >
                                     {lang === 'fr'
                                         ? 'Démarrer maintenant'
                                         : 'Start now'}

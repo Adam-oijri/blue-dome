@@ -1,15 +1,13 @@
-import { Head } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import {
     AlertTriangle,
-    Archive,
     CircleDollarSign,
     Plus,
     Receipt,
-    Search,
     Wallet,
 } from 'lucide-react';
-import { useState } from 'react';
 
+import { CreateInvoicesSheet } from '@/components/blue-dome/create-invoices-sheet';
 import { KpiCard } from '@/components/blue-dome/kpi-card';
 import { PageHeader } from '@/components/blue-dome/page-header';
 import { SectionCard } from '@/components/blue-dome/section-card';
@@ -24,134 +22,149 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import { fmtNumber } from '@/lib/format';
 import { useSecretaryLang } from '@/lib/i18n/secretary-context';
-import { findPatient, localName } from '@/lib/mock/secretary';
+import { useLocale } from '@/lib/i18n/use-locale';
 import { cn } from '@/lib/utils';
+import { Pagination } from '@/pages/panels/super-admin/users';
+import { billing as billingRoute } from '@/routes/secretary';
 
-type InvStatus = 'paid' | 'pending' | 'partially_paid' | 'overdue';
+type InvStatus =
+    | 'draft'
+    | 'pending'
+    | 'paid'
+    | 'partially_paid'
+    | 'overdue'
+    | 'cancelled'
+    | 'refunded'
+    | 'collections';
 
-const INVOICES: {
-    num: string;
-    patient: string;
-    issued: string;
-    due: string;
-    total: number;
-    paid: number;
-    status: InvStatus;
-}[] = [
-    {
-        num: 'INV-2026-1284',
-        patient: 'p1',
-        issued: '5 May',
-        due: '20 May',
-        total: 850,
-        paid: 850,
-        status: 'paid',
-    },
-    {
-        num: 'INV-2026-1283',
-        patient: 'p4',
-        issued: '5 May',
-        due: '20 May',
-        total: 1450,
-        paid: 0,
-        status: 'pending',
-    },
-    {
-        num: 'INV-2026-1282',
-        patient: 'p2',
-        issued: '4 May',
-        due: '19 May',
-        total: 600,
-        paid: 600,
-        status: 'paid',
-    },
-    {
-        num: 'INV-2026-1281',
-        patient: 'p7',
-        issued: '4 May',
-        due: '19 May',
-        total: 980,
-        paid: 480,
-        status: 'partially_paid',
-    },
-    {
-        num: 'INV-2026-1280',
-        patient: 'p9',
-        issued: '3 May',
-        due: '18 May',
-        total: 2200,
-        paid: 0,
-        status: 'pending',
-    },
-    {
-        num: 'INV-2026-1279',
-        patient: 'p8',
-        issued: '2 May',
-        due: '17 May',
-        total: 750,
-        paid: 750,
-        status: 'paid',
-    },
-    {
-        num: 'INV-2026-1278',
-        patient: 'p3',
-        issued: '2 May',
-        due: '17 May',
-        total: 1100,
-        paid: 0,
-        status: 'pending',
-    },
-    {
-        num: 'INV-2026-1265',
-        patient: 'p6',
-        issued: '20 Apr',
-        due: '5 May',
-        total: 1850,
-        paid: 0,
-        status: 'overdue',
-    },
-    {
-        num: 'INV-2026-1259',
-        patient: 'p10',
-        issued: '18 Apr',
-        due: '3 May',
-        total: 920,
-        paid: 0,
-        status: 'overdue',
-    },
-    {
-        num: 'INV-2026-1241',
-        patient: 'p5',
-        issued: '10 Apr',
-        due: '25 Apr',
-        total: 540,
-        paid: 0,
-        status: 'overdue',
-    },
-];
+type StatusFilter = 'all' | 'pending' | 'overdue' | 'paid' | 'partially_paid';
 
-const STATUS_PILL: Record<InvStatus, { tone: StatusTone; label: string }> = {
-    paid: { tone: 'success', label: 'Paid' },
-    pending: { tone: 'warning', label: 'Pending' },
-    partially_paid: { tone: 'info', label: 'Partial' },
-    overdue: { tone: 'danger', label: 'Overdue' },
+type Patient = {
+    first_name: string | null;
+    last_name: string | null;
+    gender: string | null;
+    insurance_company: string | null;
 };
 
-const AGING_BUCKETS = [
-    { label: 'Current', amount: 7920, pct: 62, color: 'bg-olive-500' },
-    { label: '1-30 days', amount: 3580, pct: 28, color: 'bg-warning' },
-    { label: '31-60 days', amount: 890, pct: 7, color: 'bg-orange-500' },
-    { label: '61+ days', amount: 450, pct: 3, color: 'bg-danger' },
-];
+type InvoiceRow = {
+    id: string;
+    invoice_number: string | null;
+    invoice_date: string | null;
+    due_date: string | null;
+    total: string | number;
+    paid_amount: string | number;
+    balance_due: string | number;
+    status: InvStatus;
+    currency: string | null;
+    patient?: Patient | null;
+};
 
-export default function SecretaryBilling() {
-    const { t, lang } = useSecretaryLang();
-    const [filter, setFilter] = useState<'all' | InvStatus>('all');
-    const list =
-        filter === 'all'
-            ? INVOICES
-            : INVOICES.filter((i) => i.status === filter);
+type Paginated<T> = {
+    data: T[];
+    total: number;
+    current_page: number;
+    last_page: number;
+    links: Array<{ url: string | null; label: string; active: boolean }>;
+};
+
+interface Props {
+    invoices: Paginated<InvoiceRow>;
+    kpis: {
+        open: number;
+        overdue: number;
+        collected: number;
+        outstanding: number;
+    };
+    aging: { label: string; amount: number }[];
+    patients: { id: string; first_name: string | null; last_name: string | null }[];
+    filters: {
+        status: StatusFilter;
+    };
+}
+
+const STATUS_TONE: Record<InvStatus, StatusTone> = {
+    draft: 'neutral',
+    pending: 'warning',
+    paid: 'success',
+    partially_paid: 'info',
+    overdue: 'danger',
+    cancelled: 'neutral',
+    refunded: 'navy',
+    collections: 'danger',
+};
+
+const STATUS_KEY: Record<InvStatus, string> = {
+    draft: 'bl_status_draft',
+    pending: 'bl_status_pending',
+    paid: 'bl_status_paid',
+    partially_paid: 'bl_status_partial',
+    overdue: 'bl_status_overdue',
+    cancelled: 'bl_status_cancelled',
+    refunded: 'bl_status_refunded',
+    collections: 'bl_status_collections',
+};
+
+const AGING_COLORS = ['bg-olive-500', 'bg-warning', 'bg-orange-500', 'bg-danger'];
+
+/**
+ * The aging buckets arrive from the controller with fixed English labels;
+ * map them to localized dictionary keys so the chart respects the UI language.
+ */
+const AGING_KEY: Record<string, string> = {
+    Current: 'bl_aging_current',
+    '1-30 days': 'bl_aging_1_30',
+    '31-60 days': 'bl_aging_31_60',
+    '61+ days': 'bl_aging_61_plus',
+};
+
+const fullName = (p: Patient | null | undefined, fallback: string): string =>
+    p ? `${p.first_name ?? ''} ${p.last_name ?? ''}`.trim() || fallback : fallback;
+
+const initials = (p: Patient | null | undefined): string => {
+    if (!p) {
+        return '—';
+    }
+
+    return (
+        `${p.first_name?.[0] ?? ''}${p.last_name?.[0] ?? ''}`.toUpperCase() ||
+        '—'
+    );
+};
+
+export default function SecretaryBilling({
+    invoices,
+    kpis,
+    aging,
+    patients,
+    filters,
+}: Props) {
+    const { t } = useSecretaryLang();
+    const { slug: locale } = useLocale();
+
+    const tr = (key: string): string => t[key] ?? key;
+
+    const money = (n: number): string => `${fmtNumber(Number(n))} ${t.mad}`;
+
+    const setStatus = (status: StatusFilter): void => {
+        router.get(
+            billingRoute.url({ locale }),
+            status === 'all' ? {} : { status },
+            { preserveState: true, preserveScroll: true, replace: true },
+        );
+    };
+
+    const agingTotal = aging.reduce((s, b) => s + Number(b.amount), 0);
+    const agingMax = aging.reduce((m, b) => Math.max(m, Number(b.amount)), 0);
+
+    const STATUS_FILTERS: ReadonlyArray<readonly [StatusFilter, string]> = [
+        ['all', t.all_label],
+        ['pending', tr('bl_status_pending')],
+        ['overdue', tr('bl_status_overdue')],
+        ['paid', tr('bl_status_paid')],
+        ['partially_paid', tr('bl_status_partial')],
+    ];
 
     return (
         <>
@@ -160,52 +173,42 @@ export default function SecretaryBilling() {
             <div className="px-6 py-5 lg:px-8">
                 <PageHeader
                     title={t.nav_billing}
-                    description="42 open invoices · 3 overdue · 48,720 MAD collected this month"
+                    description={`${kpis.open} ${tr('bl_open')} · ${kpis.overdue} ${tr('bl_overdue')} · ${money(kpis.collected)} ${tr('bl_collected')}`}
                     actions={
-                        <>
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                className="gap-2"
-                            >
-                                <Archive className="size-3.5" />
-                                Export
-                            </Button>
+                        <CreateInvoicesSheet patients={patients}>
                             <Button
                                 size="sm"
                                 className="gap-2 bg-olive-600 text-white hover:bg-olive-700"
                             >
                                 <Plus className="size-3.5" />
-                                New invoice
+                                {tr('bl_new')}
                             </Button>
-                        </>
+                        </CreateInvoicesSheet>
                     }
                 />
 
                 <div className="mb-5 grid grid-cols-2 gap-3 md:grid-cols-4">
                     <KpiCard
-                        label="Open invoices"
-                        value="42"
+                        label={tr('bl_kpi_open')}
+                        value={String(kpis.open)}
                         icon={Receipt}
                         tone="navy"
                     />
                     <KpiCard
-                        label="Overdue"
-                        value="3"
+                        label={tr('bl_kpi_overdue')}
+                        value={String(kpis.overdue)}
                         icon={AlertTriangle}
                         tone="warn"
-                        trend={{ value: '+1', direction: 'down' }}
                     />
                     <KpiCard
-                        label="Collected"
-                        value="48,720 MAD"
+                        label={tr('bl_kpi_collected')}
+                        value={money(kpis.collected)}
                         icon={CircleDollarSign}
                         tone="olive"
-                        trend={{ value: '+18%', direction: 'up' }}
                     />
                     <KpiCard
-                        label="Outstanding"
-                        value="12,840 MAD"
+                        label={tr('bl_kpi_outstanding')}
+                        value={money(kpis.outstanding)}
                         icon={Wallet}
                         tone="warn"
                     />
@@ -215,60 +218,26 @@ export default function SecretaryBilling() {
                     <SectionCard bodyClassName="p-0">
                         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-5 py-4">
                             <div className="flex flex-wrap gap-1.5">
-                                {(
-                                    [
-                                        ['all', 'All', INVOICES.length],
-                                        [
-                                            'pending',
-                                            'Pending',
-                                            INVOICES.filter(
-                                                (i) => i.status === 'pending',
-                                            ).length,
-                                        ],
-                                        [
-                                            'overdue',
-                                            'Overdue',
-                                            INVOICES.filter(
-                                                (i) => i.status === 'overdue',
-                                            ).length,
-                                        ],
-                                        [
-                                            'paid',
-                                            'Paid',
-                                            INVOICES.filter(
-                                                (i) => i.status === 'paid',
-                                            ).length,
-                                        ],
-                                    ] as const
-                                ).map(([id, label, ct]) => (
+                                {STATUS_FILTERS.map(([id, label]) => (
                                     <Button
                                         key={id}
                                         variant={
-                                            filter === id ? 'default' : 'ghost'
+                                            filters.status === id
+                                                ? 'default'
+                                                : 'ghost'
                                         }
                                         size="sm"
-                                        onClick={() => setFilter(id)}
+                                        onClick={() => setStatus(id)}
                                         className={cn(
                                             'gap-1.5',
-                                            filter === id
+                                            filters.status === id
                                                 ? 'bg-navy-900 text-white hover:bg-navy-800'
                                                 : '',
                                         )}
                                     >
                                         {label}
-                                        <span className="text-[11px] tabular-nums opacity-70">
-                                            {ct}
-                                        </span>
                                     </Button>
                                 ))}
-                            </div>
-                            <div className="relative max-w-[240px] flex-1">
-                                <Search className="pointer-events-none absolute start-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
-                                <input
-                                    type="search"
-                                    placeholder="Search invoices…"
-                                    className="h-8 w-full rounded-md border border-transparent bg-muted ps-8 pe-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
-                                />
                             </div>
                         </div>
 
@@ -276,99 +245,109 @@ export default function SecretaryBilling() {
                             <TableHeader>
                                 <TableRow className="bg-muted/50">
                                     <TableHead className="px-5 py-2.5 text-[11px] tracking-wider uppercase">
-                                        Invoice
+                                        {tr('col_invoice')}
                                     </TableHead>
                                     <TableHead className="text-[11px] tracking-wider uppercase">
-                                        Patient
+                                        {tr('col_patient')}
                                     </TableHead>
                                     <TableHead className="text-[11px] tracking-wider uppercase">
-                                        Issued
+                                        {tr('bl_col_issued')}
                                     </TableHead>
                                     <TableHead className="text-[11px] tracking-wider uppercase">
-                                        Due
+                                        {tr('bl_col_due')}
                                     </TableHead>
                                     <TableHead className="text-end text-[11px] tracking-wider uppercase">
-                                        Total
+                                        {tr('bl_col_total')}
                                     </TableHead>
                                     <TableHead className="text-end text-[11px] tracking-wider uppercase">
-                                        Balance
+                                        {tr('bl_col_balance')}
                                     </TableHead>
                                     <TableHead className="text-[11px] tracking-wider uppercase">
-                                        Status
+                                        {tr('col_status')}
                                     </TableHead>
-                                    <TableHead className="w-20" />
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {list.map((r, i) => {
-                                    const p = findPatient(r.patient);
-
-                                    if (!p) {
-                                        return null;
-                                    }
-
-                                    const balance = r.total - r.paid;
-                                    const s = STATUS_PILL[r.status];
+                                {invoices.data.length === 0 && (
+                                    <TableRow>
+                                        <TableCell
+                                            colSpan={7}
+                                            className="py-10 text-center text-sm text-muted-foreground"
+                                        >
+                                            {tr('empty_none')}
+                                        </TableCell>
+                                    </TableRow>
+                                )}
+                                {invoices.data.map((r) => {
+                                    const p = r.patient;
+                                    const balance = Number(r.balance_due);
+                                    const tone =
+                                        STATUS_TONE[r.status] ?? 'neutral';
+                                    const statusLabel = tr(
+                                        STATUS_KEY[r.status] ?? r.status,
+                                    );
+                                    const isOverdue = r.status === 'overdue';
 
                                     return (
                                         <TableRow
-                                            key={i}
+                                            key={r.id}
                                             className="hover:bg-muted/50"
                                         >
                                             <TableCell className="px-5 py-3 font-mono text-[11px] font-semibold">
-                                                {r.num}
+                                                {r.invoice_number ?? '—'}
                                             </TableCell>
                                             <TableCell>
                                                 <div className="flex items-center gap-2.5">
                                                     <div
                                                         className={cn(
                                                             'grid size-7 shrink-0 place-items-center rounded-full text-[10px] font-semibold text-white',
-                                                            p.gender === 'm'
+                                                            p?.gender === 'male'
                                                                 ? 'bg-navy-700'
                                                                 : 'bg-olive-600',
                                                         )}
                                                     >
-                                                        {p.initials}
+                                                        {initials(p)}
                                                     </div>
                                                     <div>
                                                         <div className="text-[12px] font-semibold">
-                                                            {localName(p, lang)}
+                                                            {fullName(
+                                                                p,
+                                                                tr('unassigned'),
+                                                            )}
                                                         </div>
                                                         <div className="text-[11px] text-muted-foreground">
-                                                            {p.insurance}
+                                                            {p?.insurance_company ??
+                                                                ''}
                                                         </div>
                                                     </div>
                                                 </div>
                                             </TableCell>
                                             <TableCell className="text-[12px] text-muted-foreground tabular-nums">
-                                                {r.issued}
+                                                {r.invoice_date?.slice(0, 10) ??
+                                                    '—'}
                                             </TableCell>
                                             <TableCell
                                                 className={cn(
                                                     'text-[12px] tabular-nums',
-                                                    r.status === 'overdue'
+                                                    isOverdue
                                                         ? 'font-semibold text-danger'
                                                         : 'text-muted-foreground',
                                                 )}
                                             >
-                                                {r.due}
+                                                {r.due_date?.slice(0, 10) ?? '—'}
                                             </TableCell>
                                             <TableCell className="text-end text-[13px] font-semibold tabular-nums">
-                                                {r.total.toLocaleString(
-                                                    'en-US',
-                                                )}{' '}
+                                                {fmtNumber(Number(r.total))}{' '}
                                                 <span className="text-[11px] font-normal text-muted-foreground">
-                                                    {t.mad}
+                                                    {r.currency ?? t.mad}
                                                 </span>
                                             </TableCell>
                                             <TableCell className="text-end text-[13px] tabular-nums">
                                                 {balance > 0 ? (
                                                     <span className="font-semibold text-navy-900">
-                                                        {balance.toLocaleString(
-                                                            'en-US',
-                                                        )}{' '}
+                                                        {fmtNumber(balance)}{' '}
                                                         <span className="text-[11px] font-normal text-muted-foreground">
-                                                            {t.mad}
+                                                            {r.currency ?? t.mad}
                                                         </span>
                                                     </span>
                                                 ) : (
@@ -379,62 +358,67 @@ export default function SecretaryBilling() {
                                             </TableCell>
                                             <TableCell>
                                                 <StatusPill
-                                                    tone={s.tone}
+                                                    tone={tone}
                                                     withDot
                                                 >
-                                                    {s.label}
+                                                    {statusLabel}
                                                 </StatusPill>
-                                            </TableCell>
-                                            <TableCell>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    className="h-7"
-                                                >
-                                                    View
-                                                </Button>
                                             </TableCell>
                                         </TableRow>
                                     );
                                 })}
                             </TableBody>
                         </Table>
+                        <Pagination paginated={invoices} t={t} />
                     </SectionCard>
 
                     <SectionCard
-                        title="Aging analysis"
+                        title={tr('bl_aging_title')}
                         bodyClassName="space-y-3 p-4"
                     >
                         <div className="text-[11px] text-muted-foreground">
-                            Outstanding balances by age
+                            {tr('bl_aging_subtitle')}
                         </div>
-                        {AGING_BUCKETS.map((b) => (
-                            <div key={b.label}>
-                                <div className="flex items-center justify-between text-[12px]">
-                                    <span>{b.label}</span>
-                                    <span className="font-semibold tabular-nums">
-                                        {b.pct}%
-                                    </span>
-                                </div>
-                                <div className="relative mt-1 h-5 overflow-hidden rounded bg-muted">
-                                    <div
-                                        className={cn(
-                                            'absolute inset-y-0 start-0 flex items-center px-2 text-[11px] font-semibold text-white',
-                                            b.color,
-                                        )}
-                                        style={{ width: `${b.pct}%` }}
-                                    >
-                                        {b.amount.toLocaleString('en-US')}
+                        {aging.map((b, i) => {
+                            const amount = Number(b.amount);
+                            const pct =
+                                agingMax > 0
+                                    ? Math.round((amount / agingMax) * 100)
+                                    : 0;
+                            const sharePct =
+                                agingTotal > 0
+                                    ? Math.round((amount / agingTotal) * 100)
+                                    : 0;
+                            const label = tr(AGING_KEY[b.label] ?? b.label);
+
+                            return (
+                                <div key={b.label}>
+                                    <div className="flex items-center justify-between text-[12px]">
+                                        <span>{label}</span>
+                                        <span className="font-semibold tabular-nums">
+                                            {sharePct}%
+                                        </span>
+                                    </div>
+                                    <div className="relative mt-1 h-5 overflow-hidden rounded bg-muted">
+                                        <div
+                                            className={cn(
+                                                'absolute inset-y-0 start-0 flex items-center px-2 text-[11px] font-semibold text-white',
+                                                AGING_COLORS[i] ?? 'bg-navy-700',
+                                            )}
+                                            style={{ width: `${pct}%` }}
+                                        >
+                                            {fmtNumber(amount)}
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        ))}
+                            );
+                        })}
                         <div className="mt-2 flex items-center justify-between border-t border-border pt-3">
                             <span className="text-[12px] text-muted-foreground">
-                                Total outstanding
+                                {tr('bl_total_outstanding')}
                             </span>
                             <span className="text-[15px] font-semibold text-navy-900 tabular-nums">
-                                12,840 {t.mad}
+                                {money(kpis.outstanding)}
                             </span>
                         </div>
                     </SectionCard>

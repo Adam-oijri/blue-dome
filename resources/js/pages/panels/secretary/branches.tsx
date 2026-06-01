@@ -7,54 +7,76 @@ import { Button } from '@/components/ui/button';
 import { useSecretaryLang } from '@/lib/i18n/secretary-context';
 import { cn } from '@/lib/utils';
 
-const BRANCHES: {
+type Branch = {
     id: string;
-    key: 'casa' | 'rabat';
-    main: boolean;
-    pin: string;
-    addr: { en: string; fr: string; ar: string };
-    phone: string;
-    hrs: string;
+    branch_name: string;
+    branch_code: string;
+    is_main: boolean;
+    phone: string | null;
+    address: string | null;
+    city: string | null;
+    working_hours: Record<string, unknown> | null;
+    is_active: boolean;
     doctors: number;
     staff: number;
-    todayAppts: number;
-}[] = [
-    {
-        id: 'b1',
-        key: 'casa',
-        main: true,
-        pin: 'C',
-        addr: {
-            en: '12 Rue Ibn Khaldoun, Maârif, Casablanca',
-            fr: '12 Rue Ibn Khaldoun, Maârif, Casablanca',
-            ar: '12 شارع ابن خلدون، المعاريف، الدار البيضاء',
-        },
-        phone: '+212 5 22 47 81 03',
-        hrs: 'Mon–Fri · 08:00–19:00 · Sat · 09:00–13:00',
-        doctors: 2,
-        staff: 4,
-        todayAppts: 24,
-    },
-    {
-        id: 'b2',
-        key: 'rabat',
-        main: false,
-        pin: 'R',
-        addr: {
-            en: '8 Av. Mohamed V, Agdal, Rabat',
-            fr: '8 Av. Mohamed V, Agdal, Rabat',
-            ar: '8 شارع محمد الخامس، أكدال، الرباط',
-        },
-        phone: '+212 5 37 68 24 91',
-        hrs: 'Mon–Fri · 09:00–18:00',
-        doctors: 1,
-        staff: 2,
-        todayAppts: 9,
-    },
-];
+    patients: number;
+    today_appts: number;
+};
 
-export default function SecretaryBranches() {
-    const { t, lang } = useSecretaryLang();
+interface Props {
+    branches: Branch[];
+    totals: {
+        locations: number;
+        doctors: number;
+        staff: number;
+        today_appts: number;
+    };
+}
+
+const pinLetter = (name: string): string =>
+    name.trim().charAt(0).toUpperCase() || '?';
+
+/**
+ * Render `working_hours` JSONB as a compact day → time summary. The shape isn't
+ * fixed, so we defensively accept either a `"09:00-18:00"` string or an
+ * `{ open, close }` object per day and skip anything we can't read. Returns '—'
+ * when there's nothing meaningful to show (the column defaults to `{}`).
+ */
+const workingHoursSummary = (
+    hours: Record<string, unknown> | null | undefined,
+): string => {
+    if (!hours || typeof hours !== 'object') {
+        return '—';
+    }
+
+    const parts: string[] = [];
+
+    for (const [day, value] of Object.entries(hours)) {
+        const label = day.slice(0, 3);
+
+        if (typeof value === 'string' && value.trim() !== '') {
+            parts.push(`${label} ${value.trim()}`);
+        } else if (
+            value &&
+            typeof value === 'object' &&
+            'open' in value &&
+            'close' in value
+        ) {
+            const { open, close } = value as { open: unknown; close: unknown };
+
+            if (open != null && close != null) {
+                parts.push(`${label} ${String(open)}–${String(close)}`);
+            }
+        }
+    }
+
+    return parts.length > 0 ? parts.join(' · ') : '—';
+};
+
+export default function SecretaryBranches({ branches, totals }: Props) {
+    const { t } = useSecretaryLang();
+
+    const description = `${totals.locations} ${t.br_locations} · ${totals.doctors} ${t.nav_doctors} · ${totals.staff} ${t.br_staff} · ${totals.today_appts} ${t.br_appointments_today}`;
 
     return (
         <>
@@ -63,20 +85,26 @@ export default function SecretaryBranches() {
             <div className="px-6 py-5 lg:px-8">
                 <PageHeader
                     title={t.nav_branches}
-                    description="2 locations · 3 doctors · 6 staff · 33 appointments today"
+                    description={description}
                     actions={
                         <Button
                             size="sm"
                             className="gap-2 bg-olive-600 text-white hover:bg-olive-700"
                         >
                             <Plus className="size-3.5" />
-                            New branch
+                            {t.br_new_branch}
                         </Button>
                     }
                 />
 
                 <div className="grid gap-4 md:grid-cols-2">
-                    {BRANCHES.map((b) => (
+                    {branches.length === 0 && (
+                        <div className="col-span-full rounded-xl border border-border bg-card p-10 text-center text-sm text-muted-foreground">
+                            {t.empty_none}
+                        </div>
+                    )}
+
+                    {branches.map((b) => (
                         <div
                             key={b.id}
                             className="overflow-hidden rounded-xl border border-border bg-card"
@@ -88,7 +116,7 @@ export default function SecretaryBranches() {
                                 )}
                             >
                                 <div className="relative grid size-14 place-items-center rounded-full bg-gradient-to-br from-olive-500 to-olive-700 text-xl font-bold text-white shadow-lg">
-                                    {b.pin}
+                                    {pinLetter(b.branch_name)}
                                     <span className="absolute inset-0 -z-10 animate-ping rounded-full bg-olive-600/60" />
                                 </div>
                             </div>
@@ -96,13 +124,11 @@ export default function SecretaryBranches() {
                             <div className="space-y-4 p-5">
                                 <div className="flex items-center gap-3">
                                     <h3 className="text-lg font-semibold text-navy-900">
-                                        {b.key === 'casa'
-                                            ? t.branch_casa
-                                            : t.branch_rabat}
+                                        {b.branch_name}
                                     </h3>
-                                    {b.main && (
+                                    {b.is_main && (
                                         <StatusPill tone="olive">
-                                            Main
+                                            {t.br_main}
                                         </StatusPill>
                                     )}
                                 </div>
@@ -110,29 +136,31 @@ export default function SecretaryBranches() {
                                 <div className="space-y-2 text-[13px]">
                                     <div className="flex items-start gap-2">
                                         <MapPin className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" />
-                                        <span>{b.addr[lang]}</span>
+                                        <span>{b.address ?? '—'}</span>
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <Phone className="size-3.5 shrink-0 text-muted-foreground" />
                                         <span className="font-mono text-[12px]">
-                                            {b.phone}
+                                            {b.phone ?? '—'}
                                         </span>
                                     </div>
                                     <div className="flex items-start gap-2">
                                         <Building2 className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" />
                                         <span className="text-[12px] text-muted-foreground">
-                                            {b.hrs}
+                                            {workingHoursSummary(
+                                                b.working_hours,
+                                            )}
                                         </span>
                                     </div>
                                 </div>
 
                                 <div className="grid grid-cols-3 gap-2 border-y border-border py-3">
                                     {[
-                                        ['Doctors', b.doctors],
-                                        ['Staff', b.staff],
+                                        [t.nav_doctors, b.doctors],
+                                        [t.br_staff, b.staff],
                                         [
-                                            "Today's appts",
-                                            b.todayAppts,
+                                            t.br_appts_today,
+                                            b.today_appts,
                                             'text-olive-700',
                                         ],
                                     ].map(([k, v, color]) => (
@@ -159,7 +187,7 @@ export default function SecretaryBranches() {
                                     className="w-full gap-2"
                                 >
                                     <LayoutGrid className="size-3.5" />
-                                    View dashboard
+                                    {t.br_view_dashboard}
                                 </Button>
                             </div>
                         </div>

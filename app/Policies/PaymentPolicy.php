@@ -20,15 +20,16 @@ class PaymentPolicy
 
     public function create(User $actor): bool
     {
-        return in_array($actor->role, ['secretary'], true);
+        return in_array($actor->role, ['super_admin', 'secretary'], true);
     }
 
     /**
-     * Per IG permission matrix only the secretary (clinic manager) can refund.
+     * The clinic's secretary (manager) or a super_admin (cross-tenant) can refund.
      */
     public function refund(User $actor, Payment $payment): bool
     {
-        return $actor->clinic_id === $payment->clinic_id
-            && $actor->role === 'secretary';
+        return $actor->role === 'super_admin'
+            || ($actor->clinic_id === $payment->clinic_id
+                && $actor->role === 'secretary');
     }
 }

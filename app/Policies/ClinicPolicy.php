@@ -22,6 +22,11 @@ class ClinicPolicy
         return in_array($actor->role, ['super_admin'], true);
     }
 
+    public function create(User $actor): bool
+    {
+        return $actor->role === 'super_admin';
+    }
+
     public function suspend(User $actor, Clinic $clinic): bool
     {
         return $actor->role === 'super_admin';

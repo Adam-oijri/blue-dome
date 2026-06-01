@@ -1,18 +1,12 @@
 import { Head } from '@inertiajs/react';
-import {
-    AlertTriangle,
-    Calendar as CalendarIcon,
-    ChevronRight,
-    Clock,
-    MoreHorizontal,
-    UserPlus,
-    Users,
-} from 'lucide-react';
+import { AlertTriangle, Clock, UserPlus } from 'lucide-react';
 
+import { CreateAppointmentSheet } from '@/components/blue-dome/create-appointment-sheet';
 import { KpiCard } from '@/components/blue-dome/kpi-card';
 import { PageHeader } from '@/components/blue-dome/page-header';
 import { SectionCard } from '@/components/blue-dome/section-card';
 import { StatusPill } from '@/components/blue-dome/status-pill';
+import type { StatusTone } from '@/components/blue-dome/status-pill';
 import { Button } from '@/components/ui/button';
 import {
     Table,
@@ -23,53 +17,68 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import { useSecretaryLang } from '@/lib/i18n/secretary-context';
-import { findDoctor, findPatient, localName } from '@/lib/mock/secretary';
 import { cn } from '@/lib/utils';
 
-const ROWS: {
-    p: string;
-    arrived: string;
-    waitMin: number;
-    reason: { en: string; fr: string; ar: string };
-    assigned: string | null;
-    urgent: boolean;
-}[] = [
-    {
-        p: 'p7',
-        arrived: '11:04',
-        waitMin: 10,
-        reason: {
-            en: 'Chest pain',
-            fr: 'Douleur thoracique',
-            ar: 'ألم في الصدر',
-        },
-        assigned: 'd1',
-        urgent: true,
-    },
-    {
-        p: 'p3',
-        arrived: '11:08',
-        waitMin: 6,
-        reason: { en: 'Sore throat', fr: 'Mal de gorge', ar: 'التهاب الحلق' },
-        assigned: 'd2',
-        urgent: false,
-    },
-    {
-        p: 'p10',
-        arrived: '11:12',
-        waitMin: 2,
-        reason: {
-            en: 'Refill request',
-            fr: 'Renouvellement ordonnance',
-            ar: 'تجديد وصفة',
-        },
-        assigned: null,
-        urgent: false,
-    },
-];
+type Person = {
+    first_name: string | null;
+    last_name: string | null;
+};
 
-export default function SecretaryWalkIns() {
-    const { t, lang } = useSecretaryLang();
+type WalkInRow = {
+    id: string;
+    patient: (Person & { gender: string | null }) | null;
+    doctor: Person | null;
+    scheduled_start: string | null;
+    status: string;
+    priority: string;
+    reason: string | null;
+    wait_minutes: number;
+};
+
+interface Props {
+    walk_ins: WalkInRow[];
+    kpis: {
+        waiting: number;
+        avg_wait: number;
+    };
+}
+
+const STATUS_TONE: Record<string, StatusTone> = {
+    scheduled: 'navy',
+    confirmed: 'info',
+    arrived: 'olive',
+    in_progress: 'success',
+};
+
+const URGENT_PRIORITIES = ['high', 'emergency'];
+
+const STATUS_LABEL_KEY: Record<string, string> = {
+    scheduled: 'wi_status_scheduled',
+    confirmed: 'wa_status_confirmed',
+    arrived: 'wr_status_arrived',
+    in_progress: 'sched_legend_in_progress',
+};
+
+const PRIORITY_LABEL_KEY: Record<string, string> = {
+    low: 'wi_priority_low',
+    normal: 'wi_priority_normal',
+    high: 'wi_priority_high',
+    emergency: 'wi_priority_emergency',
+};
+
+const fullName = (p?: Person | null): string =>
+    p ? `${p.first_name ?? ''} ${p.last_name ?? ''}`.trim() || '—' : '—';
+
+const initials = (p?: Person | null): string =>
+    p
+        ? `${p.first_name?.[0] ?? ''}${p.last_name?.[0] ?? ''}`.toUpperCase() ||
+          '?'
+        : '?';
+
+const timeOf = (iso: string | null): string => (iso ? iso.slice(11, 16) : '—');
+
+export default function SecretaryWalkIns({ walk_ins, kpis }: Props) {
+    const { t } = useSecretaryLang();
 
     return (
         <>
@@ -78,52 +87,41 @@ export default function SecretaryWalkIns() {
             <div className="px-6 py-5 lg:px-8">
                 <PageHeader
                     title={t.nav_walkins}
-                    description="3 patients waiting · Average wait 12 min · 6 of 11 converted to follow-up today"
+                    description={t.wr_subtitle}
                     actions={
-                        <Button
-                            size="sm"
-                            className="gap-2 bg-olive-600 text-white hover:bg-olive-700"
-                        >
-                            <UserPlus className="size-3.5" />
-                            Register walk-in
-                        </Button>
+                        <CreateAppointmentSheet>
+                            <Button
+                                size="sm"
+                                className="gap-2 bg-olive-600 text-white hover:bg-olive-700"
+                            >
+                                <UserPlus className="size-3.5" />
+                                {t.new_appointment}
+                            </Button>
+                        </CreateAppointmentSheet>
                     }
                 />
 
                 <div className="mb-5 grid grid-cols-2 gap-3 md:grid-cols-4">
                     <KpiCard
-                        label="Waiting now"
-                        value="3"
+                        label={t.kpi_walkins}
+                        value={kpis.waiting}
                         icon={UserPlus}
                         tone="navy"
                     />
                     <KpiCard
-                        label="Average wait"
-                        value="12 min"
+                        label={t.wr_col_wait}
+                        value={`${kpis.avg_wait} ${t.wr_min}`}
                         icon={Clock}
                         tone="warn"
-                    />
-                    <KpiCard
-                        label="Today total"
-                        value="11"
-                        icon={Users}
-                        tone="navy"
-                        trend={{ value: '+22%', direction: 'up' }}
-                    />
-                    <KpiCard
-                        label="Converted"
-                        value="6"
-                        icon={CalendarIcon}
-                        tone="olive"
                     />
                 </div>
 
                 <SectionCard
-                    title="Walk-in queue"
+                    title={t.wr_title}
                     titleIcon={<UserPlus className="size-4" />}
                     actions={
                         <span className="text-[12px] text-muted-foreground">
-                            Sorted by arrival
+                            {t.wr_subtitle}
                         </span>
                     }
                     bodyClassName="p-0"
@@ -132,37 +130,41 @@ export default function SecretaryWalkIns() {
                         <TableHeader>
                             <TableRow className="bg-muted/50">
                                 <TableHead className="px-5 py-2.5 text-[11px] tracking-wider uppercase">
-                                    Patient
+                                    {t.wr_col_patient}
                                 </TableHead>
                                 <TableHead className="text-[11px] tracking-wider uppercase">
-                                    Arrived
+                                    {t.wr_col_arrived}
                                 </TableHead>
                                 <TableHead className="text-[11px] tracking-wider uppercase">
-                                    Wait
+                                    {t.wr_col_wait}
                                 </TableHead>
                                 <TableHead className="text-[11px] tracking-wider uppercase">
-                                    Reason
+                                    {t.wr_col_status}
                                 </TableHead>
                                 <TableHead className="text-[11px] tracking-wider uppercase">
-                                    Assigned to
+                                    {t.wr_col_doctor}
                                 </TableHead>
-                                <TableHead className="w-44" />
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {ROWS.map((r, i) => {
-                                const p = findPatient(r.p);
-                                const d = r.assigned
-                                    ? findDoctor(r.assigned)
-                                    : null;
-
-                                if (!p) {
-                                    return null;
-                                }
+                            {walk_ins.length === 0 && (
+                                <TableRow>
+                                    <TableCell
+                                        colSpan={5}
+                                        className="py-10 text-center text-sm text-muted-foreground"
+                                    >
+                                        {t.empty_none}
+                                    </TableCell>
+                                </TableRow>
+                            )}
+                            {walk_ins.map((r) => {
+                                const urgent = URGENT_PRIORITIES.includes(
+                                    r.priority,
+                                );
 
                                 return (
                                     <TableRow
-                                        key={i}
+                                        key={r.id}
                                         className="hover:bg-muted/50"
                                     >
                                         <TableCell className="px-5 py-3">
@@ -170,94 +172,61 @@ export default function SecretaryWalkIns() {
                                                 <div
                                                     className={cn(
                                                         'grid size-8 shrink-0 place-items-center rounded-full text-xs font-semibold text-white',
-                                                        p.gender === 'm'
+                                                        r.patient?.gender ===
+                                                            'male'
                                                             ? 'bg-navy-700'
                                                             : 'bg-olive-600',
                                                     )}
                                                 >
-                                                    {p.initials}
+                                                    {initials(r.patient)}
                                                 </div>
                                                 <div>
                                                     <div className="text-[13px] font-semibold">
-                                                        {localName(p, lang)}
+                                                        {fullName(r.patient)}
                                                     </div>
-                                                    <div className="mt-0.5 flex flex-wrap items-center gap-1.5">
-                                                        <StatusPill tone="danger">
-                                                            {p.blood}
-                                                        </StatusPill>
-                                                        {r.urgent && (
+                                                    {urgent && (
+                                                        <div className="mt-0.5">
                                                             <StatusPill tone="danger">
                                                                 <AlertTriangle className="size-2.5" />
-                                                                Urgent
+                                                                {t[
+                                                                    PRIORITY_LABEL_KEY[
+                                                                        r.priority
+                                                                    ]
+                                                                ] ?? r.priority}
                                                             </StatusPill>
-                                                        )}
-                                                    </div>
+                                                        </div>
+                                                    )}
                                                 </div>
                                             </div>
                                         </TableCell>
                                         <TableCell className="text-[13px] font-semibold tabular-nums">
-                                            {r.arrived}
+                                            {timeOf(r.scheduled_start)}
                                         </TableCell>
                                         <TableCell>
                                             <span className="text-[13px] font-semibold tabular-nums">
-                                                {r.waitMin}
+                                                {r.wait_minutes}
                                                 <span className="ms-0.5 text-[11px] font-normal text-muted-foreground">
                                                     {t.wr_min}
                                                 </span>
                                             </span>
                                         </TableCell>
+                                        <TableCell>
+                                            <StatusPill
+                                                tone={
+                                                    STATUS_TONE[r.status] ??
+                                                    'neutral'
+                                                }
+                                                withDot
+                                            >
+                                                {t[
+                                                    STATUS_LABEL_KEY[r.status]
+                                                ] ?? r.status}
+                                            </StatusPill>
+                                        </TableCell>
                                         <TableCell className="text-[13px]">
-                                            {r.reason[lang]}
-                                        </TableCell>
-                                        <TableCell>
-                                            {d ? (
-                                                <div className="flex items-center gap-2">
-                                                    <div
-                                                        className={cn(
-                                                            'grid size-6 shrink-0 place-items-center rounded-full text-[10px] font-semibold text-white',
-                                                            d.hue === 'navy'
-                                                                ? 'bg-navy-700'
-                                                                : 'bg-olive-600',
-                                                        )}
-                                                    >
-                                                        {d.initials}
-                                                    </div>
-                                                    <span className="text-[12px]">
-                                                        {localName(
-                                                            d,
-                                                            lang,
-                                                        ).replace(
-                                                            /^(Dr\.|د\.)\s*/,
-                                                            '',
-                                                        )}
-                                                    </span>
-                                                </div>
-                                            ) : (
-                                                <Button
-                                                    size="sm"
-                                                    className="h-7 gap-1 bg-olive-600 text-[11px] text-white hover:bg-olive-700"
-                                                >
-                                                    Assign
-                                                </Button>
-                                            )}
-                                        </TableCell>
-                                        <TableCell>
-                                            <div className="flex items-center justify-end gap-1.5">
-                                                <Button
-                                                    size="sm"
-                                                    className="h-7 gap-1 bg-navy-900 text-[11px] text-white hover:bg-navy-800"
-                                                >
-                                                    <ChevronRight className="size-3" />
-                                                    Call in
-                                                </Button>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    className="size-7"
-                                                >
-                                                    <MoreHorizontal className="size-3.5" />
-                                                </Button>
-                                            </div>
+                                            {r.doctor
+                                                ? fullName(r.doctor)
+                                                : t.unassigned}
                                         </TableCell>
                                     </TableRow>
                                 );

@@ -1,19 +1,11 @@
 import { Head } from '@inertiajs/react';
-import {
-    Archive,
-    BarChart3,
-    CircleDollarSign,
-    Filter,
-    Receipt,
-    Wallet,
-} from 'lucide-react';
+import { BarChart3, CircleDollarSign, Receipt, Wallet } from 'lucide-react';
 
 import { KpiCard } from '@/components/blue-dome/kpi-card';
 import { PageHeader } from '@/components/blue-dome/page-header';
 import { SectionCard } from '@/components/blue-dome/section-card';
 import { StatusPill } from '@/components/blue-dome/status-pill';
 import type { StatusTone } from '@/components/blue-dome/status-pill';
-import { Button } from '@/components/ui/button';
 import {
     Table,
     TableBody,
@@ -22,191 +14,108 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import { fmtNumber } from '@/lib/format';
 import { useSecretaryLang } from '@/lib/i18n/secretary-context';
-import { findPatient, localName } from '@/lib/mock/secretary';
+import { Pagination } from '@/pages/panels/super-admin/users';
 
-type PaymentMethod = 'cash' | 'card' | 'transfer' | 'insurance' | 'check';
+type Person = { first_name: string | null; last_name: string | null };
 
-const PAYMENTS: {
-    ref: string;
-    inv: string;
-    patient: string;
-    date: string;
-    method: PaymentMethod;
-    amount: number;
-}[] = [
-    {
-        ref: 'PAY-7821',
-        inv: 'INV-2026-1284',
-        patient: 'p1',
-        date: '5 May 11:42',
-        method: 'cash',
-        amount: 850,
-    },
-    {
-        ref: 'PAY-7820',
-        inv: 'INV-2026-1282',
-        patient: 'p2',
-        date: '4 May 16:15',
-        method: 'card',
-        amount: 600,
-    },
-    {
-        ref: 'PAY-7819',
-        inv: 'INV-2026-1281',
-        patient: 'p7',
-        date: '4 May 14:30',
-        method: 'card',
-        amount: 480,
-    },
-    {
-        ref: 'PAY-7818',
-        inv: 'INV-2026-1279',
-        patient: 'p8',
-        date: '2 May 12:08',
-        method: 'insurance',
-        amount: 750,
-    },
-    {
-        ref: 'PAY-7817',
-        inv: 'INV-2026-1276',
-        patient: 'p4',
-        date: '1 May 17:50',
-        method: 'cash',
-        amount: 320,
-    },
-    {
-        ref: 'PAY-7816',
-        inv: 'INV-2026-1273',
-        patient: 'p9',
-        date: '30 Apr 10:22',
-        method: 'transfer',
-        amount: 2400,
-    },
-    {
-        ref: 'PAY-7815',
-        inv: 'INV-2026-1270',
-        patient: 'p3',
-        date: '29 Apr 15:00',
-        method: 'cash',
-        amount: 540,
-    },
-    {
-        ref: 'PAY-7814',
-        inv: 'INV-2026-1268',
-        patient: 'p6',
-        date: '28 Apr 09:40',
-        method: 'card',
-        amount: 1100,
-    },
-    {
-        ref: 'PAY-7813',
-        inv: 'INV-2026-1265',
-        patient: 'p2',
-        date: '27 Apr 11:30',
-        method: 'insurance',
-        amount: 1850,
-    },
-    {
-        ref: 'PAY-7812',
-        inv: 'INV-2026-1262',
-        patient: 'p1',
-        date: '26 Apr 14:18',
-        method: 'check',
-        amount: 700,
-    },
-];
-
-const METHOD_LABEL: Record<PaymentMethod, string> = {
-    cash: 'Cash',
-    card: 'Card',
-    transfer: 'Transfer',
-    insurance: 'Insurance',
-    check: 'Check',
+type PaymentRow = {
+    id: string;
+    payment_number: string | null;
+    payment_date: string | null;
+    amount: string | number;
+    payment_method: string;
+    currency: string | null;
+    patient?: Person | null;
+    invoice?: { invoice_number: string | null } | null;
 };
 
-const METHOD_TONE: Record<PaymentMethod, StatusTone> = {
-    cash: 'olive',
-    card: 'info',
-    transfer: 'navy',
-    insurance: 'warning',
-    check: 'neutral',
+type Paginated<T> = {
+    data: T[];
+    total: number;
+    current_page: number;
+    last_page: number;
+    links: Array<{ url: string | null; label: string; active: boolean }>;
 };
 
-const BREAKDOWN: {
-    method: PaymentMethod;
-    amt: number;
-    pct: number;
-    color: string;
-}[] = [
-    { method: 'cash', amt: 18420, pct: 38, color: 'var(--color-olive-600)' },
-    { method: 'card', amt: 14280, pct: 29, color: 'var(--color-info)' },
-    { method: 'insurance', amt: 9100, pct: 19, color: 'var(--color-warning)' },
-    { method: 'transfer', amt: 5200, pct: 11, color: 'var(--color-navy-700)' },
-    {
-        method: 'check',
-        amt: 1720,
-        pct: 3,
+interface Props {
+    payments: Paginated<PaymentRow>;
+    kpis: {
+        today: number;
+        week: number;
+        month: number;
+        avg: number;
+        currency: string;
+    };
+    method_breakdown: { method: string; amount: number; count: number }[];
+}
+
+const METHOD_META: Record<string, { tone: StatusTone; color: string }> = {
+    cash: { tone: 'olive', color: 'var(--color-olive-600)' },
+    bank_wire: { tone: 'navy', color: 'var(--color-navy-700)' },
+    card: { tone: 'info', color: 'var(--color-info)' },
+    insurance: { tone: 'warning', color: 'var(--color-warning)' },
+    check: { tone: 'neutral', color: 'var(--color-muted-foreground)' },
+};
+
+const methodMeta = (m: string): { tone: StatusTone; color: string } =>
+    METHOD_META[m] ?? {
+        tone: 'neutral',
         color: 'var(--color-muted-foreground)',
-    },
-];
+    };
 
-export default function SecretaryPayments() {
-    const { t, lang } = useSecretaryLang();
+const fullName = (
+    p: Person | null | undefined,
+    fallback: string,
+): string =>
+    p
+        ? `${p.first_name ?? ''} ${p.last_name ?? ''}`.trim() || fallback
+        : fallback;
+
+export default function SecretaryPayments({
+    payments,
+    kpis,
+    method_breakdown,
+}: Props) {
+    const { t } = useSecretaryLang();
+
+    const money = (n: number): string => `${fmtNumber(n)} ${t.mad}`;
+    const methodLabel = (m: string): string => t[`pay_method_${m}`] ?? m;
+    const breakdownTotal = method_breakdown.reduce(
+        (s, b) => s + Number(b.amount),
+        0,
+    );
 
     return (
         <>
             <Head title={t.nav_payments} />
 
             <div className="px-6 py-5 lg:px-8">
-                <PageHeader
-                    title={t.nav_payments}
-                    description="48,720 MAD collected this month · +18% vs April"
-                    actions={
-                        <>
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                className="gap-2"
-                            >
-                                <Archive className="size-3.5" />
-                                Export
-                            </Button>
-                            <Button
-                                size="sm"
-                                className="gap-2 bg-olive-600 text-white hover:bg-olive-700"
-                            >
-                                <CircleDollarSign className="size-3.5" />
-                                Record payment
-                            </Button>
-                        </>
-                    }
-                />
+                <PageHeader title={t.nav_payments} description={money(kpis.month)} />
 
                 <div className="mb-5 grid grid-cols-2 gap-3 md:grid-cols-4">
                     <KpiCard
-                        label="Today"
-                        value="2,480 MAD"
+                        label={t.today}
+                        value={money(kpis.today)}
                         icon={CircleDollarSign}
                         tone="olive"
-                        trend={{ value: '+12%', direction: 'up' }}
                     />
                     <KpiCard
-                        label="This week"
-                        value="14,820 MAD"
+                        label={t.pay_kpi_week}
+                        value={money(kpis.week)}
                         icon={Wallet}
                         tone="navy"
                     />
                     <KpiCard
-                        label="This month"
-                        value="48,720 MAD"
+                        label={t.pay_kpi_month}
+                        value={money(kpis.month)}
                         icon={BarChart3}
                         tone="success"
-                        trend={{ value: '+18%', direction: 'up' }}
                     />
                     <KpiCard
-                        label="Avg. payment"
-                        value="486 MAD"
+                        label={t.pay_kpi_avg}
+                        value={money(kpis.avg)}
                         icon={Receipt}
                         tone="navy"
                     />
@@ -214,109 +123,124 @@ export default function SecretaryPayments() {
 
                 <div className="grid gap-5 lg:grid-cols-[2fr_1fr]">
                     <SectionCard
-                        title="Recent payments"
+                        title={t.nav_payments}
                         titleIcon={<Wallet className="size-4" />}
-                        actions={
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                className="size-7"
-                            >
-                                <Filter className="size-3.5" />
-                            </Button>
-                        }
                         bodyClassName="p-0"
                     >
                         <Table>
                             <TableHeader>
                                 <TableRow className="bg-muted/50">
                                     <TableHead className="px-5 py-2.5 text-[11px] tracking-wider uppercase">
-                                        Reference
+                                        {t.pay_col_reference}
                                     </TableHead>
                                     <TableHead className="text-[11px] tracking-wider uppercase">
-                                        Date
+                                        {t.col_date}
                                     </TableHead>
                                     <TableHead className="text-[11px] tracking-wider uppercase">
-                                        Patient
+                                        {t.col_patient}
                                     </TableHead>
                                     <TableHead className="text-[11px] tracking-wider uppercase">
-                                        Invoice
+                                        {t.col_invoice}
                                     </TableHead>
                                     <TableHead className="text-[11px] tracking-wider uppercase">
-                                        Method
+                                        {t.col_method}
                                     </TableHead>
                                     <TableHead className="text-end text-[11px] tracking-wider uppercase">
-                                        Amount
+                                        {t.col_amount}
                                     </TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {PAYMENTS.map((r, i) => {
-                                    const p = findPatient(r.patient);
-
-                                    if (!p) {
-                                        return null;
-                                    }
+                                {payments.data.length === 0 && (
+                                    <TableRow>
+                                        <TableCell
+                                            colSpan={6}
+                                            className="py-10 text-center text-sm text-muted-foreground"
+                                        >
+                                            {t.empty_none}
+                                        </TableCell>
+                                    </TableRow>
+                                )}
+                                {payments.data.map((r) => {
+                                    const m = methodMeta(r.payment_method);
 
                                     return (
                                         <TableRow
-                                            key={i}
+                                            key={r.id}
                                             className="hover:bg-muted/50"
                                         >
                                             <TableCell className="px-5 py-3 font-mono text-[11px] font-semibold">
-                                                {r.ref}
+                                                {r.payment_number ?? '—'}
                                             </TableCell>
                                             <TableCell className="text-[12px] text-muted-foreground tabular-nums">
-                                                {r.date}
+                                                {r.payment_date?.slice(0, 10) ??
+                                                    '—'}
                                             </TableCell>
                                             <TableCell className="text-[13px] font-semibold">
-                                                {localName(p, lang)}
+                                                {fullName(
+                                                    r.patient,
+                                                    t.unassigned,
+                                                )}
                                             </TableCell>
                                             <TableCell className="font-mono text-[11px] text-muted-foreground">
-                                                {r.inv}
+                                                {r.invoice?.invoice_number ??
+                                                    '—'}
                                             </TableCell>
                                             <TableCell>
                                                 <StatusPill
-                                                    tone={METHOD_TONE[r.method]}
+                                                    tone={m.tone}
                                                     withDot
                                                 >
-                                                    {METHOD_LABEL[r.method]}
+                                                    {methodLabel(
+                                                        r.payment_method,
+                                                    )}
                                                 </StatusPill>
                                             </TableCell>
                                             <TableCell className="text-end text-[13px] font-semibold text-olive-700 tabular-nums">
-                                                +
-                                                {r.amount.toLocaleString(
-                                                    'en-US',
-                                                )}{' '}
-                                                {t.mad}
+                                                {money(Number(r.amount))}
                                             </TableCell>
                                         </TableRow>
                                     );
                                 })}
                             </TableBody>
                         </Table>
+                        <Pagination paginated={payments} t={t} />
                     </SectionCard>
 
-                    <SectionCard title="Method breakdown" bodyClassName="p-4">
+                    <SectionCard
+                        title={t.pay_breakdown_title}
+                        bodyClassName="p-4"
+                    >
                         <div className="mb-3 text-[11px] text-muted-foreground">
-                            30-day total
+                            {t.pay_breakdown_caption}
                         </div>
-                        <Donut breakdown={BREAKDOWN} />
+                        <Donut
+                            breakdown={method_breakdown}
+                            total={breakdownTotal}
+                        />
                         <div className="mt-4 space-y-2">
-                            {BREAKDOWN.map((b) => (
+                            {method_breakdown.length === 0 && (
+                                <div className="text-[12px] text-muted-foreground">
+                                    {t.empty_none}
+                                </div>
+                            )}
+                            {method_breakdown.map((b) => (
                                 <div
                                     key={b.method}
                                     className="flex items-center gap-2.5 text-[12px]"
                                 >
                                     <span
                                         className="inline-block size-2.5 shrink-0 rounded-sm"
-                                        style={{ background: b.color }}
+                                        style={{
+                                            background: methodMeta(b.method)
+                                                .color,
+                                        }}
                                     />
                                     <span className="flex-1">
-                                        {METHOD_LABEL[b.method]}
+                                        {methodLabel(b.method)}
                                     </span>
                                     <span className="font-semibold tabular-nums">
-                                        {b.amt.toLocaleString('en-US')}
+                                        {fmtNumber(Number(b.amount))}
                                     </span>
                                 </div>
                             ))}
@@ -330,28 +254,31 @@ export default function SecretaryPayments() {
 
 function Donut({
     breakdown,
+    total,
 }: {
-    breakdown: { method: string; pct: number; color: string }[];
+    breakdown: { method: string; amount: number }[];
+    total: number;
 }) {
     const r = 50;
     const cx = 60;
     const cy = 60;
+    const safeTotal = total > 0 ? total : 1;
     const segs = breakdown.reduce<
-        {
-            method: string;
-            pct: number;
-            color: string;
-            start: number;
-            end: number;
-        }[]
+        { method: string; color: string; start: number; end: number }[]
     >((list, b) => {
+        const pct = (Number(b.amount) / safeTotal) * 100;
         const start = list.length === 0 ? 0 : list[list.length - 1].end;
 
-        list.push({ ...b, start, end: start + b.pct });
+        list.push({
+            method: b.method,
+            color: METHOD_META[b.method]?.color ?? 'var(--color-muted-foreground)',
+            start,
+            end: start + pct,
+        });
 
         return list;
     }, []);
-    const polar = (pct: number) => {
+    const polar = (pct: number): readonly [number, number] => {
         const ang = (pct / 100) * 2 * Math.PI - Math.PI / 2;
 
         return [cx + r * Math.cos(ang), cy + r * Math.sin(ang)] as const;
@@ -360,41 +287,41 @@ function Donut({
     return (
         <div className="mx-auto" style={{ width: 120 }}>
             <svg viewBox="0 0 120 120" width="120" height="120">
-                {segs.map((s, i) => {
-                    const [x1, y1] = polar(s.start);
-                    const [x2, y2] = polar(s.end);
-                    const large = s.end - s.start > 50 ? 1 : 0;
-                    const path = `M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 ${large} 1 ${x2} ${y2} Z`;
+                {total > 0 ? (
+                    segs.map((s, i) => {
+                        const [x1, y1] = polar(s.start);
+                        const [x2, y2] = polar(s.end);
+                        const large = s.end - s.start > 50 ? 1 : 0;
+                        const path = `M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 ${large} 1 ${x2} ${y2} Z`;
 
-                    return (
-                        <path
-                            key={i}
-                            d={path}
-                            fill={s.color}
-                            stroke="white"
-                            strokeWidth="2"
-                        />
-                    );
-                })}
+                        return (
+                            <path
+                                key={i}
+                                d={path}
+                                fill={s.color}
+                                stroke="white"
+                                strokeWidth="2"
+                            />
+                        );
+                    })
+                ) : (
+                    <circle
+                        cx={cx}
+                        cy={cy}
+                        r={r}
+                        fill="var(--color-muted)"
+                    />
+                )}
                 <circle cx={cx} cy={cy} r="28" fill="white" />
                 <text
                     x={cx}
-                    y={56}
+                    y={64}
                     textAnchor="middle"
-                    fontSize="10"
-                    className="fill-muted-foreground"
-                >
-                    Total
-                </text>
-                <text
-                    x={cx}
-                    y={72}
-                    textAnchor="middle"
-                    fontSize="14"
+                    fontSize="12"
                     fontWeight={700}
                     className="fill-navy-900"
                 >
-                    48.7K
+                    {fmtNumber(total)}
                 </text>
             </svg>
         </div>

@@ -20,13 +20,14 @@ class InvoicePolicy
 
     public function create(User $actor): bool
     {
-        return in_array($actor->role, ['secretary'], true);
+        return in_array($actor->role, ['super_admin', 'secretary'], true);
     }
 
     public function update(User $actor, Invoice $invoice): bool
     {
-        return $actor->clinic_id === $invoice->clinic_id
-            && in_array($actor->role, ['secretary'], true);
+        return $actor->role === 'super_admin'
+            || ($actor->clinic_id === $invoice->clinic_id
+                && $actor->role === 'secretary');
     }
 
     public function recordPayment(User $actor, Invoice $invoice): bool
@@ -36,13 +37,15 @@ class InvoicePolicy
 
     public function refundPayment(User $actor, Invoice $invoice): bool
     {
-        return $actor->clinic_id === $invoice->clinic_id
-            && $actor->role === 'secretary';
+        return $actor->role === 'super_admin'
+            || ($actor->clinic_id === $invoice->clinic_id
+                && $actor->role === 'secretary');
     }
 
     public function delete(User $actor, Invoice $invoice): bool
     {
-        return $actor->clinic_id === $invoice->clinic_id
-            && $actor->role === 'secretary';
+        return $actor->role === 'super_admin'
+            || ($actor->clinic_id === $invoice->clinic_id
+                && $actor->role === 'secretary');
     }
 }

@@ -9,6 +9,8 @@ use App\Http\Requests\Appointment\StoreAppointmentRequest;
 use App\Http\Requests\Appointment\UpdateAppointmentRequest;
 use App\Models\Appointment;
 use App\Models\FieldChange;
+use App\Models\Patient;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -67,13 +69,31 @@ class AppointmentController extends Controller
 
     public function store(StoreAppointmentRequest $request): RedirectResponse
     {
-        $appointment = Appointment::create($request->validated() + [
+        Appointment::create($request->validated() + [
             'clinic_id' => $request->user()->clinic_id,
         ]);
 
-        return redirect()
-            ->route('appointments.show', $appointment)
+        return back()
             ->with('toast', ['type' => 'success', 'message' => __('appointments.scheduled')]);
+    }
+
+    /**
+     * JSON options for the inline "create appointment" Sheet. Returns the
+     * actor's clinic patients for the patient dropdown (the doctor is the
+     * authenticated user, so no doctor list is needed).
+     */
+    public function formOptions(Request $request): JsonResponse
+    {
+        $this->authorize('create', Appointment::class);
+
+        return response()->json([
+            'patients' => Patient::query()
+                ->where('clinic_id', $request->user()->clinic_id)
+                ->whereNull('deleted_at')
+                ->orderBy('first_name')
+                ->orderBy('last_name')
+                ->get(['id', 'first_name', 'last_name', 'phone']),
+        ]);
     }
 
     public function show(string $locale, Appointment $appointment): Response

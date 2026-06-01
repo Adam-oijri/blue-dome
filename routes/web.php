@@ -1,6 +1,9 @@
 <?php
 
 use App\Http\Controllers\AppointmentController;
+use App\Http\Controllers\Doctor\CalendarController as DoctorCalendarController;
+use App\Http\Controllers\Doctor\ConfirmationController as DoctorConfirmationController;
+use App\Http\Controllers\Doctor\DashboardController as DoctorDashboardController;
 use App\Http\Controllers\Doctor\SettingsController as DoctorSettingsController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\DocumentFolderController;
@@ -12,22 +15,38 @@ use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\LabOrderController;
 use App\Http\Controllers\MedicalRecordController;
 use App\Http\Controllers\MedicationController;
-use App\Http\Controllers\PanelController;
 use App\Http\Controllers\Patient\VitalSignsController;
 use App\Http\Controllers\PatientController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\PrescriptionController;
+use App\Http\Controllers\Secretary\AppointmentsController as SecretaryAppointmentsController;
+use App\Http\Controllers\Secretary\BillingController as SecretaryBillingController;
+use App\Http\Controllers\Secretary\BranchesController as SecretaryBranchesController;
+use App\Http\Controllers\Secretary\ChecklistController as SecretaryChecklistController;
+use App\Http\Controllers\Secretary\DashboardController as SecretaryDashboardController;
+use App\Http\Controllers\Secretary\DoctorsController as SecretaryDoctorsController;
 use App\Http\Controllers\Secretary\FollowUpController;
+use App\Http\Controllers\Secretary\PatientsController as SecretaryPatientsController;
+use App\Http\Controllers\Secretary\PaymentsController as SecretaryPaymentsController;
+use App\Http\Controllers\Secretary\ReportsController as SecretaryReportsController;
 use App\Http\Controllers\Secretary\SettingsController as SecretarySettingsController;
+use App\Http\Controllers\Secretary\WalkInsController as SecretaryWalkInsController;
+use App\Http\Controllers\Secretary\WhatsAppController as SecretaryWhatsAppController;
 use App\Http\Controllers\SuperAdmin\ActivityLogController as SuperAdminActivityLogController;
 use App\Http\Controllers\SuperAdmin\AppointmentController as SuperAdminAppointmentController;
+use App\Http\Controllers\SuperAdmin\ClinicAppointmentController as SuperAdminClinicAppointmentController;
 use App\Http\Controllers\SuperAdmin\ClinicController as SuperAdminClinicController;
 use App\Http\Controllers\SuperAdmin\ClinicEmailController as SuperAdminClinicEmailController;
 use App\Http\Controllers\SuperAdmin\ClinicWhatsAppController as SuperAdminClinicWhatsAppController;
 use App\Http\Controllers\SuperAdmin\DashboardController as SuperAdminDashboardController;
 use App\Http\Controllers\SuperAdmin\DoctorController as SuperAdminDoctorController;
+use App\Http\Controllers\SuperAdmin\DoctorProfileController as SuperAdminDoctorProfileController;
 use App\Http\Controllers\SuperAdmin\FinanceController as SuperAdminFinanceController;
+use App\Http\Controllers\SuperAdmin\InventoryController as SuperAdminInventoryController;
 use App\Http\Controllers\SuperAdmin\InvitationController as SuperAdminInvitationController;
+use App\Http\Controllers\SuperAdmin\InvoiceController as SuperAdminInvoiceController;
+use App\Http\Controllers\SuperAdmin\PatientController as SuperAdminPatientController;
+use App\Http\Controllers\SuperAdmin\PaymentController as SuperAdminPaymentController;
 use App\Http\Controllers\SuperAdmin\RecycleController as SuperAdminRecycleController;
 use App\Http\Controllers\SuperAdmin\SettingsController as SuperAdminSettingsController;
 use App\Http\Controllers\SuperAdmin\UserController as SuperAdminUserController;
@@ -75,19 +94,78 @@ Route::prefix('{locale}')
                 Route::get('/', [SuperAdminDashboardController::class, 'index'])->name('dashboard');
 
                 Route::get('clinics', [SuperAdminClinicController::class, 'index'])->name('clinics.index');
+                Route::get('clinics/create', [SuperAdminClinicController::class, 'create'])->name('clinics.create');
+                Route::get('clinics/export', [SuperAdminClinicController::class, 'export'])->name('clinics.export');
+                Route::post('clinics', [SuperAdminClinicController::class, 'store'])->name('clinics.store');
+                Route::post('clinics/bulk', [SuperAdminClinicController::class, 'bulk'])->name('clinics.bulk');
                 Route::get('clinics/{clinic}', [SuperAdminClinicController::class, 'show'])->name('clinics.show');
+                Route::get('clinics/{clinic}/edit', [SuperAdminClinicController::class, 'edit'])->name('clinics.edit');
+                Route::patch('clinics/{clinic}', [SuperAdminClinicController::class, 'update'])->name('clinics.update');
                 Route::get('clinics/{clinic}/whatsapp', [SuperAdminClinicWhatsAppController::class, 'edit'])
                     ->name('clinics.whatsapp.edit');
                 Route::get('clinics/{clinic}/email', [SuperAdminClinicEmailController::class, 'edit'])
                     ->name('clinics.email.edit');
 
+                /*
+                 * Clinic-scoped operational management. The {clinic} binding is
+                 * the write target, so super-admin writes land on that clinic,
+                 * not the super-admin's own "Platform" clinic.
+                 */
+                Route::prefix('clinics/{clinic}')->name('clinics.')->group(function (): void {
+                    Route::get('patients', [SuperAdminPatientController::class, 'index'])->name('patients.index');
+                    Route::get('patients/create', [SuperAdminPatientController::class, 'create'])->name('patients.create');
+                    Route::post('patients', [SuperAdminPatientController::class, 'store'])->name('patients.store');
+                    Route::get('patients/{patient}/edit', [SuperAdminPatientController::class, 'edit'])->name('patients.edit');
+                    Route::patch('patients/{patient}', [SuperAdminPatientController::class, 'update'])->name('patients.update');
+                    Route::delete('patients/{patient}', [SuperAdminPatientController::class, 'destroy'])->name('patients.destroy');
+
+                    Route::get('inventory', [SuperAdminInventoryController::class, 'index'])->name('inventory.index');
+                    Route::get('inventory/create', [SuperAdminInventoryController::class, 'create'])->name('inventory.create');
+                    Route::post('inventory', [SuperAdminInventoryController::class, 'store'])->name('inventory.store');
+                    Route::get('inventory/{inventory}/edit', [SuperAdminInventoryController::class, 'edit'])->name('inventory.edit');
+                    Route::patch('inventory/{inventory}', [SuperAdminInventoryController::class, 'update'])->name('inventory.update');
+                    Route::delete('inventory/{inventory}', [SuperAdminInventoryController::class, 'destroy'])->name('inventory.destroy');
+                    Route::post('inventory/{inventory}/transactions', [SuperAdminInventoryController::class, 'storeTransaction'])->name('inventory.transactions.store');
+
+                    Route::get('invoices', [SuperAdminInvoiceController::class, 'index'])->name('invoices.index');
+                    Route::get('invoices/create', [SuperAdminInvoiceController::class, 'create'])->name('invoices.create');
+                    Route::post('invoices', [SuperAdminInvoiceController::class, 'store'])->name('invoices.store');
+                    Route::get('invoices/{invoice}', [SuperAdminInvoiceController::class, 'show'])->name('invoices.show');
+                    Route::get('invoices/{invoice}/edit', [SuperAdminInvoiceController::class, 'edit'])->name('invoices.edit');
+                    Route::patch('invoices/{invoice}', [SuperAdminInvoiceController::class, 'update'])->name('invoices.update');
+                    Route::delete('invoices/{invoice}', [SuperAdminInvoiceController::class, 'destroy'])->name('invoices.destroy');
+                    Route::post('payments', [SuperAdminPaymentController::class, 'store'])->name('payments.store');
+                    Route::post('payments/{payment}/refund', [SuperAdminPaymentController::class, 'refund'])->name('payments.refund');
+
+                    Route::get('appointments', [SuperAdminClinicAppointmentController::class, 'index'])->name('appointments.index');
+                    Route::get('appointments/create', [SuperAdminClinicAppointmentController::class, 'create'])->name('appointments.create');
+                    Route::post('appointments', [SuperAdminClinicAppointmentController::class, 'store'])->name('appointments.store');
+                    Route::get('appointments/{appointment}/edit', [SuperAdminClinicAppointmentController::class, 'edit'])->name('appointments.edit');
+                    Route::patch('appointments/{appointment}', [SuperAdminClinicAppointmentController::class, 'update'])->name('appointments.update');
+                    Route::delete('appointments/{appointment}', [SuperAdminClinicAppointmentController::class, 'destroy'])->name('appointments.destroy');
+                    Route::post('appointments/{appointment}/cancel', [SuperAdminClinicAppointmentController::class, 'cancel'])->name('appointments.cancel');
+                });
+
                 Route::get('activity-log', [SuperAdminActivityLogController::class, 'index'])
                     ->name('activity-log');
 
                 Route::get('users', [SuperAdminUserController::class, 'index'])->name('users');
+                Route::get('users/export', [SuperAdminUserController::class, 'export'])->name('users.export');
+                Route::post('users/bulk', [SuperAdminUserController::class, 'bulk'])->name('users.bulk');
+                Route::get('users/{user}/edit', [SuperAdminUserController::class, 'edit'])->name('users.edit');
+                Route::patch('users/{user}', [SuperAdminUserController::class, 'update'])->name('users.update');
+                Route::delete('users/{user}', [SuperAdminUserController::class, 'destroy'])->name('users.destroy');
+                Route::post('users/{user}/restore', [SuperAdminUserController::class, 'restore'])->name('users.restore');
+
                 Route::get('appointments', [SuperAdminAppointmentController::class, 'index'])->name('appointments');
+                Route::get('appointments/export', [SuperAdminAppointmentController::class, 'export'])->name('appointments.export');
+
                 Route::get('doctors', [SuperAdminDoctorController::class, 'index'])->name('doctors');
+                Route::get('doctors/export', [SuperAdminDoctorController::class, 'export'])->name('doctors.export');
+                Route::get('doctors/{user}/profile/edit', [SuperAdminDoctorProfileController::class, 'edit'])->name('doctors.profile.edit');
+                Route::patch('doctors/{user}/profile', [SuperAdminDoctorProfileController::class, 'update'])->name('doctors.profile.update');
                 Route::get('finance', [SuperAdminFinanceController::class, 'index'])->name('finance');
+                Route::get('finance/export', [SuperAdminFinanceController::class, 'export'])->name('finance.export');
                 Route::get('recycle', [SuperAdminRecycleController::class, 'index'])->name('recycle');
                 Route::get('settings', [SuperAdminSettingsController::class, 'edit'])
                     ->name('settings');
@@ -108,24 +186,27 @@ Route::prefix('{locale}')
             });
 
             Route::middleware('role:doctor')->prefix('doctor')->name('doctor.')->group(function (): void {
-                Route::get('/', [PanelController::class, 'doctor'])->name('dashboard');
-                Route::inertia('calendar', 'panels/doctor/calendar')->name('calendar');
-                Route::inertia('follow-up', 'panels/doctor/follow-up')->name('follow-up');
+                Route::get('/', [DoctorDashboardController::class, 'index'])->name('dashboard');
+                Route::get('calendar', [DoctorCalendarController::class, 'index'])->name('calendar');
+                Route::get('confirmations', [DoctorConfirmationController::class, 'index'])->name('confirmations');
                 Route::get('settings', [DoctorSettingsController::class, 'edit'])->name('settings');
             });
 
             Route::middleware('role:secretary')->prefix('secretary')->name('secretary.')->group(function (): void {
-                Route::get('/', [PanelController::class, 'secretary'])->name('dashboard');
+                Route::get('/', [SecretaryDashboardController::class, 'index'])->name('dashboard');
+                Route::post('checklist', [SecretaryChecklistController::class, 'toggle'])->name('checklist.toggle');
+                Route::post('checklist/items', [SecretaryChecklistController::class, 'storeItem'])->name('checklist.items.store');
+                Route::delete('checklist/items/{item}', [SecretaryChecklistController::class, 'destroyItem'])->name('checklist.items.destroy');
                 Route::get('follow-up', [FollowUpController::class, 'index'])->name('follow-up');
-                Route::inertia('appointments', 'panels/secretary/appointments')->name('appointments');
-                Route::inertia('patients', 'panels/secretary/patients')->name('patients');
-                Route::inertia('walk-ins', 'panels/secretary/walk-ins')->name('walkins');
-                Route::inertia('whatsapp', 'panels/secretary/whatsapp')->name('whatsapp');
-                Route::inertia('billing', 'panels/secretary/billing')->name('billing');
-                Route::inertia('payments', 'panels/secretary/payments')->name('payments');
-                Route::inertia('doctors', 'panels/secretary/doctors')->name('doctors');
-                Route::inertia('branches', 'panels/secretary/branches')->name('branches');
-                Route::inertia('reports', 'panels/secretary/reports')->name('reports');
+                Route::get('appointments', [SecretaryAppointmentsController::class, 'index'])->name('appointments');
+                Route::get('patients', [SecretaryPatientsController::class, 'index'])->name('patients');
+                Route::get('walk-ins', [SecretaryWalkInsController::class, 'index'])->name('walkins');
+                Route::get('whatsapp', [SecretaryWhatsAppController::class, 'index'])->name('whatsapp');
+                Route::get('billing', [SecretaryBillingController::class, 'index'])->name('billing');
+                Route::get('payments', [SecretaryPaymentsController::class, 'index'])->name('payments');
+                Route::get('doctors', [SecretaryDoctorsController::class, 'index'])->name('doctors');
+                Route::get('branches', [SecretaryBranchesController::class, 'index'])->name('branches');
+                Route::get('reports', [SecretaryReportsController::class, 'index'])->name('reports');
                 Route::get('settings', [SecretarySettingsController::class, 'edit'])->name('settings');
             });
 
@@ -138,6 +219,9 @@ Route::prefix('{locale}')
                     ->name('patients.vital-signs.index');
                 Route::post('patients/{patient}/vital-signs', [VitalSignsController::class, 'store'])
                     ->name('patients.vital-signs.store');
+
+                Route::get('appointments/form-options', [AppointmentController::class, 'formOptions'])
+                    ->name('appointments.form-options');
 
                 Route::resource('appointments', AppointmentController::class)
                     ->except(['confirm']);

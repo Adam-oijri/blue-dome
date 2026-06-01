@@ -44,19 +44,21 @@ export function ProvenancePanel({
     title = 'Change history',
 }: Props) {
     return (
-        <section className="rounded border border-neutral-200 p-4 text-sm">
-            <h2 className="mb-3 text-xs font-semibold tracking-wide text-neutral-500 uppercase">
+        <section className="rounded border border-border p-4 text-sm">
+            <h2 className="mb-3 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
                 {title}
             </h2>
             <Deferred
                 data={deferredKey}
                 fallback={
-                    <p className="text-xs text-neutral-400">Loading history…</p>
+                    <p className="text-xs text-muted-foreground">
+                        Loading history…
+                    </p>
                 }
             >
                 <>
                     {entries && entries.length === 0 && (
-                        <p className="text-xs text-neutral-400">
+                        <p className="text-xs text-muted-foreground">
                             No changes have been recorded for this record yet.
                         </p>
                     )}
@@ -65,10 +67,10 @@ export function ProvenancePanel({
                             {entries.map((entry) => (
                                 <li
                                     key={entry.id}
-                                    className="border-b border-neutral-100 pb-2 last:border-b-0"
+                                    className="border-b border-border pb-2 last:border-b-0"
                                 >
                                     <div className="flex flex-wrap items-baseline gap-x-2">
-                                        <span className="font-mono text-neutral-500">
+                                        <span className="font-mono text-muted-foreground">
                                             {entry.changed_at}
                                         </span>
                                         <span className="font-medium">
@@ -76,23 +78,23 @@ export function ProvenancePanel({
                                                 ? `${entry.changed_by_user.first_name} ${entry.changed_by_user.last_name}`
                                                 : 'Unknown user'}
                                         </span>
-                                        <span className="text-neutral-500">
+                                        <span className="text-muted-foreground">
                                             (
                                             {entry.changed_by_clinic?.name ??
                                                 'Unknown clinic'}
                                             )
                                         </span>
                                     </div>
-                                    <div className="text-neutral-700">
+                                    <div className="text-foreground">
                                         <code className="font-mono">
                                             {entry.field_name}
                                         </code>
                                         :{' '}
-                                        <span className="text-neutral-400 line-through">
+                                        <span className="text-muted-foreground line-through">
                                             {entry.old_value ?? '∅'}
                                         </span>{' '}
                                         →{' '}
-                                        <span className="text-neutral-900">
+                                        <span className="text-foreground">
                                             {entry.new_value ?? '∅'}
                                         </span>
                                     </div>

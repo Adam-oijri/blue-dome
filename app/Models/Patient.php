@@ -71,6 +71,35 @@ class Patient extends Model
     ];
 
     /**
+     * Keep the deterministic national-ID blind index in sync on every write.
+     * The `national_id` column is encrypted with a random IV, so it cannot be
+     * uniquely indexed directly; `national_id_hash` is a deterministic HMAC of
+     * the plaintext that backs the per-clinic uniqueness constraint.
+     */
+    protected static function booted(): void
+    {
+        static::saving(function (Patient $patient): void {
+            $patient->national_id_hash = self::nationalIdHash($patient->national_id);
+        });
+    }
+
+    /**
+     * Deterministic blind-index hash of a national ID (HMAC-SHA256 keyed on the
+     * app key), or null when empty. Used for per-clinic uniqueness without
+     * exposing or decrypting the stored ciphertext.
+     */
+    public static function nationalIdHash(?string $value): ?string
+    {
+        $normalized = is_string($value) ? trim($value) : '';
+
+        if ($normalized === '') {
+            return null;
+        }
+
+        return hash_hmac('sha256', $normalized, (string) config('app.key'));
+    }
+
+    /**
      * @return array<string, string>
      */
     protected function casts(): array

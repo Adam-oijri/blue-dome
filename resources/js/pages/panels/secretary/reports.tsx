@@ -1,4 +1,4 @@
-import { Head } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import {
     AlertTriangle,
     Archive,
@@ -8,61 +8,111 @@ import {
     Clock,
     Printer,
 } from 'lucide-react';
-import { useState } from 'react';
 
 import { KpiCard } from '@/components/blue-dome/kpi-card';
 import { PageHeader } from '@/components/blue-dome/page-header';
 import { SectionCard } from '@/components/blue-dome/section-card';
 import { Button } from '@/components/ui/button';
+import { fmtNumber } from '@/lib/format';
 import { useSecretaryLang } from '@/lib/i18n/secretary-context';
-import { SECRETARY_MOCK, localName } from '@/lib/mock/secretary';
+import { useLocale } from '@/lib/i18n/use-locale';
 import { cn } from '@/lib/utils';
+import { reports as reportsRoute } from '@/routes/secretary';
 
-const APPTS_PER_DAY = [
-    { day: 'Mon', a: 12, b: 6 },
-    { day: 'Tue', a: 14, b: 8 },
-    { day: 'Wed', a: 13, b: 6 },
-    { day: 'Thu', a: 16, b: 10 },
-    { day: 'Fri', a: 15, b: 9 },
-    { day: 'Sat', a: 8, b: 4 },
-    { day: 'Sun', a: 0, b: 0 },
-];
+type Period = '7d' | '30d' | 'qtr';
 
-const REV_PER_WEEK = [
-    { week: 'W14', value: 42 },
-    { week: 'W15', value: 51 },
-    { week: 'W16', value: 47 },
-    { week: 'W17', value: 49 },
-];
+type AppointmentsPerDay = { date: string; count: number };
+type RevenuePerWeek = { week_label: string; amount: number | string };
+type Funnel = {
+    booked: number;
+    confirmed: number;
+    arrived: number;
+    completed: number;
+};
+type DoctorVolume = { doctor_name: string | null; count: number };
 
-const FUNNEL = [
-    { label: 'Booked', pct: 100, n: 184, color: 'bg-navy-700' },
-    { label: 'Confirmed', pct: 78, n: 144, color: 'bg-navy-600' },
-    { label: 'Arrived', pct: 71, n: 131, color: 'bg-olive-600' },
-    { label: 'Completed', pct: 68, n: 125, color: 'bg-olive-500' },
-];
+interface Props {
+    appointments_per_day: AppointmentsPerDay[];
+    revenue_per_week: RevenuePerWeek[];
+    funnel: Funnel;
+    doctor_volumes: DoctorVolume[];
+    filters: {
+        period: Period;
+    };
+}
 
-export default function SecretaryReports() {
-    const { t, lang } = useSecretaryLang();
-    const [period, setPeriod] = useState<'today' | '7d' | '30d' | 'qtr'>('7d');
-    const maxAppts = Math.max(...APPTS_PER_DAY.map((d) => d.a + d.b));
-    const maxRev = Math.max(...REV_PER_WEEK.map((r) => r.value));
+const PERIODS: ReadonlyArray<Period> = ['7d', '30d', 'qtr'];
 
-    const docBars = [
+const DOCTOR_COLORS = ['bg-navy-700', 'bg-olive-600', 'bg-info'];
+
+const dayLabel = (iso: string): string => {
+    const d = new Date(`${iso}T00:00:00`);
+
+    return d.toLocaleDateString('en-US', { weekday: 'short' });
+};
+
+const pct = (n: number, total: number): number =>
+    total > 0 ? Math.round((n / total) * 100) : 0;
+
+export default function SecretaryReports({
+    appointments_per_day,
+    revenue_per_week,
+    funnel,
+    doctor_volumes,
+    filters,
+}: Props) {
+    const { t } = useSecretaryLang();
+    const { slug: locale } = useLocale();
+    const period = filters.period;
+
+    const periodLabels: Record<Period, string> = {
+        '7d': t.rep_period_7d,
+        '30d': t.rep_period_30d,
+        qtr: t.rep_period_qtr,
+    };
+
+    const setPeriod = (next: Period): void => {
+        router.get(
+            reportsRoute.url({ locale }),
+            { period: next },
+            { preserveState: true, preserveScroll: true, replace: true },
+        );
+    };
+
+    const maxAppts = Math.max(1, ...appointments_per_day.map((d) => d.count));
+    const maxRev = Math.max(
+        1,
+        ...revenue_per_week.map((r) => Number(r.amount)),
+    );
+    const maxDoc = Math.max(1, ...doctor_volumes.map((d) => d.count));
+
+    const totalAppts = funnel.booked;
+    const totalRevenue = revenue_per_week.reduce(
+        (s, r) => s + Number(r.amount),
+        0,
+    );
+    const showRate = pct(funnel.arrived, funnel.booked);
+    const noShowRate =
+        funnel.booked > 0
+            ? Math.max(0, 100 - pct(funnel.arrived, funnel.booked))
+            : 0;
+
+    const funnelRows: { label: string; n: number; color: string }[] = [
+        { label: t.rep_funnel_booked, n: funnel.booked, color: 'bg-navy-700' },
         {
-            name: localName(SECRETARY_MOCK.doctors[0], lang),
-            n: 84,
-            color: 'bg-navy-700',
+            label: t.rep_funnel_confirmed,
+            n: funnel.confirmed,
+            color: 'bg-navy-600',
         },
         {
-            name: localName(SECRETARY_MOCK.doctors[1], lang),
-            n: 71,
+            label: t.rep_funnel_arrived,
+            n: funnel.arrived,
             color: 'bg-olive-600',
         },
         {
-            name: localName(SECRETARY_MOCK.doctors[2], lang),
-            n: 29,
-            color: 'bg-info',
+            label: t.rep_funnel_completed,
+            n: funnel.completed,
+            color: 'bg-olive-500',
         },
     ];
 
@@ -73,7 +123,7 @@ export default function SecretaryReports() {
             <div className="px-6 py-5 lg:px-8">
                 <PageHeader
                     title={t.nav_reports}
-                    description="Insights across appointments, revenue, and conversion"
+                    description={t.rep_subtitle}
                     actions={
                         <>
                             <Button
@@ -82,7 +132,7 @@ export default function SecretaryReports() {
                                 className="gap-2"
                             >
                                 <Archive className="size-3.5" />
-                                Export
+                                {t.action_export}
                             </Button>
                             <Button
                                 variant="outline"
@@ -90,21 +140,14 @@ export default function SecretaryReports() {
                                 className="gap-2"
                             >
                                 <Printer className="size-3.5" />
-                                Print
+                                {t.action_print}
                             </Button>
                         </>
                     }
                 />
 
                 <div className="mb-4 inline-flex gap-px rounded-md bg-muted p-[3px]">
-                    {(
-                        [
-                            ['today', 'Today'],
-                            ['7d', '7 days'],
-                            ['30d', '30 days'],
-                            ['qtr', 'Quarter'],
-                        ] as const
-                    ).map(([id, label]) => (
+                    {PERIODS.map((id) => (
                         <button
                             key={id}
                             type="button"
@@ -116,188 +159,193 @@ export default function SecretaryReports() {
                                     : 'text-muted-foreground hover:text-foreground',
                             )}
                         >
-                            {label}
+                            {periodLabels[id]}
                         </button>
                     ))}
                 </div>
 
                 <div className="mb-5 grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-5">
                     <KpiCard
-                        label="Total appts"
-                        value="184"
+                        label={t.rep_kpi_total_appts}
+                        value={fmtNumber(totalAppts)}
                         icon={CalendarIcon}
                         tone="navy"
-                        trend={{ value: '+12%', direction: 'up' }}
                     />
                     <KpiCard
-                        label="Show rate"
-                        value="71%"
+                        label={t.rep_kpi_show_rate}
+                        value={`${showRate}%`}
                         icon={Check}
                         tone="success"
-                        trend={{ value: '+3.2%', direction: 'up' }}
                     />
                     <KpiCard
-                        label="Revenue"
-                        value="48.7K MAD"
+                        label={t.rep_kpi_revenue}
+                        value={`${fmtNumber(totalRevenue)} ${t.mad}`}
                         icon={CircleDollarSign}
                         tone="olive"
-                        trend={{ value: '+18%', direction: 'up' }}
                     />
                     <KpiCard
-                        label="Avg. duration"
-                        value="28 min"
+                        label={t.rep_kpi_completed}
+                        value={fmtNumber(funnel.completed)}
                         icon={Clock}
                         tone="navy"
                     />
                     <KpiCard
-                        label="No-shows"
-                        value="4.2%"
+                        label={t.rep_kpi_no_shows}
+                        value={`${noShowRate}%`}
                         icon={AlertTriangle}
                         tone="warn"
-                        trend={{ value: '-0.4%', direction: 'up' }}
                     />
                 </div>
 
                 <div className="grid gap-5 md:grid-cols-2">
-                    <SectionCard title="Appointment volume" bodyClassName="p-4">
+                    <SectionCard
+                        title={t.rep_appt_volume}
+                        bodyClassName="p-4"
+                    >
                         <div className="mb-3 text-[11px] text-muted-foreground">
-                            Daily · 7 days · stacked by doctor
+                            {t.rep_daily_appts}
                         </div>
                         <div className="flex h-40 items-end gap-2">
-                            {APPTS_PER_DAY.map((d, i) => (
+                            {appointments_per_day.map((d) => (
                                 <div
-                                    key={i}
-                                    className="flex flex-1 flex-col gap-px"
+                                    key={d.date}
+                                    className="flex flex-1 flex-col justify-end gap-px"
                                 >
-                                    {d.b > 0 && (
+                                    {d.count > 0 ? (
                                         <div
-                                            className="rounded-t-sm bg-olive-600"
+                                            className="rounded-t-sm bg-navy-700"
                                             style={{
-                                                height: `${(d.b / maxAppts) * 100}%`,
+                                                height: `${(d.count / maxAppts) * 100}%`,
                                             }}
                                         />
-                                    )}
-                                    {d.a > 0 && (
-                                        <div
-                                            className="bg-navy-700"
-                                            style={{
-                                                height: `${(d.a / maxAppts) * 100}%`,
-                                            }}
-                                        />
-                                    )}
-                                    {d.a === 0 && d.b === 0 && (
+                                    ) : (
                                         <div className="h-1 bg-muted/60" />
                                     )}
                                 </div>
                             ))}
+                            {appointments_per_day.length === 0 && (
+                                <div className="flex-1 text-center text-[12px] text-muted-foreground">
+                                    {t.empty_none}
+                                </div>
+                            )}
                         </div>
                         <div className="mt-2 flex justify-between text-[10px] text-muted-foreground">
-                            {APPTS_PER_DAY.map((d) => (
+                            {appointments_per_day.map((d) => (
                                 <span
-                                    key={d.day}
+                                    key={d.date}
                                     className="flex-1 text-center"
                                 >
-                                    {d.day}
+                                    {dayLabel(d.date)}
                                 </span>
                             ))}
                         </div>
-                        <div className="mt-3 flex gap-4 text-[11px]">
-                            <span className="flex items-center gap-1.5">
-                                <span className="inline-block size-2.5 rounded-sm bg-navy-700" />
-                                Dr. Lahlou
-                            </span>
-                            <span className="flex items-center gap-1.5">
-                                <span className="inline-block size-2.5 rounded-sm bg-olive-600" />
-                                Dr. Idrissi
-                            </span>
-                        </div>
                     </SectionCard>
 
-                    <SectionCard title="Revenue trend" bodyClassName="p-4">
+                    <SectionCard title={t.rep_revenue_trend} bodyClassName="p-4">
                         <div className="mb-3 text-[11px] text-muted-foreground">
-                            Last 4 weeks · MAD '000
+                            {t.rep_weekly_collected} · {t.mad}
                         </div>
                         <div className="flex h-40 items-end gap-3">
-                            {REV_PER_WEEK.map((r, i) => (
+                            {revenue_per_week.map((r) => (
                                 <div
-                                    key={i}
+                                    key={r.week_label}
                                     className="flex flex-1 flex-col items-stretch gap-1"
                                 >
                                     <div className="text-center text-[10px] font-semibold tabular-nums">
-                                        {r.value}
+                                        {fmtNumber(Number(r.amount))}
                                     </div>
                                     <div
                                         className="rounded-t-sm bg-olive-600"
                                         style={{
-                                            height: `${(r.value / maxRev) * 100}%`,
+                                            height: `${(Number(r.amount) / maxRev) * 100}%`,
                                         }}
                                     />
                                 </div>
                             ))}
+                            {revenue_per_week.length === 0 && (
+                                <div className="flex-1 text-center text-[12px] text-muted-foreground">
+                                    {t.empty_none}
+                                </div>
+                            )}
                         </div>
                         <div className="mt-2 flex justify-between text-[10px] text-muted-foreground">
-                            {REV_PER_WEEK.map((r) => (
+                            {revenue_per_week.map((r) => (
                                 <span
-                                    key={r.week}
+                                    key={r.week_label}
                                     className="flex-1 text-center"
                                 >
-                                    {r.week}
+                                    {r.week_label}
                                 </span>
                             ))}
                         </div>
                     </SectionCard>
 
                     <SectionCard
-                        title="Conversion funnel"
+                        title={t.rep_conversion_funnel}
                         bodyClassName="space-y-3 p-4"
                     >
                         <div className="text-[11px] text-muted-foreground">
-                            Booked → confirmed → arrived → completed
+                            {t.rep_funnel_flow}
                         </div>
-                        {FUNNEL.map((f) => (
-                            <div key={f.label}>
-                                <div className="flex items-center justify-between text-[12px]">
-                                    <span>{f.label}</span>
-                                    <span className="font-semibold tabular-nums">
-                                        {f.pct}%
-                                    </span>
-                                </div>
-                                <div className="relative mt-1 h-5 overflow-hidden rounded bg-muted">
-                                    <div
-                                        className={cn(
-                                            'absolute inset-y-0 start-0 flex items-center px-2 text-[11px] font-semibold text-white',
-                                            f.color,
-                                        )}
-                                        style={{ width: `${f.pct}%` }}
-                                    >
-                                        {f.n}
+                        {funnelRows.map((f) => {
+                            const p = pct(f.n, totalAppts);
+
+                            return (
+                                <div key={f.label}>
+                                    <div className="flex items-center justify-between text-[12px]">
+                                        <span>{f.label}</span>
+                                        <span className="font-semibold tabular-nums">
+                                            {p}%
+                                        </span>
+                                    </div>
+                                    <div className="relative mt-1 h-5 overflow-hidden rounded bg-muted">
+                                        <div
+                                            className={cn(
+                                                'absolute inset-y-0 start-0 flex items-center px-2 text-[11px] font-semibold text-white',
+                                                f.color,
+                                            )}
+                                            style={{ width: `${p}%` }}
+                                        >
+                                            {f.n}
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </SectionCard>
 
                     <SectionCard
-                        title="By doctor · 7d"
+                        title={t.rep_by_doctor}
                         bodyClassName="space-y-3 p-4"
                     >
-                        {docBars.map((d) => (
+                        {doctor_volumes.length === 0 && (
+                            <div className="text-[12px] text-muted-foreground">
+                                {t.empty_none}
+                            </div>
+                        )}
+                        {doctor_volumes.map((d, i) => (
                             <div
-                                key={d.name}
+                                key={d.doctor_name ?? `doctor-${i}`}
                                 className="grid grid-cols-[160px_1fr_40px] items-center gap-3 text-[12px]"
                             >
-                                <span className="truncate">{d.name}</span>
+                                <span className="truncate">
+                                    {d.doctor_name?.trim() || t.unassigned}
+                                </span>
                                 <div className="relative h-4 overflow-hidden rounded bg-muted">
                                     <div
                                         className={cn(
                                             'h-full rounded',
-                                            d.color,
+                                            DOCTOR_COLORS[
+                                                i % DOCTOR_COLORS.length
+                                            ],
                                         )}
-                                        style={{ width: `${d.n}%` }}
+                                        style={{
+                                            width: `${(d.count / maxDoc) * 100}%`,
+                                        }}
                                     />
                                 </div>
                                 <span className="text-end font-semibold tabular-nums">
-                                    {d.n}
+                                    {d.count}
                                 </span>
                             </div>
                         ))}

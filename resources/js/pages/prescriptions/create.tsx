@@ -1,310 +1,409 @@
-import { Head } from '@inertiajs/react';
-import {
-    AlertTriangle,
-    MessageCircle,
-    Plus,
-    Printer,
-    Search,
-    X,
-} from 'lucide-react';
-import { useState } from 'react';
+import { Head, Link, useForm } from '@inertiajs/react';
+import { ChevronLeft, Plus, X } from 'lucide-react';
 
 import { PageHeader } from '@/components/blue-dome/page-header';
 import { SectionCard } from '@/components/blue-dome/section-card';
+import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Spinner } from '@/components/ui/spinner';
 import { useDoctorLang } from '@/lib/i18n/doctor-context';
+import { useLocale } from '@/lib/i18n/use-locale';
+import prescriptions from '@/routes/prescriptions';
 
-type RxLine = {
-    med: string;
-    dose: string;
-    freq: string;
-    duration: string;
-    route: string;
+type PatientOption = {
+    id: string;
+    first_name: string | null;
+    last_name: string | null;
+    patient_code: string | null;
 };
 
-const INITIAL_RX: RxLine[] = [
-    {
-        med: 'Amlodipine 5mg',
-        dose: '1 tablet',
-        freq: 'Once daily',
-        duration: '30 days',
-        route: 'oral',
-    },
-    {
-        med: 'Atorvastatin 20mg',
-        dose: '1 tablet',
-        freq: 'At bedtime',
-        duration: '30 days',
-        route: 'oral',
-    },
+type MedicationOption = {
+    id: string;
+    trade_name: string | null;
+    generic_name: string | null;
+    strength: string | null;
+    form: string | null;
+};
+
+type ItemForm = {
+    medication_id: string;
+    dosage: string;
+    frequency_text: string;
+    duration_days: string;
+    route: string;
+    quantity: string;
+};
+
+const ROUTES = [
+    'oral',
+    'topical',
+    'intravenous',
+    'intramuscular',
+    'subcutaneous',
+    'sublingual',
+    'rectal',
+    'inhalation',
+    'ophthalmic',
+    'otic',
 ];
 
-const FREQUENCIES = [
-    'Once daily',
-    'Twice daily',
-    'Three times daily',
-    'Every 8 hours',
-    'At bedtime',
-];
+const STATUSES = ['draft', 'active', 'completed', 'discontinued', 'cancelled'];
 
-export default function PrescriptionCreate() {
+const inputClass =
+    'h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50';
+const selectClass = inputClass;
+
+function emptyItem(): ItemForm {
+    return {
+        medication_id: '',
+        dosage: '',
+        frequency_text: '',
+        duration_days: '',
+        route: 'oral',
+        quantity: '',
+    };
+}
+
+function patientLabel(p: PatientOption): string {
+    const name = `${p.first_name ?? ''} ${p.last_name ?? ''}`.trim() || '—';
+
+    return p.patient_code ? `${name} · ${p.patient_code}` : name;
+}
+
+function medicationLabel(m: MedicationOption): string {
+    return [m.trade_name, m.strength].filter(Boolean).join(' ') || '—';
+}
+
+export default function PrescriptionCreate({
+    patients,
+    medications,
+}: {
+    patients: PatientOption[];
+    medications: MedicationOption[];
+}) {
     const { t } = useDoctorLang();
-    const [items, setItems] = useState<RxLine[]>(INITIAL_RX);
+    const { slug: locale } = useLocale();
 
-    const updateItem = (i: number, patch: Partial<RxLine>) => {
-        setItems((prev) =>
-            prev.map((item, idx) => (idx === i ? { ...item, ...patch } : item)),
+    const { data, setData, post, processing, errors } = useForm<{
+        patient_id: string;
+        prescription_date: string;
+        expiry_date: string;
+        status: string;
+        diagnosis_related: string;
+        notes: string;
+        items: ItemForm[];
+    }>({
+        patient_id: '',
+        prescription_date: '',
+        expiry_date: '',
+        status: 'active',
+        diagnosis_related: '',
+        notes: '',
+        items: [emptyItem()],
+    });
+
+    const err = errors as Record<string, string | undefined>;
+
+    const updateItem = (i: number, patch: Partial<ItemForm>): void => {
+        setData(
+            'items',
+            data.items.map((item, idx) =>
+                idx === i ? { ...item, ...patch } : item,
+            ),
         );
     };
 
-    const addItem = () =>
-        setItems((prev) => [
-            ...prev,
-            {
-                med: '',
-                dose: '',
-                freq: 'Once daily',
-                duration: '',
-                route: 'oral',
-            },
-        ]);
+    const addItem = (): void => setData('items', [...data.items, emptyItem()]);
 
-    const removeItem = (i: number) =>
-        setItems((prev) => prev.filter((_, idx) => idx !== i));
+    const removeItem = (i: number): void =>
+        setData(
+            'items',
+            data.items.filter((_, idx) => idx !== i),
+        );
+
+    const submit = (e: React.FormEvent): void => {
+        e.preventDefault();
+        post(prescriptions.store.url({ locale }));
+    };
 
     return (
         <>
             <Head title={t.new_rx} />
 
             <div className="px-8 py-6 lg:px-10">
-                <PageHeader
-                    title={t.new_rx}
-                    description="For Hassan El Amrani · P-002841 · 58y · A+"
-                    actions={
-                        <>
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                className="gap-2"
-                            >
-                                <Printer className="size-3.5" />
-                                Print
-                            </Button>
-                            <Button
-                                size="sm"
-                                className="gap-2 bg-olive-600 text-white hover:bg-olive-700"
-                            >
-                                <MessageCircle className="size-3.5" />
-                                {t.save_send}
-                            </Button>
-                        </>
-                    }
-                />
+                <div className="mb-4 flex items-center gap-3 text-sm">
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        asChild
+                        className="-ms-2 gap-1.5"
+                    >
+                        <Link href={prescriptions.index.url({ locale })}>
+                            <ChevronLeft className="size-3.5" />
+                            {t.prescriptions}
+                        </Link>
+                    </Button>
+                    <span className="text-muted-foreground">/</span>
+                    <span className="text-[13px] font-medium">{t.new_rx}</span>
+                </div>
 
-                <div className="grid gap-5 lg:grid-cols-[1fr_360px]">
-                    <div className="space-y-3 rounded-xl border border-border bg-card p-5">
-                        <h2 className="text-lg font-semibold">Medications</h2>
+                <PageHeader title={t.new_rx} description={t.prescriptions} />
 
-                        <div className="flex flex-wrap items-center gap-3 rounded-lg border border-dashed border-border bg-muted px-3 py-2.5">
-                            <Search className="size-4 text-muted-foreground" />
-                            <input
-                                placeholder="Search medication: trade name, generic, ATC code..."
-                                className="min-w-0 flex-1 border-none bg-transparent text-sm outline-none"
-                            />
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                className="gap-2"
+                <form onSubmit={submit} className="mt-6 space-y-5">
+                    <SectionCard bodyClassName="grid gap-5 p-6 sm:grid-cols-2">
+                        <div className="grid gap-2">
+                            <Label htmlFor="patient_id">{t.patients}</Label>
+                            <select
+                                id="patient_id"
+                                value={data.patient_id}
+                                onChange={(e) =>
+                                    setData('patient_id', e.target.value)
+                                }
+                                required
+                                className={selectClass}
                             >
-                                <AlertTriangle className="size-3.5" />
-                                Allergy check
-                            </Button>
+                                <option value="" disabled>
+                                    Select a patient…
+                                </option>
+                                {patients.map((p) => (
+                                    <option key={p.id} value={p.id}>
+                                        {patientLabel(p)}
+                                    </option>
+                                ))}
+                            </select>
+                            <InputError message={err.patient_id} />
                         </div>
+                        <div className="grid gap-2">
+                            <Label htmlFor="status">Status</Label>
+                            <select
+                                id="status"
+                                value={data.status}
+                                onChange={(e) =>
+                                    setData('status', e.target.value)
+                                }
+                                className={selectClass}
+                            >
+                                {STATUSES.map((s) => (
+                                    <option key={s} value={s}>
+                                        {s}
+                                    </option>
+                                ))}
+                            </select>
+                            <InputError message={err.status} />
+                        </div>
+                        <div className="grid gap-2">
+                            <Label htmlFor="prescription_date">Issued</Label>
+                            <Input
+                                id="prescription_date"
+                                type="date"
+                                value={data.prescription_date}
+                                onChange={(e) =>
+                                    setData('prescription_date', e.target.value)
+                                }
+                            />
+                            <InputError message={err.prescription_date} />
+                        </div>
+                        <div className="grid gap-2">
+                            <Label htmlFor="expiry_date">Expires</Label>
+                            <Input
+                                id="expiry_date"
+                                type="date"
+                                value={data.expiry_date}
+                                onChange={(e) =>
+                                    setData('expiry_date', e.target.value)
+                                }
+                            />
+                            <InputError message={err.expiry_date} />
+                        </div>
+                    </SectionCard>
 
-                        {items.map((rx, i) => (
+                    <SectionCard
+                        title={t.medication}
+                        bodyClassName="space-y-3 p-5"
+                        actions={
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                className="gap-2"
+                                onClick={addItem}
+                            >
+                                <Plus className="size-3.5" />
+                                Add
+                            </Button>
+                        }
+                    >
+                        {err.items && (
+                            <p className="text-[13px] text-danger">
+                                {err.items}
+                            </p>
+                        )}
+                        {data.items.map((item, i) => (
                             <div
                                 key={i}
-                                className="grid items-end gap-2 rounded-lg border border-border bg-card p-3"
-                                style={{
-                                    gridTemplateColumns:
-                                        '1.5fr 1fr 1fr 1fr 36px',
-                                }}
+                                className="rounded-lg border border-border p-3"
                             >
-                                <div>
-                                    <div className="mb-1 text-[12px] font-medium text-muted-foreground">
-                                        {t.medication}
+                                <div className="grid gap-3 sm:grid-cols-2">
+                                    <div className="grid gap-1.5 sm:col-span-2">
+                                        <Label htmlFor={`med-${i}`}>
+                                            {t.medication}
+                                        </Label>
+                                        <select
+                                            id={`med-${i}`}
+                                            value={item.medication_id}
+                                            onChange={(e) =>
+                                                updateItem(i, {
+                                                    medication_id:
+                                                        e.target.value,
+                                                })
+                                            }
+                                            required
+                                            className={selectClass}
+                                        >
+                                            <option value="" disabled>
+                                                Select a medication…
+                                            </option>
+                                            {medications.map((m) => (
+                                                <option key={m.id} value={m.id}>
+                                                    {medicationLabel(m)}
+                                                </option>
+                                            ))}
+                                        </select>
+                                        <InputError
+                                            message={
+                                                err[`items.${i}.medication_id`]
+                                            }
+                                        />
                                     </div>
-                                    <div className="text-[14px] font-semibold">
-                                        {rx.med || '—'}
+                                    <div className="grid gap-1.5">
+                                        <Label htmlFor={`dose-${i}`}>
+                                            {t.dosage}
+                                        </Label>
+                                        <Input
+                                            id={`dose-${i}`}
+                                            value={item.dosage}
+                                            onChange={(e) =>
+                                                updateItem(i, {
+                                                    dosage: e.target.value,
+                                                })
+                                            }
+                                            required
+                                        />
+                                        <InputError
+                                            message={err[`items.${i}.dosage`]}
+                                        />
                                     </div>
-                                    <div className="mt-0.5 text-[11px] text-muted-foreground">
-                                        oral · tablet
+                                    <div className="grid gap-1.5">
+                                        <Label htmlFor={`freq-${i}`}>
+                                            {t.frequency}
+                                        </Label>
+                                        <Input
+                                            id={`freq-${i}`}
+                                            value={item.frequency_text}
+                                            placeholder="e.g. Twice daily"
+                                            onChange={(e) =>
+                                                updateItem(i, {
+                                                    frequency_text:
+                                                        e.target.value,
+                                                })
+                                            }
+                                        />
                                     </div>
-                                </div>
-                                <div>
-                                    <label className="mb-1 block text-[12px] font-medium text-muted-foreground">
-                                        {t.dosage}
-                                    </label>
-                                    <input
-                                        value={rx.dose}
-                                        onChange={(e) =>
-                                            updateItem(i, {
-                                                dose: e.target.value,
-                                            })
-                                        }
-                                        className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="mb-1 block text-[12px] font-medium text-muted-foreground">
-                                        {t.frequency}
-                                    </label>
-                                    <select
-                                        value={rx.freq}
-                                        onChange={(e) =>
-                                            updateItem(i, {
-                                                freq: e.target.value,
-                                            })
-                                        }
-                                        className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
-                                    >
-                                        {FREQUENCIES.map((f) => (
-                                            <option key={f}>{f}</option>
-                                        ))}
-                                    </select>
-                                </div>
-                                <div>
-                                    <label className="mb-1 block text-[12px] font-medium text-muted-foreground">
-                                        {t.duration}
-                                    </label>
-                                    <input
-                                        value={rx.duration}
-                                        onChange={(e) =>
-                                            updateItem(i, {
-                                                duration: e.target.value,
-                                            })
-                                        }
-                                        className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
-                                    />
-                                </div>
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="size-9"
-                                    onClick={() => removeItem(i)}
-                                >
-                                    <X className="size-3.5" />
-                                </Button>
-                            </div>
-                        ))}
-
-                        <Button
-                            variant="outline"
-                            className="w-full gap-2"
-                            onClick={addItem}
-                        >
-                            <Plus className="size-3.5" />
-                            Add medication
-                        </Button>
-
-                        <div className="mt-6 space-y-3">
-                            <div>
-                                <label className="mb-1 block text-[12px] font-medium text-muted-foreground">
-                                    Diagnosis
-                                </label>
-                                <input
-                                    defaultValue="I10 — Essential (primary) hypertension"
-                                    className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
-                                />
-                            </div>
-                            <div>
-                                <label className="mb-1 block text-[12px] font-medium text-muted-foreground">
-                                    Notes for patient
-                                </label>
-                                <textarea
-                                    rows={3}
-                                    defaultValue="Take with food. Monitor BP twice daily and log readings. Return in 4 weeks."
-                                    className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
-                                />
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="flex flex-col gap-4">
-                        <div className="rounded-xl border border-border bg-card p-5">
-                            <div className="mb-3 flex items-center gap-3 border-b-2 border-navy-900 pb-2.5">
-                                <div className="grid size-7 place-items-center rounded-md bg-navy-900 text-[11px] font-bold text-white">
-                                    BD
-                                </div>
-                                <div>
-                                    <div className="text-[13px] font-bold">
-                                        Cabinet Dr. Lahlou
+                                    <div className="grid gap-1.5">
+                                        <Label htmlFor={`dur-${i}`}>
+                                            {t.duration} (days)
+                                        </Label>
+                                        <Input
+                                            id={`dur-${i}`}
+                                            type="number"
+                                            min={1}
+                                            value={item.duration_days}
+                                            onChange={(e) =>
+                                                updateItem(i, {
+                                                    duration_days:
+                                                        e.target.value,
+                                                })
+                                            }
+                                        />
                                     </div>
-                                    <div className="text-[10px] text-muted-foreground">
-                                        Cardiology · Casablanca
+                                    <div className="grid gap-1.5">
+                                        <Label htmlFor={`route-${i}`}>
+                                            Route
+                                        </Label>
+                                        <select
+                                            id={`route-${i}`}
+                                            value={item.route}
+                                            onChange={(e) =>
+                                                updateItem(i, {
+                                                    route: e.target.value,
+                                                })
+                                            }
+                                            className={selectClass}
+                                        >
+                                            {ROUTES.map((r) => (
+                                                <option key={r} value={r}>
+                                                    {r}
+                                                </option>
+                                            ))}
+                                        </select>
                                     </div>
                                 </div>
-                            </div>
-                            <div className="mb-1 text-[10px] tracking-wider text-muted-foreground uppercase">
-                                Prescription
-                            </div>
-                            <div className="mb-3 text-[11px] leading-relaxed">
-                                <div>
-                                    <strong>Patient:</strong> Hassan El Amrani ·
-                                    58y
-                                </div>
-                                <div>
-                                    <strong>Date:</strong> May 5, 2026
-                                </div>
-                                <div>
-                                    <strong>RX#:</strong> RX-2026-04812
-                                </div>
-                            </div>
-                            <div className="space-y-2.5 text-[11px] leading-relaxed">
-                                {items.map(
-                                    (rx, i) =>
-                                        rx.med && (
-                                            <div
-                                                key={i}
-                                                className="border-b border-dashed border-border pb-2 last:border-b-0"
-                                            >
-                                                <div className="font-semibold">
-                                                    ℞ {rx.med}
-                                                </div>
-                                                <div className="text-muted-foreground">
-                                                    {rx.dose} · {rx.freq} ·{' '}
-                                                    {rx.duration}
-                                                </div>
-                                            </div>
-                                        ),
+                                {data.items.length > 1 && (
+                                    <div className="mt-2 flex justify-end">
+                                        <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="sm"
+                                            className="gap-1.5 text-danger"
+                                            onClick={() => removeItem(i)}
+                                        >
+                                            <X className="size-3.5" />
+                                            Remove
+                                        </Button>
+                                    </div>
                                 )}
                             </div>
-                            <div className="mt-4 border-t border-dashed border-border pt-2.5 text-[10px] text-muted-foreground">
-                                Dr. Karim Lahlou · License MA-CD-1842
-                            </div>
-                        </div>
+                        ))}
+                    </SectionCard>
 
-                        <SectionCard
-                            className="border-[#fcd34d] bg-warning-soft"
-                            bodyClassName="p-4"
-                        >
-                            <div className="flex items-start gap-3">
-                                <AlertTriangle className="size-4 shrink-0 pt-0.5 text-warning" />
-                                <div>
-                                    <div className="text-[13px] font-semibold text-warning">
-                                        Minor interaction
-                                    </div>
-                                    <div className="mt-1 text-[12px] text-amber-900">
-                                        Atorvastatin + Amlodipine: monitor for
-                                        muscle pain. Both prescribed at
-                                        recommended doses — proceed with
-                                        caution.
-                                    </div>
-                                </div>
-                            </div>
-                        </SectionCard>
-                    </div>
-                </div>
+                    <SectionCard bodyClassName="space-y-4 p-5">
+                        <div className="grid gap-2">
+                            <Label htmlFor="diagnosis_related">Diagnosis</Label>
+                            <Input
+                                id="diagnosis_related"
+                                value={data.diagnosis_related}
+                                onChange={(e) =>
+                                    setData('diagnosis_related', e.target.value)
+                                }
+                            />
+                            <InputError message={err.diagnosis_related} />
+                        </div>
+                        <div className="grid gap-2">
+                            <Label htmlFor="notes">Notes</Label>
+                            <textarea
+                                id="notes"
+                                rows={3}
+                                value={data.notes}
+                                onChange={(e) =>
+                                    setData('notes', e.target.value)
+                                }
+                                className="min-h-16 rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                            />
+                            <InputError message={err.notes} />
+                        </div>
+                    </SectionCard>
+
+                    <Button
+                        type="submit"
+                        disabled={processing}
+                        className="bg-olive-600 text-white hover:bg-olive-700"
+                    >
+                        {processing && <Spinner />}
+                        Issue prescription
+                    </Button>
+                </form>
             </div>
         </>
     );

@@ -20,19 +20,21 @@ class InventoryPolicy
 
     public function create(User $actor): bool
     {
-        return in_array($actor->role, ['secretary'], true);
+        return in_array($actor->role, ['super_admin', 'secretary'], true);
     }
 
     public function update(User $actor, Inventory $inventory): bool
     {
-        return $actor->clinic_id === $inventory->clinic_id
-            && in_array($actor->role, ['secretary'], true);
+        return $actor->role === 'super_admin'
+            || ($actor->clinic_id === $inventory->clinic_id
+                && $actor->role === 'secretary');
     }
 
     public function delete(User $actor, Inventory $inventory): bool
     {
-        return $actor->clinic_id === $inventory->clinic_id
-            && $actor->role === 'secretary';
+        return $actor->role === 'super_admin'
+            || ($actor->clinic_id === $inventory->clinic_id
+                && $actor->role === 'secretary');
     }
 
     public function recordTransaction(User $actor, Inventory $inventory): bool

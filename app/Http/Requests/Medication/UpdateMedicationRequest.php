@@ -32,7 +32,7 @@ class UpdateMedicationRequest extends FormRequest
                     ->ignore($medicationId),
             ],
             'generic_name' => ['sometimes', 'nullable', 'string', 'max:255'],
-            'form' => ['sometimes', 'nullable', 'in:tablet,capsule,syrup,injection,cream,drops,inhaler,spray,gel,suppository,other'],
+            'form' => ['sometimes', 'nullable', 'string', 'max:50'],
             'strength' => ['sometimes', 'nullable', 'string', 'max:100'],
             'manufacturer' => ['sometimes', 'nullable', 'string', 'max:255'],
             'category' => ['sometimes', 'nullable', 'string', 'max:100'],

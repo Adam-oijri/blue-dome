@@ -1,16 +1,8 @@
-import { Head } from '@inertiajs/react';
-import {
-    Archive,
-    Calendar as CalendarIcon,
-    ChevronLeft,
-    ChevronRight,
-    Heart,
-    Search,
-    UserPlus,
-    Users,
-} from 'lucide-react';
-import { useState } from 'react';
+import { Head, router } from '@inertiajs/react';
+import { Archive, Heart, Search, UserPlus, Users } from 'lucide-react';
+import { useRef, useState } from 'react';
 
+import { CreatePatientsSheet } from '@/components/blue-dome/create-patients-sheet';
 import { KpiCard } from '@/components/blue-dome/kpi-card';
 import { PageHeader } from '@/components/blue-dome/page-header';
 import { SectionCard } from '@/components/blue-dome/section-card';
@@ -24,42 +16,128 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import { fmtNumber } from '@/lib/format';
 import { useSecretaryLang } from '@/lib/i18n/secretary-context';
-import { SECRETARY_MOCK, localName } from '@/lib/mock/secretary';
+import { useLocale } from '@/lib/i18n/use-locale';
 import { cn } from '@/lib/utils';
+import { Pagination } from '@/pages/panels/super-admin/users';
+import { show as patientShow } from '@/routes/patients';
+import { patients as patientsRoute } from '@/routes/secretary';
 
-const LAST_VISITS = [
-    '12 Apr 2026',
-    '28 Mar 2026',
-    '04 Apr 2026',
-    '30 Apr 2026',
-    '19 Mar 2026',
-    '02 May 2026',
-    '11 Apr 2026',
-    '25 Apr 2026',
-    '08 Apr 2026',
-    '30 Apr 2026',
-];
-const NEXT_APPTS = [
-    '—',
-    '6 May',
-    '—',
-    '12 May',
-    '—',
-    '—',
-    '6 May',
-    '20 May',
-    '—',
-    '6 May',
-];
+type PatientRow = {
+    id: string;
+    patient_code: string | null;
+    first_name: string | null;
+    last_name: string | null;
+    gender: string | null;
+    date_of_birth: string | null;
+    phone: string | null;
+    blood_type: string | null;
+    chronic_diseases: string | null;
+    insurance_company: string | null;
+    registration_date: string | null;
+    is_active: boolean;
+    last_visit: string | null;
+    next_appt: string | null;
+};
 
-export default function SecretaryPatients() {
-    const { t, lang } = useSecretaryLang();
-    const [filter, setFilter] = useState<
-        'all' | 'chronic' | 'insured' | 'bday'
-    >('all');
-    const list = SECRETARY_MOCK.patients;
-    const visible = filter === 'chronic' ? list.filter((p) => p.chronic) : list;
+type Paginated<T> = {
+    data: T[];
+    total: number;
+    current_page: number;
+    last_page: number;
+    links: Array<{ url: string | null; label: string; active: boolean }>;
+};
+
+interface Props {
+    patients: Paginated<PatientRow>;
+    kpis: {
+        total: number;
+        chronic: number;
+        new_this_month: number;
+    };
+    filters: {
+        q: string | null;
+        filter: string | null;
+    };
+}
+
+const fullName = (p: PatientRow): string =>
+    `${p.first_name ?? ''} ${p.last_name ?? ''}`.trim() || '—';
+
+const initials = (name: string): string =>
+    name
+        .split(' ')
+        .filter(Boolean)
+        .slice(0, 2)
+        .map((s) => s[0]?.toUpperCase() ?? '')
+        .join('') || '?';
+
+const ageFrom = (dob: string | null): string => {
+    if (!dob) {
+        return '—';
+    }
+
+    const birth = new Date(dob);
+    const diff = Date.now() - birth.getTime();
+
+    return String(Math.floor(diff / (365.25 * 24 * 60 * 60 * 1000)));
+};
+
+const fmtDate = (value: string | null): string =>
+    value ? value.slice(0, 10) : '—';
+
+export default function SecretaryPatients({ patients, kpis, filters }: Props) {
+    const { t } = useSecretaryLang();
+    const { slug: locale } = useLocale();
+    const [search, setSearch] = useState(filters.q ?? '');
+    const debounce = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    const chronicActive = filters.filter === 'chronic';
+
+    const visit = (params: Record<string, string>): void => {
+        router.get(patientsRoute.url({ locale }), params, {
+            preserveState: true,
+            preserveScroll: true,
+            replace: true,
+        });
+    };
+
+    const onSearchChange = (value: string): void => {
+        setSearch(value);
+
+        if (debounce.current) {
+            clearTimeout(debounce.current);
+        }
+
+        debounce.current = setTimeout(() => {
+            const params: Record<string, string> = {};
+
+            if (value) {
+                params.q = value;
+            }
+
+            if (chronicActive) {
+                params.filter = 'chronic';
+            }
+
+            visit(params);
+        }, 300);
+    };
+
+    const toggleChronic = (next: boolean): void => {
+        const params: Record<string, string> = {};
+
+        if (search) {
+            params.q = search;
+        }
+
+        if (next) {
+            params.filter = 'chronic';
+        }
+
+        visit(params);
+    };
 
     return (
         <>
@@ -68,7 +146,7 @@ export default function SecretaryPatients() {
             <div className="px-6 py-5 lg:px-8">
                 <PageHeader
                     title={t.nav_patients}
-                    description="3,248 patients across 2 branches · 47 new this month"
+                    description={`${fmtNumber(kpis.total)} · ${fmtNumber(kpis.new_this_month)} ${t.pt_kpi_new_month}`}
                     actions={
                         <>
                             <Button
@@ -77,44 +155,45 @@ export default function SecretaryPatients() {
                                 className="gap-2"
                             >
                                 <Archive className="size-3.5" />
-                                Export
+                                {t.pt_export}
                             </Button>
-                            <Button
-                                size="sm"
-                                className="gap-2 bg-olive-600 text-white hover:bg-olive-700"
-                            >
-                                <UserPlus className="size-3.5" />
-                                New patient
-                            </Button>
+                            <CreatePatientsSheet>
+                                <Button
+                                    size="sm"
+                                    className="gap-2 bg-olive-600 text-white hover:bg-olive-700"
+                                >
+                                    <UserPlus className="size-3.5" />
+                                    {t.pt_new}
+                                </Button>
+                            </CreatePatientsSheet>
                         </>
                     }
                 />
 
                 <div className="mb-5 grid grid-cols-2 gap-3 md:grid-cols-4">
                     <KpiCard
-                        label="Total patients"
-                        value="3,248"
+                        label={t.pt_kpi_total}
+                        value={fmtNumber(kpis.total)}
                         icon={Users}
                         tone="navy"
-                        trend={{ value: '+1.5%', direction: 'up' }}
                     />
                     <KpiCard
-                        label="New this month"
-                        value="47"
+                        label={t.pt_kpi_new_month}
+                        value={fmtNumber(kpis.new_this_month)}
                         icon={UserPlus}
                         tone="olive"
                     />
                     <KpiCard
-                        label="Chronic care"
-                        value="412"
+                        label={t.pt_kpi_chronic}
+                        value={fmtNumber(kpis.chronic)}
                         icon={Heart}
                         tone="warn"
                     />
                     <KpiCard
-                        label="Birthdays this week"
-                        value="9"
-                        icon={CalendarIcon}
-                        tone="navy"
+                        label={t.pt_kpi_results}
+                        value={fmtNumber(patients.total)}
+                        icon={Search}
+                        tone="success"
                     />
                 </div>
 
@@ -124,43 +203,42 @@ export default function SecretaryPatients() {
                             <Search className="pointer-events-none absolute start-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
                             <input
                                 type="search"
-                                placeholder="Search patients…"
+                                value={search}
+                                onChange={(e) => onSearchChange(e.target.value)}
+                                placeholder={t.pt_search_placeholder}
                                 className="h-8 w-full rounded-md border border-transparent bg-muted ps-8 pe-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                             />
                         </div>
                         <div className="flex flex-wrap gap-1.5">
-                            {(
-                                [
-                                    ['all', 'All', list.length],
-                                    [
-                                        'chronic',
-                                        'Chronic care',
-                                        list.filter((p) => p.chronic).length,
-                                    ],
-                                    ['insured', 'Insured', list.length],
-                                    ['bday', 'Birthday this week', 3],
-                                ] as const
-                            ).map(([id, label, ct]) => (
-                                <Button
-                                    key={id}
-                                    variant={
-                                        filter === id ? 'default' : 'ghost'
-                                    }
-                                    size="sm"
-                                    onClick={() => setFilter(id)}
-                                    className={cn(
-                                        'gap-1.5',
-                                        filter === id
-                                            ? 'bg-navy-900 text-white hover:bg-navy-800'
-                                            : '',
-                                    )}
-                                >
-                                    {label}
-                                    <span className="text-[11px] tabular-nums opacity-70">
-                                        {ct}
-                                    </span>
-                                </Button>
-                            ))}
+                            <Button
+                                variant={chronicActive ? 'ghost' : 'default'}
+                                size="sm"
+                                onClick={() => toggleChronic(false)}
+                                className={cn(
+                                    'gap-1.5',
+                                    !chronicActive
+                                        ? 'bg-navy-900 text-white hover:bg-navy-800'
+                                        : '',
+                                )}
+                            >
+                                {t.pt_filter_all}
+                            </Button>
+                            <Button
+                                variant={chronicActive ? 'default' : 'ghost'}
+                                size="sm"
+                                onClick={() => toggleChronic(true)}
+                                className={cn(
+                                    'gap-1.5',
+                                    chronicActive
+                                        ? 'bg-navy-900 text-white hover:bg-navy-800'
+                                        : '',
+                                )}
+                            >
+                                {t.pt_filter_chronic}
+                                <span className="text-[11px] tabular-nums opacity-70">
+                                    {fmtNumber(kpis.chronic)}
+                                </span>
+                            </Button>
                         </div>
                     </div>
 
@@ -168,99 +246,115 @@ export default function SecretaryPatients() {
                         <TableHeader>
                             <TableRow className="bg-muted/50">
                                 <TableHead className="px-5 py-2.5 text-[11px] tracking-wider uppercase">
-                                    Patient
+                                    {t.pt_col_patient}
                                 </TableHead>
                                 <TableHead className="text-[11px] tracking-wider uppercase">
-                                    Age
+                                    {t.pt_col_age}
                                 </TableHead>
                                 <TableHead className="text-[11px] tracking-wider uppercase">
-                                    Contact
+                                    {t.pt_col_contact}
                                 </TableHead>
                                 <TableHead className="text-[11px] tracking-wider uppercase">
-                                    Insurance
+                                    {t.pt_col_insurance}
                                 </TableHead>
                                 <TableHead className="text-[11px] tracking-wider uppercase">
-                                    Last visit
+                                    {t.pt_col_last_visit}
                                 </TableHead>
                                 <TableHead className="text-[11px] tracking-wider uppercase">
-                                    Next appt
+                                    {t.pt_col_next_appt}
                                 </TableHead>
                                 <TableHead className="text-[11px] tracking-wider uppercase">
-                                    Tags
+                                    {t.pt_col_tags}
                                 </TableHead>
                                 <TableHead className="w-20" />
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {visible.map((p, i) => {
-                                const phoneSuffix = String(
-                                    10000000 +
-                                        ((p.id.charCodeAt(1) * 73) % 90000000),
-                                ).padStart(8, '0');
-                                const phone = `+212 6 ${phoneSuffix.slice(0, 2)} ${phoneSuffix.slice(2, 4)} ${phoneSuffix.slice(4, 6)} ${phoneSuffix.slice(6, 8)}`;
-                                const next = NEXT_APPTS[i] ?? '—';
+                            {patients.data.length === 0 && (
+                                <TableRow>
+                                    <TableCell
+                                        colSpan={8}
+                                        className="py-10 text-center text-sm text-muted-foreground"
+                                    >
+                                        {t.pt_empty}
+                                    </TableCell>
+                                </TableRow>
+                            )}
+                            {patients.data.map((p) => {
+                                const name = fullName(p);
+                                const chronic = Boolean(
+                                    p.chronic_diseases &&
+                                        p.chronic_diseases.trim() !== '',
+                                );
 
                                 return (
                                     <TableRow
                                         key={p.id}
-                                        className="hover:bg-muted/50"
+                                        className="cursor-pointer hover:bg-muted/50"
+                                        onClick={() =>
+                                            router.visit(
+                                                patientShow.url({
+                                                    locale,
+                                                    patient: p.id,
+                                                }),
+                                            )
+                                        }
                                     >
                                         <TableCell className="px-5 py-3">
                                             <div className="flex items-center gap-2.5">
                                                 <div
                                                     className={cn(
                                                         'grid size-8 shrink-0 place-items-center rounded-full text-xs font-semibold text-white',
-                                                        p.gender === 'm'
+                                                        p.gender === 'male'
                                                             ? 'bg-navy-700'
                                                             : 'bg-olive-600',
                                                     )}
                                                 >
-                                                    {p.initials}
+                                                    {initials(name)}
                                                 </div>
                                                 <div>
                                                     <div className="text-[13px] font-semibold">
-                                                        {localName(p, lang)}
+                                                        {name}
                                                     </div>
                                                     <div className="text-[11px] text-muted-foreground tabular-nums">
-                                                        #{1000 + i * 7} ·{' '}
-                                                        {p.gender === 'f'
-                                                            ? 'F'
-                                                            : 'M'}
+                                                        {p.patient_code ?? '—'}
                                                     </div>
                                                 </div>
                                             </div>
                                         </TableCell>
                                         <TableCell className="text-[13px] tabular-nums">
-                                            {p.age}
+                                            {ageFrom(p.date_of_birth)}
                                         </TableCell>
                                         <TableCell className="font-mono text-[11px] text-muted-foreground">
-                                            {phone}
+                                            {p.phone ?? '—'}
                                         </TableCell>
                                         <TableCell className="text-[13px]">
-                                            {p.insurance}
+                                            {p.insurance_company ?? '—'}
                                         </TableCell>
                                         <TableCell className="text-[12px] text-muted-foreground tabular-nums">
-                                            {LAST_VISITS[i] ?? '—'}
+                                            {fmtDate(p.last_visit)}
                                         </TableCell>
                                         <TableCell className="text-[12px] tabular-nums">
-                                            {next === '—' ? (
-                                                <span className="text-muted-foreground/60">
-                                                    —
+                                            {p.next_appt ? (
+                                                <span className="font-semibold text-olive-700">
+                                                    {fmtDate(p.next_appt)}
                                                 </span>
                                             ) : (
-                                                <span className="font-semibold text-olive-700">
-                                                    {next}
+                                                <span className="text-muted-foreground/60">
+                                                    —
                                                 </span>
                                             )}
                                         </TableCell>
                                         <TableCell>
                                             <div className="flex flex-wrap gap-1">
-                                                <StatusPill tone="danger">
-                                                    {p.blood}
-                                                </StatusPill>
-                                                {p.chronic && (
+                                                {p.blood_type && (
+                                                    <StatusPill tone="danger">
+                                                        {p.blood_type}
+                                                    </StatusPill>
+                                                )}
+                                                {chronic && (
                                                     <StatusPill tone="warning">
-                                                        Chronic
+                                                        {t.pt_tag_chronic}
                                                     </StatusPill>
                                                 )}
                                             </div>
@@ -271,7 +365,7 @@ export default function SecretaryPatients() {
                                                 size="sm"
                                                 className="h-7"
                                             >
-                                                View
+                                                {t.pt_view}
                                             </Button>
                                         </TableCell>
                                     </TableRow>
@@ -280,51 +374,7 @@ export default function SecretaryPatients() {
                         </TableBody>
                     </Table>
 
-                    <div className="flex items-center justify-between border-t border-border px-5 py-3 text-[12px] text-muted-foreground">
-                        <span>
-                            Showing 1–{visible.length} of 3,248 patients
-                        </span>
-                        <div className="flex items-center gap-1">
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                className="size-7"
-                            >
-                                <ChevronLeft className="size-3" />
-                            </Button>
-                            <Button
-                                size="sm"
-                                className="size-7 bg-navy-900 text-white hover:bg-navy-800"
-                            >
-                                1
-                            </Button>
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                className="size-7"
-                            >
-                                2
-                            </Button>
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                className="size-7"
-                            >
-                                3
-                            </Button>
-                            <span className="px-1">…</span>
-                            <Button variant="ghost" size="sm" className="h-7">
-                                325
-                            </Button>
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                className="size-7"
-                            >
-                                <ChevronRight className="size-3" />
-                            </Button>
-                        </div>
-                    </div>
+                    <Pagination paginated={patients} t={t} />
                 </SectionCard>
             </div>
         </>

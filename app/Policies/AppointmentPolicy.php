@@ -20,13 +20,13 @@ class AppointmentPolicy
 
     public function create(User $actor): bool
     {
-        return in_array($actor->role, ['doctor', 'secretary'], true);
+        return in_array($actor->role, ['super_admin', 'doctor', 'secretary'], true);
     }
 
     public function update(User $actor, Appointment $appointment): bool
     {
         // Phase 8: clinic-membership branch removed.
-        return in_array($actor->role, ['doctor', 'secretary'], true);
+        return in_array($actor->role, ['super_admin', 'doctor', 'secretary'], true);
     }
 
     public function delete(User $actor, Appointment $appointment): bool
@@ -41,6 +41,6 @@ class AppointmentPolicy
 
     public function followUp(User $actor, Appointment $appointment): bool
     {
-        return in_array($actor->role, ['secretary'], true);
+        return in_array($actor->role, ['super_admin', 'secretary'], true);
     }
 }

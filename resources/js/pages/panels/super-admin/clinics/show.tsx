@@ -1,13 +1,16 @@
 import { Head, Link } from '@inertiajs/react';
 import {
+    Boxes,
     Building2,
     Calendar,
     ChevronLeft,
     Mail,
     MessageCircle,
     Pause,
+    Pencil,
     Phone,
     Play,
+    Receipt,
     Shield,
     Users,
 } from 'lucide-react';
@@ -124,6 +127,22 @@ export default function SuperAdminClinicShow({
                                 asChild
                             >
                                 <Link
+                                    href={superAdmin.clinics.edit.url({
+                                        locale,
+                                        clinic: clinic.id,
+                                    })}
+                                >
+                                    <Pencil className="size-3.5" />
+                                    Edit
+                                </Link>
+                            </Button>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="gap-2"
+                                asChild
+                            >
+                                <Link
                                     href={superAdmin.clinics.whatsapp.edit.url({
                                         locale,
                                         clinic: clinic.id,
@@ -215,6 +234,78 @@ export default function SuperAdminClinicShow({
                         tone="navy"
                     />
                 </div>
+
+                <SectionCard
+                    title="Operational management"
+                    titleIcon={<Boxes className="size-4" />}
+                    bodyClassName="flex flex-wrap gap-2 p-5"
+                    className="mb-5"
+                >
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        className="gap-2"
+                        asChild
+                    >
+                        <Link
+                            href={superAdmin.clinics.patients.index.url({
+                                locale,
+                                clinic: clinic.id,
+                            })}
+                        >
+                            <Users className="size-3.5" />
+                            Patients
+                        </Link>
+                    </Button>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        className="gap-2"
+                        asChild
+                    >
+                        <Link
+                            href={superAdmin.clinics.appointments.index.url({
+                                locale,
+                                clinic: clinic.id,
+                            })}
+                        >
+                            <Calendar className="size-3.5" />
+                            Appointments
+                        </Link>
+                    </Button>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        className="gap-2"
+                        asChild
+                    >
+                        <Link
+                            href={superAdmin.clinics.invoices.index.url({
+                                locale,
+                                clinic: clinic.id,
+                            })}
+                        >
+                            <Receipt className="size-3.5" />
+                            Invoices
+                        </Link>
+                    </Button>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        className="gap-2"
+                        asChild
+                    >
+                        <Link
+                            href={superAdmin.clinics.inventory.index.url({
+                                locale,
+                                clinic: clinic.id,
+                            })}
+                        >
+                            <Boxes className="size-3.5" />
+                            Inventory
+                        </Link>
+                    </Button>
+                </SectionCard>
 
                 <div className="grid gap-5 lg:grid-cols-[1fr_320px]">
                     <SectionCard

@@ -2,6 +2,7 @@ import { Head, Link } from '@inertiajs/react';
 import {
     Building2,
     CreditCard,
+    Download,
     Receipt,
     TrendingUp,
     Wallet,
@@ -11,6 +12,7 @@ import { KpiCard } from '@/components/blue-dome/kpi-card';
 import { PageHeader } from '@/components/blue-dome/page-header';
 import { SectionCard } from '@/components/blue-dome/section-card';
 import { StatusPill } from '@/components/blue-dome/status-pill';
+import { Button } from '@/components/ui/button';
 import {
     Table,
     TableBody,
@@ -93,6 +95,19 @@ export default function SuperAdminFinancePage({
                 <PageHeader
                     title={t.finance_page_title}
                     description={t.finance_page_sub}
+                    actions={
+                        <Button
+                            asChild
+                            variant="outline"
+                            size="sm"
+                            className="gap-2"
+                        >
+                            <a href={superAdmin.finance.export.url({ locale })}>
+                                <Download className="size-3.5" />
+                                Export revenue
+                            </a>
+                        </Button>
+                    }
                 />
 
                 <div className="mb-5 grid grid-cols-2 gap-3 md:grid-cols-4">

@@ -22,7 +22,7 @@ it('lets doctor / secretary list appointments', function (string $role) {
     $this->actingAs($actor)->get(route('appointments.index'))->assertSuccessful();
 })->with(['doctor', 'secretary']);
 
-it('lets clinic staff schedule and rejects super_admin', function (string $role, bool $allowed) {
+it('lets clinic staff and super_admin schedule an appointment', function (string $role, bool $allowed) {
     $actor = User::factory()->state(['role' => $role])->create(['clinic_id' => $this->clinic->id]);
 
     $start = now()->addDays(2)->setTime(10, 0);
@@ -44,7 +44,7 @@ it('lets clinic staff schedule and rejects super_admin', function (string $role,
         $response->assertForbidden();
     }
 })->with([
-    ['super_admin', false],
+    ['super_admin', true],
     ['doctor', true],
     ['secretary', true],
 ]);
@@ -65,20 +65,6 @@ it('lets a secretary cancel an appointment', function () {
 
     expect($appointment->fresh()->status)->toBe('cancelled');
     expect($appointment->fresh()->cancelled_reason)->toBe('Patient called to reschedule');
-});
-
-it('blocks super_admin from creating', function () {
-    $superAdmin = User::factory()->superAdmin()->create(['clinic_id' => $this->clinic->id]);
-    $start = now()->addDays(2)->setTime(10, 0);
-
-    $this->actingAs($superAdmin)
-        ->post(route('appointments.store'), [
-            'patient_id' => $this->patient->id,
-            'doctor_id' => $this->doctor->id,
-            'scheduled_start' => $start->toDateTimeString(),
-            'scheduled_end' => $start->copy()->addMinutes(30)->toDateTimeString(),
-        ])
-        ->assertForbidden();
 });
 
 it('lets a clinic schedule an appointment for a patient from another clinic (Phase 8 global access)', function () {

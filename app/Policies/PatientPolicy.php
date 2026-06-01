@@ -28,17 +28,17 @@ class PatientPolicy
 
     public function create(User $actor): bool
     {
-        return in_array($actor->role, ['doctor', 'secretary'], true);
+        return in_array($actor->role, ['super_admin', 'doctor', 'secretary'], true);
     }
 
     public function update(User $actor, Patient $patient): bool
     {
-        return in_array($actor->role, ['doctor', 'secretary'], true);
+        return in_array($actor->role, ['super_admin', 'doctor', 'secretary'], true);
     }
 
     public function delete(User $actor, Patient $patient): bool
     {
-        return $actor->role === 'secretary';
+        return in_array($actor->role, ['super_admin', 'secretary'], true);
     }
 
     public function export(User $actor, Patient $patient): bool

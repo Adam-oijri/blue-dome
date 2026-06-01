@@ -1,13 +1,16 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { Building2, Search, Users } from 'lucide-react';
+import { Building2, Download, Plus, Search, Users } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
+import { BulkActionBar } from '@/components/blue-dome/bulk-action-bar';
+import { CreateClinicsSheet } from '@/components/blue-dome/create-clinics-sheet';
 import { KpiCard } from '@/components/blue-dome/kpi-card';
 import { PageHeader } from '@/components/blue-dome/page-header';
 import { SectionCard } from '@/components/blue-dome/section-card';
 import { StatusPill } from '@/components/blue-dome/status-pill';
 import type { StatusTone } from '@/components/blue-dome/status-pill';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
     Table,
     TableBody,
@@ -16,6 +19,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import { useRowSelection } from '@/hooks/use-row-selection';
 import { useSuperAdminLang } from '@/lib/i18n/super-admin-context';
 import { useLocale } from '@/lib/i18n/use-locale';
 import { cn } from '@/lib/utils';
@@ -38,6 +42,7 @@ interface ClinicRow {
 interface Filters {
     search: string;
     status: string;
+    [key: string]: string;
 }
 
 interface ClinicsIndexProps {
@@ -70,6 +75,22 @@ export default function SuperAdminClinicsIndex({
     const currentFilters: Filters = filters ?? { search: '', status: '' };
 
     const [search, setSearch] = useState(currentFilters.search);
+    const selection = useRowSelection(data.map((c) => c.id));
+
+    const runBulk = (action: 'suspend' | 'restore'): void => {
+        router.post(
+            superAdmin.clinics.bulk.url({ locale }),
+            { action, ids: selection.ids },
+            { preserveScroll: true, onSuccess: () => selection.clear() },
+        );
+    };
+
+    const exportSelected = (): void => {
+        window.location.href = superAdmin.clinics.export.url(
+            { locale },
+            { query: { ids: selection.ids } },
+        );
+    };
 
     useEffect(() => {
         const handle = setTimeout(() => {
@@ -77,6 +98,7 @@ export default function SuperAdminClinicsIndex({
                 return;
             }
 
+            selection.clear();
             router.get(
                 superAdmin.clinics.index.url({ locale }),
                 { search, status: currentFilters.status || undefined },
@@ -89,6 +111,7 @@ export default function SuperAdminClinicsIndex({
     }, [search]);
 
     const setStatus = (status: string): void => {
+        selection.clear();
         router.get(
             superAdmin.clinics.index.url({ locale }),
             {
@@ -107,6 +130,35 @@ export default function SuperAdminClinicsIndex({
                 <PageHeader
                     title={t.nav_clinics}
                     description={`${total} clinics across the platform`}
+                    actions={
+                        <div className="flex items-center gap-2">
+                            <Button
+                                asChild
+                                variant="outline"
+                                size="sm"
+                                className="gap-2"
+                            >
+                                <a
+                                    href={superAdmin.clinics.export.url(
+                                        { locale },
+                                        { query: currentFilters },
+                                    )}
+                                >
+                                    <Download className="size-3.5" />
+                                    Export
+                                </a>
+                            </Button>
+                            <CreateClinicsSheet>
+                                <Button
+                                    size="sm"
+                                    className="gap-2 bg-navy-900 text-white hover:bg-navy-800"
+                                >
+                                    <Plus className="size-3.5" />
+                                    New clinic
+                                </Button>
+                            </CreateClinicsSheet>
+                        </div>
+                    }
                 />
 
                 <div className="mb-5 grid grid-cols-2 gap-3 md:grid-cols-4">
@@ -177,6 +229,21 @@ export default function SuperAdminClinicsIndex({
                     <Table>
                         <TableHeader>
                             <TableRow className="bg-muted/50">
+                                <TableHead className="w-10 px-5">
+                                    <Checkbox
+                                        aria-label="Select all"
+                                        checked={
+                                            selection.allSelected
+                                                ? true
+                                                : selection.someSelected
+                                                  ? 'indeterminate'
+                                                  : false
+                                        }
+                                        onCheckedChange={() =>
+                                            selection.toggleAll()
+                                        }
+                                    />
+                                </TableHead>
                                 <TableHead className="px-5 py-2.5 text-[11px] tracking-wider uppercase">
                                     {t.th_clinic}
                                 </TableHead>
@@ -202,7 +269,7 @@ export default function SuperAdminClinicsIndex({
                             {data.length === 0 && (
                                 <TableRow>
                                     <TableCell
-                                        colSpan={7}
+                                        colSpan={8}
                                         className="py-12 text-center text-sm text-muted-foreground"
                                     >
                                         {t.empty_no_results}
@@ -216,8 +283,22 @@ export default function SuperAdminClinicsIndex({
                                 return (
                                     <TableRow
                                         key={c.id}
+                                        data-state={
+                                            selection.has(c.id)
+                                                ? 'selected'
+                                                : undefined
+                                        }
                                         className="hover:bg-muted/50"
                                     >
+                                        <TableCell className="px-5">
+                                            <Checkbox
+                                                aria-label={`Select ${c.name}`}
+                                                checked={selection.has(c.id)}
+                                                onCheckedChange={() =>
+                                                    selection.toggle(c.id)
+                                                }
+                                            />
+                                        </TableCell>
                                         <TableCell className="px-5 py-3">
                                             <Link
                                                 href={superAdmin.clinics.show.url(
@@ -304,6 +385,20 @@ export default function SuperAdminClinicsIndex({
                     {clinics && <Pagination paginated={clinics} t={t} />}
                 </SectionCard>
             </div>
+
+            <BulkActionBar
+                count={selection.count}
+                onClear={selection.clear}
+                actions={[
+                    { label: 'Restore', onClick: () => runBulk('restore') },
+                    { label: 'Export selected', onClick: exportSelected },
+                    {
+                        label: 'Suspend',
+                        onClick: () => runBulk('suspend'),
+                        destructive: true,
+                    },
+                ]}
+            />
         </>
     );
 }

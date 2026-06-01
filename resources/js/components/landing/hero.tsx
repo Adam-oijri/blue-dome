@@ -9,6 +9,8 @@ import { ScrollCue } from '@/components/landing/scroll-cue';
 import { FADE_UP, STAGGER } from '@/components/landing/shared/animations';
 import type { SectionProps } from '@/components/landing/shared/types';
 import { Button } from '@/components/ui/button';
+import { useLocale } from '@/lib/i18n/use-locale';
+import { login } from '@/routes';
 
 const WORD_FADE: Variants = {
     hidden: { opacity: 0, y: 18 },
@@ -37,7 +39,11 @@ function splitWords(text: string) {
     ));
 }
 
-export function Hero({ lang }: SectionProps) {
+export function Hero({
+    lang,
+    canRegister = false,
+}: SectionProps & { canRegister?: boolean }) {
+    const { slug: locale } = useLocale();
     const { scrollY } = useScroll();
     const heroParallax = useTransform(scrollY, [0, 600], [0, 80]);
     const heroOpacity = useTransform(scrollY, [0, 400], [1, 0.6]);
@@ -126,7 +132,13 @@ export function Hero({ lang }: SectionProps) {
                                 size="lg"
                                 className="h-12 gap-2 bg-navy-900 px-6 text-white shadow-lg shadow-navy-900/20 hover:bg-navy-800"
                             >
-                                <Link href="/register">
+                                <Link
+                                    href={
+                                        canRegister
+                                            ? '/register'
+                                            : login({ locale })
+                                    }
+                                >
                                     {lang === 'fr'
                                         ? 'Commencer gratuitement'
                                         : 'Start free trial'}

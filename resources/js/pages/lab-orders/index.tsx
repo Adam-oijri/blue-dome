@@ -1,13 +1,13 @@
-import { Head } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
 import {
     AlertTriangle,
     ChevronRight,
     Clock,
-    Filter,
     FlaskConical,
     Plus,
 } from 'lucide-react';
 
+import { CreateLabOrdersSheet } from '@/components/blue-dome/create-lab-orders-sheet';
 import { KpiCard } from '@/components/blue-dome/kpi-card';
 import { PageHeader } from '@/components/blue-dome/page-header';
 import { SectionCard } from '@/components/blue-dome/section-card';
@@ -23,112 +23,96 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import { useDoctorLang } from '@/lib/i18n/doctor-context';
+import { useLocale } from '@/lib/i18n/use-locale';
+import { Pagination } from '@/pages/panels/super-admin/users';
+import labOrders from '@/routes/lab-orders';
 
-type LabStatus = 'pending' | 'sample_collected' | 'in_progress' | 'completed';
+type LabStatus =
+    | 'pending'
+    | 'sample_collected'
+    | 'in_progress'
+    | 'partially_completed'
+    | 'completed'
+    | 'cancelled';
 type Urgency = 'routine' | 'urgent' | 'stat';
 
-const ORDERS: {
+type Person = {
     id: string;
-    patient: string;
-    tests: number;
-    lab: string;
-    urgency: Urgency;
+    first_name: string | null;
+    last_name: string | null;
+    patient_code?: string | null;
+} | null;
+
+type LabOrderRow = {
+    id: string;
+    lab_order_number: string | null;
+    order_date: string | null;
     status: LabStatus;
-    date: string;
-    abnormal?: number;
-}[] = [
-    {
-        id: 'LAB-2026-1842',
-        patient: 'Youssef Tazi',
-        tests: 4,
-        lab: 'Biocenter',
-        urgency: 'routine',
-        status: 'in_progress',
-        date: 'May 5',
-    },
-    {
-        id: 'LAB-2026-1839',
-        patient: 'Hassan El Amrani',
-        tests: 2,
-        lab: 'Biocenter',
-        urgency: 'urgent',
-        status: 'completed',
-        date: 'May 5',
-        abnormal: 1,
-    },
-    {
-        id: 'LAB-2026-1835',
-        patient: 'Salma Idrissi',
-        tests: 6,
-        lab: 'Pasteur',
-        urgency: 'routine',
-        status: 'completed',
-        date: 'May 4',
-        abnormal: 0,
-    },
-    {
-        id: 'LAB-2026-1828',
-        patient: 'Latifa Ouazzani',
-        tests: 3,
-        lab: 'Biocenter',
-        urgency: 'routine',
-        status: 'sample_collected',
-        date: 'May 4',
-    },
-    {
-        id: 'LAB-2026-1820',
-        patient: 'Aicha Berrada',
-        tests: 5,
-        lab: 'Pasteur',
-        urgency: 'stat',
-        status: 'completed',
-        date: 'May 3',
-        abnormal: 2,
-    },
-    {
-        id: 'LAB-2026-1815',
-        patient: 'Mehdi Saidi',
-        tests: 4,
-        lab: 'Biocenter',
-        urgency: 'routine',
-        status: 'pending',
-        date: 'May 3',
-    },
-];
+    urgency: Urgency;
+    items_count: number;
+    abnormal_count: number;
+    patient?: Person;
+    external_lab?: { id: string; lab_name: string | null } | null;
+};
+
+type CriticalResult = {
+    id: string;
+    test_name: string | null;
+    result: string | null;
+    unit: string | null;
+    normal_range: string | null;
+    is_critical: boolean;
+    is_abnormal: boolean;
+    lab_order?: { id: string; patient?: Person } | null;
+};
+
+type Paginated<T> = {
+    data: T[];
+    total: number;
+    current_page: number;
+    last_page: number;
+    links: Array<{ url: string | null; label: string; active: boolean }>;
+};
+
+type PatientOption = {
+    id: string;
+    first_name: string | null;
+    last_name: string | null;
+    patient_code: string | null;
+};
 
 const STATUS: Record<LabStatus, { tone: StatusTone; label: string }> = {
     pending: { tone: 'neutral', label: 'Pending' },
     sample_collected: { tone: 'warning', label: 'Collected' },
     in_progress: { tone: 'info', label: 'In progress' },
+    partially_completed: { tone: 'info', label: 'Partial' },
     completed: { tone: 'success', label: 'Completed' },
+    cancelled: { tone: 'danger', label: 'Cancelled' },
 };
 
-const CRITICAL = [
-    {
-        patient: 'Aicha Berrada',
-        test: 'Troponin I',
-        value: '0.42 ng/mL',
-        normal: '<0.04',
-        critical: true,
-    },
-    {
-        patient: 'Hassan El Amrani',
-        test: 'LDL Cholesterol',
-        value: '218 mg/dL',
-        normal: '<100',
-        critical: false,
-    },
-    {
-        patient: 'Aicha Berrada',
-        test: 'Potassium',
-        value: '5.9 mEq/L',
-        normal: '3.5–5.0',
-        critical: true,
-    },
-];
+function personName(p?: Person): string {
+    return p ? `${p.first_name ?? ''} ${p.last_name ?? ''}`.trim() || '—' : '—';
+}
 
-export default function LabOrdersIndex() {
+export default function LabOrdersIndex({
+    lab_orders,
+    patients,
+    kpis,
+    critical_results,
+}: {
+    lab_orders: Paginated<LabOrderRow>;
+    patients: PatientOption[];
+    kpis: {
+        pending: number;
+        in_progress: number;
+        completed: number;
+        critical: number;
+    };
+    critical_results: CriticalResult[];
+    filters: { patient_id: string | null; status: string | null };
+}) {
     const { t } = useDoctorLang();
+    const { slug: locale } = useLocale();
 
     return (
         <>
@@ -137,42 +121,44 @@ export default function LabOrdersIndex() {
             <div className="px-8 py-6 lg:px-10">
                 <PageHeader
                     title={t.lab_orders}
-                    description="23 orders this week · 3 critical results pending review"
+                    description={`${lab_orders.total} orders · ${kpis.critical} critical results`}
                     actions={
-                        <Button
-                            size="sm"
-                            className="gap-2 bg-olive-600 text-white hover:bg-olive-700"
-                        >
-                            <Plus className="size-3.5" />
-                            New lab order
-                        </Button>
+                        <CreateLabOrdersSheet patients={patients}>
+                            <Button
+                                size="sm"
+                                className="gap-2 bg-olive-600 text-white hover:bg-olive-700"
+                            >
+                                <Plus className="size-3.5" />
+                                New lab order
+                            </Button>
+                        </CreateLabOrdersSheet>
                     }
                 />
 
                 <div className="mb-6 grid grid-cols-2 gap-4 md:grid-cols-4">
                     <KpiCard
                         label="In progress"
-                        value="8"
+                        value={String(kpis.in_progress)}
                         icon={FlaskConical}
                         tone="navy"
                     />
                     <KpiCard
-                        label="Awaiting review"
-                        value="3"
-                        icon={AlertTriangle}
+                        label="Pending"
+                        value={String(kpis.pending)}
+                        icon={Clock}
                         tone="warn"
+                    />
+                    <KpiCard
+                        label="Completed"
+                        value={String(kpis.completed)}
+                        icon={FlaskConical}
+                        tone="success"
                     />
                     <KpiCard
                         label="Critical results"
-                        value="1"
+                        value={String(kpis.critical)}
                         icon={AlertTriangle}
                         tone="warn"
-                    />
-                    <KpiCard
-                        label="Avg. turnaround"
-                        value="18h"
-                        icon={Clock}
-                        tone="success"
                     />
                 </div>
 
@@ -180,16 +166,6 @@ export default function LabOrdersIndex() {
                     <SectionCard
                         title="Recent orders"
                         titleIcon={<FlaskConical className="size-4" />}
-                        actions={
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                className="gap-2"
-                            >
-                                <Filter className="size-3.5" />
-                                All labs
-                            </Button>
-                        }
                         bodyClassName="p-0"
                     >
                         <Table>
@@ -217,39 +193,61 @@ export default function LabOrdersIndex() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {ORDERS.map((o) => {
-                                    const s = STATUS[o.status];
+                                {lab_orders.data.length === 0 && (
+                                    <TableRow>
+                                        <TableCell
+                                            colSpan={7}
+                                            className="py-12 text-center text-sm text-muted-foreground"
+                                        >
+                                            No lab orders yet.
+                                        </TableCell>
+                                    </TableRow>
+                                )}
+                                {lab_orders.data.map((o) => {
+                                    const s = STATUS[o.status] ?? STATUS.pending;
 
                                     return (
                                         <TableRow
                                             key={o.id}
-                                            className="cursor-pointer hover:bg-muted/50"
+                                            className="hover:bg-muted/50"
                                         >
                                             <TableCell className="px-5 py-3">
-                                                <div className="text-[12px] font-medium tabular-nums">
-                                                    {o.id}
-                                                </div>
-                                                <div className="text-[11px] text-muted-foreground">
-                                                    {o.date}
-                                                </div>
+                                                <Link
+                                                    href={labOrders.show.url({
+                                                        locale,
+                                                        lab_order: o.id,
+                                                    })}
+                                                    className="block"
+                                                >
+                                                    <div className="text-[12px] font-medium tabular-nums">
+                                                        {o.lab_order_number ??
+                                                            '—'}
+                                                    </div>
+                                                    <div className="text-[11px] text-muted-foreground">
+                                                        {o.order_date?.slice(
+                                                            0,
+                                                            10,
+                                                        ) ?? '—'}
+                                                    </div>
+                                                </Link>
                                             </TableCell>
                                             <TableCell className="text-[13px]">
-                                                {o.patient}
+                                                {personName(o.patient)}
                                             </TableCell>
                                             <TableCell className="text-[13px] tabular-nums">
-                                                {o.tests}
-                                                {o.abnormal != null &&
-                                                    o.abnormal > 0 && (
-                                                        <StatusPill
-                                                            tone="danger"
-                                                            className="ms-1.5 text-[10px]"
-                                                        >
-                                                            {o.abnormal} abn.
-                                                        </StatusPill>
-                                                    )}
+                                                {o.items_count}
+                                                {o.abnormal_count > 0 && (
+                                                    <StatusPill
+                                                        tone="danger"
+                                                        className="ms-1.5 text-[10px]"
+                                                    >
+                                                        {o.abnormal_count} abn.
+                                                    </StatusPill>
+                                                )}
                                             </TableCell>
                                             <TableCell className="text-[12px] text-muted-foreground">
-                                                {o.lab}
+                                                {o.external_lab?.lab_name ??
+                                                    'In-house'}
                                             </TableCell>
                                             <TableCell>
                                                 {o.urgency === 'stat' && (
@@ -274,13 +272,22 @@ export default function LabOrdersIndex() {
                                                 </StatusPill>
                                             </TableCell>
                                             <TableCell>
-                                                <ChevronRight className="size-3.5 text-muted-foreground" />
+                                                <Link
+                                                    href={labOrders.show.url({
+                                                        locale,
+                                                        lab_order: o.id,
+                                                    })}
+                                                >
+                                                    <ChevronRight className="size-3.5 text-muted-foreground" />
+                                                </Link>
                                             </TableCell>
                                         </TableRow>
                                     );
                                 })}
                             </TableBody>
                         </Table>
+
+                        <Pagination paginated={lab_orders} t={{}} />
                     </SectionCard>
 
                     <SectionCard
@@ -288,35 +295,43 @@ export default function LabOrdersIndex() {
                         titleIcon={<AlertTriangle className="size-4" />}
                         bodyClassName="space-y-2 p-4"
                     >
-                        {CRITICAL.map((r, i) => (
+                        {critical_results.length === 0 && (
+                            <p className="py-6 text-center text-[12px] text-muted-foreground">
+                                No critical results pending review.
+                            </p>
+                        )}
+                        {critical_results.map((r) => (
                             <div
-                                key={i}
-                                className={`rounded-lg border border-border p-3 ${r.critical ? 'bg-danger-soft/40' : 'bg-card'}`}
+                                key={r.id}
+                                className={`rounded-lg border border-border p-3 ${r.is_critical ? 'bg-danger-soft/40' : 'bg-card'}`}
                             >
                                 <div className="flex items-start gap-3">
                                     <div className="flex-1">
                                         <div className="text-[13px] font-semibold">
-                                            {r.test}
+                                            {r.test_name ?? '—'}
                                         </div>
                                         <div className="text-[11px] text-muted-foreground">
-                                            {r.patient}
+                                            {personName(r.lab_order?.patient)}
                                         </div>
                                     </div>
                                     <StatusPill
-                                        tone={r.critical ? 'danger' : 'warning'}
+                                        tone={r.is_critical ? 'danger' : 'warning'}
                                     >
-                                        {r.critical ? 'Critical' : 'High'}
+                                        {r.is_critical ? 'Critical' : 'High'}
                                     </StatusPill>
                                 </div>
                                 <div className="mt-2 flex items-center gap-3 text-[12px]">
                                     <span
-                                        className={`font-semibold tabular-nums ${r.critical ? 'text-danger' : 'text-warning'}`}
+                                        className={`font-semibold tabular-nums ${r.is_critical ? 'text-danger' : 'text-warning'}`}
                                     >
-                                        {r.value}
+                                        {r.result ?? '—'}
+                                        {r.unit ? ` ${r.unit}` : ''}
                                     </span>
-                                    <span className="text-muted-foreground">
-                                        Normal: {r.normal}
-                                    </span>
+                                    {r.normal_range && (
+                                        <span className="text-muted-foreground">
+                                            Normal: {r.normal_range}
+                                        </span>
+                                    )}
                                 </div>
                             </div>
                         ))}

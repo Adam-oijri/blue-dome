@@ -1,11 +1,19 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { Activity, Search, Stethoscope, Wallet } from 'lucide-react';
+import {
+    Activity,
+    Download,
+    Pencil,
+    Search,
+    Stethoscope,
+    Wallet,
+} from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 import { KpiCard } from '@/components/blue-dome/kpi-card';
 import { PageHeader } from '@/components/blue-dome/page-header';
 import { SectionCard } from '@/components/blue-dome/section-card';
 import { StatusPill } from '@/components/blue-dome/status-pill';
+import { Button } from '@/components/ui/button';
 import {
     Table,
     TableBody,
@@ -47,6 +55,7 @@ interface Filters {
     clinic_id: string;
     specialty: string;
     search: string;
+    [key: string]: string;
 }
 
 interface Props {
@@ -108,6 +117,24 @@ export default function SuperAdminDoctorsPage({
                 <PageHeader
                     title={t.doctors_page_title}
                     description={t.doctors_page_sub}
+                    actions={
+                        <Button
+                            asChild
+                            variant="outline"
+                            size="sm"
+                            className="gap-2"
+                        >
+                            <a
+                                href={superAdmin.doctors.export.url(
+                                    { locale },
+                                    { query: filters },
+                                )}
+                            >
+                                <Download className="size-3.5" />
+                                Export
+                            </a>
+                        </Button>
+                    }
                 />
 
                 <div className="mb-5 grid grid-cols-2 gap-3 md:grid-cols-4">
@@ -210,13 +237,14 @@ export default function SuperAdminDoctorsPage({
                                 <TableHead className="text-[11px] tracking-wider uppercase">
                                     {t.th_last_login}
                                 </TableHead>
+                                <TableHead className="w-12" />
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {doctors.data.length === 0 && (
                                 <TableRow>
                                     <TableCell
-                                        colSpan={8}
+                                        colSpan={9}
                                         className="py-12 text-center text-sm text-muted-foreground"
                                     >
                                         {t.empty_no_results}
@@ -303,6 +331,26 @@ export default function SuperAdminDoctorsPage({
                                                 d.last_login_at,
                                                 'en',
                                             )}
+                                        </TableCell>
+                                        <TableCell>
+                                            <Button
+                                                asChild
+                                                variant="ghost"
+                                                size="sm"
+                                                className="size-7 p-0"
+                                                title="Edit profile"
+                                            >
+                                                <Link
+                                                    href={superAdmin.doctors.profile.edit.url(
+                                                        {
+                                                            locale,
+                                                            user: d.id,
+                                                        },
+                                                    )}
+                                                >
+                                                    <Pencil className="size-3.5" />
+                                                </Link>
+                                            </Button>
                                         </TableCell>
                                     </TableRow>
                                 );

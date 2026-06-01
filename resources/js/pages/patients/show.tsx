@@ -1,142 +1,147 @@
-import { Head, Link } from '@inertiajs/react';
+import { Deferred, Head, Link } from '@inertiajs/react';
 import {
+    Activity,
     ChevronLeft,
     Droplet,
     Edit3,
     Phone,
-    Pill,
     Plus,
     User as UserIcon,
 } from 'lucide-react';
-import { useState } from 'react';
 
+import { CreateAppointmentSheet } from '@/components/blue-dome/create-appointment-sheet';
+import { SectionCard } from '@/components/blue-dome/section-card';
 import { StatusPill } from '@/components/blue-dome/status-pill';
+import type { FieldChangeEntry } from '@/components/provenance-panel';
+import { ProvenancePanel } from '@/components/provenance-panel';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useDoctorLang } from '@/lib/i18n/doctor-context';
 import { useLocale } from '@/lib/i18n/use-locale';
-import { DOCTOR_MOCK } from '@/lib/mock/doctor';
-import type { PatientRecord } from '@/lib/mock/doctor';
 import patients from '@/routes/patients';
 
-type LegacyPatient = {
+type Vital = {
     id: string;
-    first_name: string;
-    last_name: string;
+    recorded_at: string | null;
+    temperature_c: string | number | null;
+    blood_pressure_sys: number | null;
+    blood_pressure_dia: number | null;
+    heart_rate: number | null;
+    oxygen_saturation: string | number | null;
+    weight_kg: string | number | null;
+    height_cm: string | number | null;
+    bmi: string | number | null;
+    pain_score: number | null;
+};
+
+type Patient = {
+    id: string;
+    first_name: string | null;
+    last_name: string | null;
     date_of_birth: string | null;
     gender: string | null;
     phone: string | null;
+    email: string | null;
+    address: string | null;
+    city: string | null;
     blood_type: string | null;
+    patient_code: string | null;
+    insurance_company: string | null;
+    allergies: string | null;
+    chronic_diseases: string | null;
+    current_medications: string | null;
+    registration_date: string | null;
+    is_active: boolean;
+    clinic?: { name: string | null } | null;
+    branch?: { branch_name: string | null } | null;
 };
 
 interface PatientShowProps {
-    // Phase 2 wires from PatientController@show. Optional for the UI port.
-    patient?: LegacyPatient;
+    patient: Patient;
+    national_id: string | null;
+    insurance_number: string | null;
+    vital_signs?: Vital[];
+    provenance?: FieldChangeEntry[];
 }
 
-function adaptPatient(p?: LegacyPatient): PatientRecord {
-    if (!p) {
-        return DOCTOR_MOCK.patients[0];
+function fullName(p: Patient): string {
+    return `${p.first_name ?? ''} ${p.last_name ?? ''}`.trim() || '—';
+}
+
+function ageFrom(dob: string | null): string {
+    if (!dob) {
+        return '—';
     }
 
-    const name = `${p.first_name} ${p.last_name}`;
-    const age = p.date_of_birth
-        ? new Date().getFullYear() - new Date(p.date_of_birth).getFullYear()
-        : 50;
+    const birth = new Date(dob);
+    const now = new Date();
+    let age = now.getFullYear() - birth.getFullYear();
+    const m = now.getMonth() - birth.getMonth();
 
-    return {
-        id: p.id,
-        name: { en: name, fr: name, ar: name },
-        age,
-        gender: p.gender === 'female' ? 'female' : 'male',
-        blood: p.blood_type ?? 'A+',
-        phone: p.phone ?? '—',
-        last_visit: '—',
-        insurance: '—',
-        flag: '',
-    };
+    if (m < 0 || (m === 0 && now.getDate() < birth.getDate())) {
+        age -= 1;
+    }
+
+    return `${age}`;
 }
 
-const VITALS: {
+function InfoRow({ label, value }: { label: string; value: string | null }) {
+    return (
+        <div className="flex items-baseline justify-between gap-3 py-1.5">
+            <span className="text-[12px] text-muted-foreground">{label}</span>
+            <span className="text-[13px] font-medium">{value || '—'}</span>
+        </div>
+    );
+}
+
+function Metric({
+    label,
+    value,
+    unit,
+}: {
     label: string;
-    value: string;
-    unit: string;
-    tone?: 'warning';
-}[] = [
-    { label: 'BP', value: '138/86', unit: 'mmHg', tone: 'warning' },
-    { label: 'Heart rate', value: '78', unit: 'bpm' },
-    { label: 'Temperature', value: '36.7', unit: '°C' },
-    { label: 'SpO₂', value: '98', unit: '%' },
-    { label: 'Weight', value: '82.5', unit: 'kg' },
-    { label: 'BMI', value: '27.4', unit: '', tone: 'warning' },
-];
+    value: string | number | null;
+    unit?: string;
+}) {
+    return (
+        <div className="rounded-md border border-border p-3">
+            <div className="text-[10px] tracking-wider text-muted-foreground uppercase">
+                {label}
+            </div>
+            <div className="mt-0.5 flex items-baseline gap-1">
+                <span className="text-lg font-semibold tabular-nums">
+                    {value ?? '—'}
+                </span>
+                {unit && value != null && (
+                    <span className="text-[11px] text-muted-foreground">
+                        {unit}
+                    </span>
+                )}
+            </div>
+        </div>
+    );
+}
 
-const HISTORY: {
-    date: string;
-    title: string;
-    who: string;
-    desc: string;
-    color: 'olive' | 'warning' | 'danger' | 'navy';
-}[] = [
-    {
-        date: 'May 5, 2026',
-        title: 'Follow-up consultation',
-        who: 'Dr. Lahlou',
-        desc: 'BP slightly elevated, adjusted Amlodipine dose to 10mg.',
-        color: 'olive',
-    },
-    {
-        date: 'Apr 22, 2026',
-        title: 'Lipid panel results',
-        who: 'Lab Biocenter',
-        desc: 'LDL 162 mg/dL — borderline high. Statin continued.',
-        color: 'warning',
-    },
-    {
-        date: 'Mar 15, 2026',
-        title: 'Annual checkup',
-        who: 'Dr. Lahlou',
-        desc: 'ECG normal. BMI 27.4 — counseled on diet.',
-        color: 'navy',
-    },
-    {
-        date: 'Jan 8, 2026',
-        title: 'Echocardiogram',
-        who: 'Dr. Idrissi (referral)',
-        desc: 'Mild LV hypertrophy, EF 58%. Recheck in 6 months.',
-        color: 'navy',
-    },
-    {
-        date: 'Oct 10, 2025',
-        title: 'ER visit — chest pain',
-        who: 'Hôpital Cheikh Zaid',
-        desc: 'Ruled out MI. Discharged with cardiology follow-up.',
-        color: 'danger',
-    },
-];
-
-const TIMELINE_DOT: Record<(typeof HISTORY)[number]['color'], string> = {
-    olive: 'bg-olive-500',
-    warning: 'bg-warning',
-    danger: 'bg-danger',
-    navy: 'bg-navy-500',
-};
-
-const CURRENT_MEDS = [
-    { name: 'Atorvastatin', detail: '20mg · 1× daily · evening' },
-    { name: 'Amlodipine', detail: '5mg · 1× daily · morning' },
-    { name: 'Aspirin', detail: '75mg · 1× daily' },
-];
-
-export default function PatientShow({ patient }: PatientShowProps) {
-    const { t, lang } = useDoctorLang();
+export default function PatientShow({
+    patient,
+    national_id,
+    insurance_number,
+    vital_signs,
+    provenance,
+}: PatientShowProps) {
+    const { t } = useDoctorLang();
     const { slug: locale } = useLocale();
-    const [tab, setTab] = useState('overview');
-    const p = adaptPatient(patient);
+    const name = fullName(patient);
+
+    const genderLabel =
+        patient.gender === 'male'
+            ? t.male
+            : patient.gender === 'female'
+              ? t.female
+              : (patient.gender ?? '—');
 
     return (
         <>
-            <Head title={p.name[lang]} />
+            <Head title={name} />
 
             <div className="px-8 py-6 lg:px-10">
                 <div className="mb-4 flex items-center gap-3 text-sm">
@@ -152,9 +157,7 @@ export default function PatientShow({ patient }: PatientShowProps) {
                         </Link>
                     </Button>
                     <span className="text-muted-foreground">/</span>
-                    <span className="text-[13px] font-medium">
-                        {p.name[lang]}
-                    </span>
+                    <span className="text-[13px] font-medium">{name}</span>
                 </div>
 
                 <div className="relative mb-5 flex items-start gap-5 overflow-hidden rounded-xl bg-gradient-to-br from-navy-950 to-navy-800 p-6 text-white">
@@ -167,213 +170,265 @@ export default function PatientShow({ patient }: PatientShowProps) {
                         aria-hidden
                     />
                     <div className="relative grid size-14 shrink-0 place-items-center rounded-full bg-olive-600 text-lg font-semibold">
-                        {p.name.en
-                            .split(' ')
-                            .map((s) => s[0])
-                            .join('')}
+                        {`${patient.first_name?.[0] ?? ''}${patient.last_name?.[0] ?? ''}`.toUpperCase() ||
+                            '?'}
                     </div>
                     <div className="relative flex-1">
                         <div className="flex items-center gap-3">
                             <h1 className="text-[22px] font-semibold">
-                                {p.name[lang]}
+                                {name}
                             </h1>
-                            {p.flag === 'chronic' && (
-                                <StatusPill tone="warning">
-                                    Chronic care
-                                </StatusPill>
-                            )}
+                            <StatusPill
+                                tone={patient.is_active ? 'olive' : 'neutral'}
+                            >
+                                {patient.is_active ? 'active' : 'inactive'}
+                            </StatusPill>
                         </div>
                         <div className="mt-2 flex flex-wrap gap-4 text-[13px] text-slate-300">
                             <span className="flex items-center gap-1.5">
                                 <UserIcon className="size-3.5" />
-                                {p.age} ·{' '}
-                                {p.gender === 'male' ? t.male : t.female}
+                                {ageFrom(patient.date_of_birth)} · {genderLabel}
                             </span>
-                            <span className="flex items-center gap-1.5">
-                                <Droplet className="size-3.5" />
-                                {p.blood}
-                            </span>
+                            {patient.blood_type && (
+                                <span className="flex items-center gap-1.5">
+                                    <Droplet className="size-3.5" />
+                                    {patient.blood_type}
+                                </span>
+                            )}
                             <span className="flex items-center gap-1.5">
                                 <Phone className="size-3.5" />
-                                {p.phone}
+                                {patient.phone ?? '—'}
                             </span>
-                            <span className="opacity-70">· {p.id}</span>
+                            {patient.patient_code && (
+                                <span className="opacity-70">
+                                    · {patient.patient_code}
+                                </span>
+                            )}
                         </div>
                     </div>
                     <div className="relative flex items-center gap-2 self-start">
                         <Button
                             variant="outline"
                             size="sm"
+                            asChild
                             className="gap-2 border-white/20 bg-white/10 text-white hover:bg-white/15"
                         >
-                            <Edit3 className="size-3.5" />
-                            Edit
+                            <Link
+                                href={patients.edit.url({
+                                    locale,
+                                    patient: patient.id,
+                                })}
+                            >
+                                <Edit3 className="size-3.5" />
+                                Edit
+                            </Link>
                         </Button>
-                        <Button
-                            size="sm"
-                            className="gap-2 bg-olive-600 text-white hover:bg-olive-700"
+                        <CreateAppointmentSheet
+                            lockedPatient={{ id: patient.id, name }}
                         >
-                            <Plus className="size-3.5" />
-                            New visit
-                        </Button>
+                            <Button
+                                size="sm"
+                                className="gap-2 bg-olive-600 text-white hover:bg-olive-700"
+                            >
+                                <Plus className="size-3.5" />
+                                {t.new_appointment}
+                            </Button>
+                        </CreateAppointmentSheet>
                     </div>
                 </div>
 
-                <div className="overflow-hidden rounded-xl border border-border bg-card">
-                    <Tabs value={tab} onValueChange={setTab}>
-                        <TabsList className="h-auto w-full justify-start rounded-none border-b border-border bg-transparent p-0">
-                            {[
-                                ['overview', t.overview],
-                                ['history', t.medical_history],
-                                ['visits', t.visits],
-                                ['rx', t.rx],
-                                ['labs', t.labs],
-                                ['billing', t.billing],
-                            ].map(([id, label]) => (
-                                <TabsTrigger
-                                    key={id}
-                                    value={id}
-                                    className="h-auto rounded-none border-b-2 border-transparent px-4 py-3 text-[13px] font-medium text-muted-foreground shadow-none data-[state=active]:border-olive-600 data-[state=active]:bg-transparent data-[state=active]:text-navy-900 data-[state=active]:shadow-none dark:data-[state=active]:bg-transparent"
-                                >
-                                    {label}
-                                </TabsTrigger>
-                            ))}
-                        </TabsList>
-
-                        <TabsContent value="overview" className="m-0 p-6">
-                            <div className="grid gap-6 md:grid-cols-2">
-                                <div>
-                                    <h3 className="mb-3.5 text-sm font-semibold">
-                                        {t.vital_signs}{' '}
-                                        <span className="text-[12px] font-normal text-muted-foreground">
-                                            · last recorded today 09:50
-                                        </span>
-                                    </h3>
+                <div className="grid gap-5 lg:grid-cols-3">
+                    <div className="space-y-5 lg:col-span-2">
+                        <SectionCard
+                            title={t.vital_signs}
+                            titleIcon={<Activity className="size-4" />}
+                            bodyClassName="p-5"
+                        >
+                            <Deferred
+                                data="vital_signs"
+                                fallback={
                                     <div className="grid grid-cols-3 gap-2.5">
-                                        {VITALS.map((v) => (
-                                            <div
-                                                key={v.label}
-                                                className="rounded-md border border-border p-3"
-                                            >
-                                                <div className="text-[10px] tracking-wider text-muted-foreground uppercase">
-                                                    {v.label}
-                                                </div>
-                                                <div className="mt-0.5 flex items-baseline gap-1">
-                                                    <span
-                                                        className={
-                                                            v.tone === 'warning'
-                                                                ? 'text-lg font-semibold text-warning tabular-nums'
-                                                                : 'text-lg font-semibold tabular-nums'
-                                                        }
-                                                    >
-                                                        {v.value}
-                                                    </span>
-                                                    <span className="text-[11px] text-muted-foreground">
-                                                        {v.unit}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        ))}
+                                        {Array.from({ length: 6 }).map(
+                                            (_, i) => (
+                                                <div
+                                                    key={i}
+                                                    className="h-16 animate-pulse rounded-md bg-muted"
+                                                />
+                                            ),
+                                        )}
                                     </div>
+                                }
+                            >
+                                {!vital_signs || vital_signs.length === 0 ? (
+                                    <div className="py-8 text-center text-sm text-muted-foreground">
+                                        No vital signs recorded.
+                                    </div>
+                                ) : (
+                                    <>
+                                        <div className="mb-3 text-[12px] text-muted-foreground">
+                                            Last recorded{' '}
+                                            {vital_signs[0].recorded_at
+                                                ?.slice(0, 16)
+                                                .replace('T', ' ') ?? '—'}
+                                        </div>
+                                        <div className="grid grid-cols-3 gap-2.5">
+                                            <Metric
+                                                label="BP"
+                                                value={
+                                                    vital_signs[0]
+                                                        .blood_pressure_sys &&
+                                                    vital_signs[0]
+                                                        .blood_pressure_dia
+                                                        ? `${vital_signs[0].blood_pressure_sys}/${vital_signs[0].blood_pressure_dia}`
+                                                        : null
+                                                }
+                                                unit="mmHg"
+                                            />
+                                            <Metric
+                                                label="Heart rate"
+                                                value={
+                                                    vital_signs[0].heart_rate
+                                                }
+                                                unit="bpm"
+                                            />
+                                            <Metric
+                                                label="Temp"
+                                                value={
+                                                    vital_signs[0].temperature_c
+                                                }
+                                                unit="°C"
+                                            />
+                                            <Metric
+                                                label="SpO₂"
+                                                value={
+                                                    vital_signs[0]
+                                                        .oxygen_saturation
+                                                }
+                                                unit="%"
+                                            />
+                                            <Metric
+                                                label="Weight"
+                                                value={vital_signs[0].weight_kg}
+                                                unit="kg"
+                                            />
+                                            <Metric
+                                                label="BMI"
+                                                value={vital_signs[0].bmi}
+                                            />
+                                        </div>
+                                    </>
+                                )}
+                            </Deferred>
+                        </SectionCard>
 
-                                    <h3 className="mt-5 mb-2.5 text-sm font-semibold">
+                        <SectionCard title="Clinical" bodyClassName="p-5">
+                            <div className="space-y-4">
+                                <div>
+                                    <h3 className="mb-1.5 text-sm font-semibold">
                                         {t.allergies}
                                     </h3>
-                                    <div className="flex flex-wrap gap-2">
-                                        <StatusPill tone="danger">
-                                            Penicillin
-                                        </StatusPill>
-                                        <StatusPill tone="danger">
-                                            Aspirin
-                                        </StatusPill>
-                                        <StatusPill>
-                                            Pollen (seasonal)
-                                        </StatusPill>
-                                    </div>
-
-                                    <h3 className="mt-5 mb-2.5 text-sm font-semibold">
+                                    <p className="text-[13px] text-muted-foreground">
+                                        {patient.allergies || 'None recorded'}
+                                    </p>
+                                </div>
+                                <div>
+                                    <h3 className="mb-1.5 text-sm font-semibold">
                                         {t.chronic_diseases}
                                     </h3>
-                                    <div className="flex flex-wrap gap-2">
-                                        <StatusPill tone="warning">
-                                            Hypertension (since 2019)
-                                        </StatusPill>
-                                        <StatusPill tone="warning">
-                                            Hyperlipidemia
-                                        </StatusPill>
-                                    </div>
-
-                                    <h3 className="mt-5 mb-2.5 text-sm font-semibold">
+                                    <p className="text-[13px] text-muted-foreground">
+                                        {patient.chronic_diseases ||
+                                            'None recorded'}
+                                    </p>
+                                </div>
+                                <div>
+                                    <h3 className="mb-1.5 text-sm font-semibold">
                                         {t.current_meds}
                                     </h3>
-                                    <div className="flex flex-col gap-2">
-                                        {CURRENT_MEDS.map((m) => (
-                                            <div
-                                                key={m.name}
-                                                className="flex items-center gap-3 rounded-md bg-muted px-3 py-2"
-                                            >
-                                                <Pill className="size-3.5 text-muted-foreground" />
-                                                <div className="flex-1">
-                                                    <div className="text-[13px] font-medium">
-                                                        {m.name}
-                                                    </div>
-                                                    <div className="text-[11px] text-muted-foreground">
-                                                        {m.detail}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <h3 className="mb-3.5 text-sm font-semibold">
-                                        {t.medical_history}
-                                    </h3>
-                                    <div className="relative border-s-2 border-border ps-5">
-                                        {HISTORY.map((h, i) => (
-                                            <div
-                                                key={i}
-                                                className="relative pb-4"
-                                            >
-                                                <span
-                                                    className={`absolute -start-[27px] top-1 size-3 rounded-full border-2 border-white shadow-[0_0_0_2px_var(--color-border)] ${TIMELINE_DOT[h.color]}`}
-                                                    aria-hidden
-                                                />
-                                                <div className="text-[11px] text-muted-foreground">
-                                                    {h.date}
-                                                </div>
-                                                <div className="mt-0.5 text-[13px] font-semibold">
-                                                    {h.title}
-                                                </div>
-                                                <div className="text-[11px] text-muted-foreground">
-                                                    {h.who}
-                                                </div>
-                                                <div className="mt-1 text-[12px] text-slate-700">
-                                                    {h.desc}
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
+                                    <p className="text-[13px] text-muted-foreground">
+                                        {patient.current_medications ||
+                                            'None recorded'}
+                                    </p>
                                 </div>
                             </div>
-                        </TabsContent>
+                        </SectionCard>
+                    </div>
 
-                        {['history', 'visits', 'rx', 'labs', 'billing'].map(
-                            (id) => (
-                                <TabsContent
-                                    key={id}
-                                    value={id}
-                                    className="m-0"
-                                >
-                                    <div className="py-16 text-center text-sm text-muted-foreground">
-                                        The {id} tab — content scaffolds coming
-                                        as wiring lands.
-                                    </div>
-                                </TabsContent>
-                            ),
-                        )}
-                    </Tabs>
+                    <div className="space-y-5">
+                        <SectionCard
+                            title="Patient information"
+                            bodyClassName="px-5 py-3"
+                        >
+                            <div className="divide-y divide-border">
+                                <InfoRow
+                                    label={t.age}
+                                    value={`${ageFrom(patient.date_of_birth)} · ${genderLabel}`}
+                                />
+                                <InfoRow
+                                    label="Date of birth"
+                                    value={
+                                        patient.date_of_birth?.slice(0, 10) ??
+                                        null
+                                    }
+                                />
+                                <InfoRow
+                                    label={t.phone}
+                                    value={patient.phone}
+                                />
+                                <InfoRow label="Email" value={patient.email} />
+                                <InfoRow
+                                    label="Address"
+                                    value={
+                                        [patient.address, patient.city]
+                                            .filter(Boolean)
+                                            .join(', ') || null
+                                    }
+                                />
+                                <InfoRow
+                                    label="National ID"
+                                    value={national_id}
+                                />
+                                <InfoRow
+                                    label="Insurance"
+                                    value={
+                                        [
+                                            patient.insurance_company,
+                                            insurance_number,
+                                        ]
+                                            .filter(Boolean)
+                                            .join(' · ') || null
+                                    }
+                                />
+                                <InfoRow
+                                    label={t.patient_id}
+                                    value={patient.patient_code}
+                                />
+                                <InfoRow
+                                    label="Clinic"
+                                    value={patient.clinic?.name ?? null}
+                                />
+                                <InfoRow
+                                    label="Branch"
+                                    value={patient.branch?.branch_name ?? null}
+                                />
+                                <InfoRow
+                                    label="Registered"
+                                    value={
+                                        patient.registration_date?.slice(
+                                            0,
+                                            10,
+                                        ) ?? null
+                                    }
+                                />
+                            </div>
+                        </SectionCard>
+                    </div>
+                </div>
+
+                <div className="mt-5">
+                    <ProvenancePanel
+                        deferredKey="provenance"
+                        entries={provenance}
+                    />
                 </div>
             </div>
         </>

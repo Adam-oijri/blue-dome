@@ -124,10 +124,10 @@ export function SuperAdminSidebar() {
                 <div className="flex items-center gap-2.5 px-2 py-1.5">
                     <BrandIconMark />
                     <div className="grid min-w-0 leading-tight group-data-[collapsible=icon]:hidden">
-                        <span className="text-[15px] font-bold tracking-wide text-white">
+                        <span className="text-[15px] font-bold tracking-wide text-sidebar-foreground">
                             {t.brand_name}
                         </span>
-                        <span className="text-[11px] text-slate-500">
+                        <span className="text-[11px] text-sidebar-foreground/70">
                             {t.brand_sub}
                         </span>
                     </div>
@@ -170,7 +170,7 @@ function NavSection({
 }) {
     return (
         <SidebarGroup>
-            <SidebarGroupLabel className="text-[10px] tracking-[0.08em] text-slate-500 uppercase">
+            <SidebarGroupLabel className="text-[10px] tracking-[0.08em] uppercase">
                 {label}
             </SidebarGroupLabel>
             <SidebarGroupContent>
@@ -190,8 +190,9 @@ function NavSection({
                                     isActive={active}
                                     tooltip={entry.label}
                                     className={cn(
-                                        'text-slate-300 hover:bg-navy-900 hover:text-white',
-                                        'data-[active=true]:bg-navy-800 data-[active=true]:text-white',
+                                        'text-sidebar-foreground/80',
+                                        'data-[active=true]:bg-navy-100 data-[active=true]:font-medium data-[active=true]:text-navy-800',
+                                        'dark:data-[active=true]:bg-navy-900 dark:data-[active=true]:text-white',
                                         'data-[active=true]:before:absolute data-[active=true]:before:start-0 data-[active=true]:before:top-2 data-[active=true]:before:bottom-2 data-[active=true]:before:w-[3px] data-[active=true]:before:rounded-e data-[active=true]:before:bg-olive-500',
                                         'group-data-[collapsible=icon]:before:hidden',
                                     )}

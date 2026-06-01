@@ -1,9 +1,12 @@
 <?php
 
 use App\Models\Clinic;
+use App\Models\Document;
 use App\Models\LabOrder;
 use App\Models\Patient;
 use App\Models\User;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 
 beforeEach(function () {
     $this->clinic = Clinic::factory()->create();
@@ -96,4 +99,101 @@ it('lets a doctor order labs for a patient from another clinic (Phase 8 global a
 
     expect($labOrder)->not->toBeNull();
     expect($labOrder->clinic_id)->toBe($this->clinic->id);
+});
+
+it('uploads images to storage and attaches them to the lab order as documents', function () {
+    Storage::fake('local');
+    $doctor = User::factory()->doctor()->create(['clinic_id' => $this->clinic->id]);
+
+    $this->actingAs($doctor)->post(route('lab-orders.store'), [
+        'patient_id' => $this->patient->id,
+        'items' => [['test_name' => 'NFS']],
+        'images' => [
+            UploadedFile::fake()->image('result-1.jpg'),
+            UploadedFile::fake()->image('result-2.png'),
+        ],
+    ])->assertSessionHasNoErrors();
+
+    $labOrder = LabOrder::query()->where('patient_id', $this->patient->id)->firstOrFail();
+
+    $docs = Document::query()
+        ->where('entity_type', 'LabOrder')
+        ->where('entity_id', $labOrder->id)
+        ->get();
+
+    expect($docs)->toHaveCount(2);
+    expect($docs->pluck('document_type')->unique()->all())->toBe(['lab_result']);
+
+    foreach ($docs as $doc) {
+        expect($doc->clinic_id)->toBe($this->clinic->id);
+        Storage::disk('local')->assertExists($doc->file_path);
+    }
+});
+
+it('attaches uploaded images when editing a lab order', function () {
+    Storage::fake('local');
+    $doctor = User::factory()->doctor()->create(['clinic_id' => $this->clinic->id]);
+    $order = LabOrder::factory()->create([
+        'clinic_id' => $this->clinic->id,
+        'patient_id' => $this->patient->id,
+        'doctor_id' => $doctor->id,
+        'status' => 'pending',
+    ]);
+
+    $this->actingAs($doctor)->put(route('lab-orders.update', $order), [
+        'status' => 'in_progress',
+        'images' => [UploadedFile::fake()->image('scan.jpg')],
+    ])->assertSessionHasNoErrors();
+
+    expect($order->fresh()->status)->toBe('in_progress');
+
+    $doc = Document::query()
+        ->where('entity_type', 'LabOrder')
+        ->where('entity_id', $order->id)
+        ->first();
+
+    expect($doc)->not->toBeNull();
+    expect($doc->document_type)->toBe('lab_result');
+    Storage::disk('local')->assertExists($doc->file_path);
+});
+
+it('lists attached images on the lab order show page', function () {
+    $doctor = User::factory()->doctor()->create(['clinic_id' => $this->clinic->id]);
+    $order = LabOrder::factory()->create([
+        'clinic_id' => $this->clinic->id,
+        'patient_id' => $this->patient->id,
+        'doctor_id' => $doctor->id,
+    ]);
+
+    Document::create([
+        'clinic_id' => $this->clinic->id,
+        'document_name' => 'result.jpg',
+        'document_type' => 'lab_result',
+        'file_name' => 'result.jpg',
+        'file_path' => "clinics/{$this->clinic->id}/result.jpg",
+        'mime_type' => 'image/jpeg',
+        'entity_type' => 'LabOrder',
+        'entity_id' => $order->id,
+        'is_private' => true,
+        'uploaded_by' => $doctor->id,
+        'uploaded_at' => now(),
+    ]);
+
+    $this->actingAs($doctor)
+        ->get(route('lab-orders.show', $order))
+        ->assertInertia(fn ($page) => $page
+            ->component('lab-orders/show')
+            ->has('images', 1)
+            ->where('images.0.file_name', 'result.jpg'));
+});
+
+it('rejects a non-image upload on a lab order', function () {
+    Storage::fake('local');
+    $doctor = User::factory()->doctor()->create(['clinic_id' => $this->clinic->id]);
+
+    $this->actingAs($doctor)->post(route('lab-orders.store'), [
+        'patient_id' => $this->patient->id,
+        'items' => [['test_name' => 'NFS']],
+        'images' => [UploadedFile::fake()->create('notes.pdf', 100, 'application/pdf')],
+    ])->assertSessionHasErrors('images.0');
 });

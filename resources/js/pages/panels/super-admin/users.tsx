@@ -1,7 +1,18 @@
-import { Head, Link, router } from '@inertiajs/react';
-import { Search, UserCog, Users as UsersIcon } from 'lucide-react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
+import {
+    Building2,
+    Download,
+    MoreHorizontal,
+    Pencil,
+    RotateCcw,
+    Search,
+    Trash2,
+    UserCog,
+    Users as UsersIcon,
+} from 'lucide-react';
 import { useEffect, useState } from 'react';
 
+import { BulkActionBar } from '@/components/blue-dome/bulk-action-bar';
 import { InviteStaffSheet } from '@/components/blue-dome/invite-staff-sheet';
 import { KpiCard } from '@/components/blue-dome/kpi-card';
 import { PageHeader } from '@/components/blue-dome/page-header';
@@ -9,6 +20,14 @@ import { SectionCard } from '@/components/blue-dome/section-card';
 import { StatusPill } from '@/components/blue-dome/status-pill';
 import type { StatusTone } from '@/components/blue-dome/status-pill';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import {
     Table,
     TableBody,
@@ -17,6 +36,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import { useRowSelection } from '@/hooks/use-row-selection';
 import { fmtNumber, fmtRelativeTime } from '@/lib/format';
 import { useSuperAdminLang } from '@/lib/i18n/super-admin-context';
 import { useLocale } from '@/lib/i18n/use-locale';
@@ -51,6 +71,7 @@ interface Filters {
     clinic_id: string;
     status: 'all' | 'active' | 'inactive' | 'deleted' | string;
     search: string;
+    [key: string]: string;
 }
 
 interface Props {
@@ -79,6 +100,24 @@ export default function SuperAdminUsersPage({
 }: Props) {
     const { t } = useSuperAdminLang();
     const { slug: locale } = useLocale();
+    const { auth } = usePage().props;
+    const authUserId = auth?.user?.id;
+    const selection = useRowSelection(users.data.map((u) => u.id));
+
+    const runBulk = (action: 'activate' | 'deactivate' | 'delete'): void => {
+        router.post(
+            superAdmin.users.bulk.url({ locale }),
+            { action, ids: selection.ids },
+            { preserveScroll: true, onSuccess: () => selection.clear() },
+        );
+    };
+
+    const exportSelected = (): void => {
+        window.location.href = superAdmin.users.export.url(
+            { locale },
+            { query: { ids: selection.ids } },
+        );
+    };
 
     const [search, setSearch] = useState(filters.search ?? '');
 
@@ -88,6 +127,7 @@ export default function SuperAdminUsersPage({
                 return;
             }
 
+            selection.clear();
             router.get(
                 superAdmin.users.url({ locale }),
                 {
@@ -105,6 +145,7 @@ export default function SuperAdminUsersPage({
     }, [search]);
 
     const setFilter = (key: keyof Filters, value: string): void => {
+        selection.clear();
         router.get(
             superAdmin.users.url({ locale }),
             { ...filters, [key]: value },
@@ -120,7 +161,27 @@ export default function SuperAdminUsersPage({
                 <PageHeader
                     title={t.users_page_title}
                     description={t.users_page_sub}
-                    actions={<InviteStaffSheet clinics={clinics} />}
+                    actions={
+                        <div className="flex items-center gap-2">
+                            <Button
+                                asChild
+                                variant="outline"
+                                size="sm"
+                                className="gap-2"
+                            >
+                                <a
+                                    href={superAdmin.users.export.url(
+                                        { locale },
+                                        { query: filters },
+                                    )}
+                                >
+                                    <Download className="size-3.5" />
+                                    Export
+                                </a>
+                            </Button>
+                            <InviteStaffSheet clinics={clinics} />
+                        </div>
+                    }
                 />
 
                 <div className="mb-5 grid grid-cols-2 gap-3 md:grid-cols-4">
@@ -223,6 +284,21 @@ export default function SuperAdminUsersPage({
                     <Table>
                         <TableHeader>
                             <TableRow className="bg-muted/50">
+                                <TableHead className="w-10 px-5">
+                                    <Checkbox
+                                        aria-label="Select all"
+                                        checked={
+                                            selection.allSelected
+                                                ? true
+                                                : selection.someSelected
+                                                  ? 'indeterminate'
+                                                  : false
+                                        }
+                                        onCheckedChange={() =>
+                                            selection.toggleAll()
+                                        }
+                                    />
+                                </TableHead>
                                 <TableHead className="px-5 py-2.5 text-[11px] tracking-wider uppercase">
                                     {t.th_doctor}
                                 </TableHead>
@@ -250,7 +326,7 @@ export default function SuperAdminUsersPage({
                             {users.data.length === 0 && (
                                 <TableRow>
                                     <TableCell
-                                        colSpan={7}
+                                        colSpan={8}
                                         className="py-12 text-center text-sm text-muted-foreground"
                                     >
                                         {t.empty_no_results}
@@ -265,8 +341,22 @@ export default function SuperAdminUsersPage({
                                 return (
                                     <TableRow
                                         key={u.id}
+                                        data-state={
+                                            selection.has(u.id)
+                                                ? 'selected'
+                                                : undefined
+                                        }
                                         className="hover:bg-muted/50"
                                     >
+                                        <TableCell className="px-5">
+                                            <Checkbox
+                                                aria-label={`Select ${fullName}`}
+                                                checked={selection.has(u.id)}
+                                                onCheckedChange={() =>
+                                                    selection.toggle(u.id)
+                                                }
+                                            />
+                                        </TableCell>
                                         <TableCell className="px-5 py-3">
                                             <div className="flex items-center gap-2.5">
                                                 <div className="grid size-8 shrink-0 place-items-center rounded-full bg-navy-700 text-xs font-semibold text-white">
@@ -337,28 +427,107 @@ export default function SuperAdminUsersPage({
                                             )}
                                         </TableCell>
                                         <TableCell>
-                                            <div className="flex items-center justify-end gap-1">
-                                                {u.clinic && (
-                                                    <Button
+                                            <div className="flex items-center justify-end">
+                                                <DropdownMenu>
+                                                    <DropdownMenuTrigger
                                                         asChild
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        className="h-7"
                                                     >
-                                                        <Link
-                                                            href={superAdmin.clinics.show.url(
-                                                                {
-                                                                    locale,
-                                                                    clinic: u
-                                                                        .clinic
-                                                                        .id,
-                                                                },
-                                                            )}
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            className="size-7 p-0"
                                                         >
-                                                            {t.action_view}
-                                                        </Link>
-                                                    </Button>
-                                                )}
+                                                            <MoreHorizontal className="size-4" />
+                                                        </Button>
+                                                    </DropdownMenuTrigger>
+                                                    <DropdownMenuContent align="end">
+                                                        {!u.deleted_at && (
+                                                            <DropdownMenuItem
+                                                                asChild
+                                                            >
+                                                                <Link
+                                                                    href={superAdmin.users.edit.url(
+                                                                        {
+                                                                            locale,
+                                                                            user: u.id,
+                                                                        },
+                                                                    )}
+                                                                >
+                                                                    <Pencil className="size-3.5" />
+                                                                    Edit
+                                                                </Link>
+                                                            </DropdownMenuItem>
+                                                        )}
+                                                        {u.clinic && (
+                                                            <DropdownMenuItem
+                                                                asChild
+                                                            >
+                                                                <Link
+                                                                    href={superAdmin.clinics.show.url(
+                                                                        {
+                                                                            locale,
+                                                                            clinic: u
+                                                                                .clinic
+                                                                                .id,
+                                                                        },
+                                                                    )}
+                                                                >
+                                                                    <Building2 className="size-3.5" />
+                                                                    View clinic
+                                                                </Link>
+                                                            </DropdownMenuItem>
+                                                        )}
+                                                        {u.deleted_at ? (
+                                                            <DropdownMenuItem
+                                                                asChild
+                                                            >
+                                                                <Link
+                                                                    href={superAdmin.users.restore.url(
+                                                                        {
+                                                                            locale,
+                                                                            user: u.id,
+                                                                        },
+                                                                    )}
+                                                                    method="post"
+                                                                    as="button"
+                                                                >
+                                                                    <RotateCcw className="size-3.5" />
+                                                                    Restore
+                                                                </Link>
+                                                            </DropdownMenuItem>
+                                                        ) : (
+                                                            u.id !==
+                                                                authUserId && (
+                                                                <>
+                                                                    <DropdownMenuSeparator />
+                                                                    <DropdownMenuItem
+                                                                        asChild
+                                                                        className="text-danger focus:text-danger"
+                                                                    >
+                                                                        <Link
+                                                                            href={superAdmin.users.destroy.url(
+                                                                                {
+                                                                                    locale,
+                                                                                    user: u.id,
+                                                                                },
+                                                                            )}
+                                                                            method="delete"
+                                                                            as="button"
+                                                                            onBefore={() =>
+                                                                                confirm(
+                                                                                    'Remove this user? They can be restored later.',
+                                                                                )
+                                                                            }
+                                                                        >
+                                                                            <Trash2 className="size-3.5" />
+                                                                            Remove
+                                                                        </Link>
+                                                                    </DropdownMenuItem>
+                                                                </>
+                                                            )
+                                                        )}
+                                                    </DropdownMenuContent>
+                                                </DropdownMenu>
                                             </div>
                                         </TableCell>
                                     </TableRow>
@@ -370,6 +539,24 @@ export default function SuperAdminUsersPage({
                     <Pagination paginated={users} t={t} />
                 </SectionCard>
             </div>
+
+            <BulkActionBar
+                count={selection.count}
+                onClear={selection.clear}
+                actions={[
+                    { label: 'Activate', onClick: () => runBulk('activate') },
+                    {
+                        label: 'Deactivate',
+                        onClick: () => runBulk('deactivate'),
+                    },
+                    { label: 'Export selected', onClick: exportSelected },
+                    {
+                        label: 'Remove',
+                        onClick: () => runBulk('delete'),
+                        destructive: true,
+                    },
+                ]}
+            />
         </>
     );
 }

@@ -22,6 +22,9 @@ export type DoctorDictionary = {
     staff: string;
     settings: string;
     follow_up: string;
+    confirmations: string;
+    no_appointments: string;
+    all_confirmed: string;
 
     search_placeholder: string;
     new_appointment: string;
@@ -110,6 +113,9 @@ const en: DoctorDictionary = {
     staff: 'Staff & Branches',
     settings: 'Settings',
     follow_up: 'Follow-up Calls',
+    confirmations: 'Confirmations',
+    no_appointments: 'No appointments',
+    all_confirmed: 'All upcoming appointments are confirmed',
     search_placeholder: 'Search patients, appointments, prescriptions…',
     new_appointment: 'New appointment',
     good_morning: 'Good morning, Dr. Lahlou',
@@ -193,6 +199,9 @@ const fr: DoctorDictionary = {
     staff: 'Personnel & Filiales',
     settings: 'Paramètres',
     follow_up: 'Appels de suivi',
+    confirmations: 'Confirmations',
+    no_appointments: 'Aucun rendez-vous',
+    all_confirmed: 'Tous les rendez-vous à venir sont confirmés',
     search_placeholder: 'Rechercher patients, rendez-vous, ordonnances…',
     new_appointment: 'Nouveau rendez-vous',
     good_morning: 'Bonjour, Dr Lahlou',
@@ -276,6 +285,9 @@ const ar: DoctorDictionary = {
     staff: 'الموظفون والفروع',
     settings: 'الإعدادات',
     follow_up: 'مكالمات المتابعة',
+    confirmations: 'التأكيدات',
+    no_appointments: 'لا توجد مواعيد',
+    all_confirmed: 'جميع المواعيد القادمة مؤكدة',
     search_placeholder: 'ابحث عن مرضى، مواعيد، وصفات...',
     new_appointment: 'موعد جديد',
     good_morning: 'صباح الخير، د. اللهلو',

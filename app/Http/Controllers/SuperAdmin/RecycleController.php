@@ -23,6 +23,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -165,6 +166,12 @@ class RecycleController extends Controller
 
         /** @var class-string<Model> $modelClass */
         $modelClass = self::TYPES[$type]['model'];
+
+        // All restorable models use UUID keys; a non-UUID id is a 404, not a
+        // Postgres "invalid input syntax for type uuid" 500.
+        if (! Str::isUuid($id)) {
+            abort(404);
+        }
 
         $record = $modelClass::query()->onlyTrashed()->findOrFail($id);
 

@@ -58,12 +58,11 @@ class PatientController extends Controller
 
     public function store(StorePatientRequest $request): RedirectResponse
     {
-        $patient = Patient::create($request->validated() + [
+        Patient::create($request->validated() + [
             'clinic_id' => $request->user()->clinic_id,
         ]);
 
-        return redirect()
-            ->route('patients.show', $patient)
+        return back()
             ->with('toast', ['type' => 'success', 'message' => __('patients.created')]);
     }
 

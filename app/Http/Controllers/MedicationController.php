@@ -47,12 +47,11 @@ class MedicationController extends Controller
 
     public function store(StoreMedicationRequest $request): RedirectResponse
     {
-        $medication = Medication::create($request->validated() + [
+        Medication::create($request->validated() + [
             'clinic_id' => $request->user()->clinic_id,
         ]);
 
-        return redirect()
-            ->route('medications.show', $medication)
+        return back()
             ->with('toast', ['type' => 'success', 'message' => __('medications.created')]);
     }
 
@@ -81,8 +80,9 @@ class MedicationController extends Controller
         unset($locale);
         $medication->update($request->validated());
 
-        return redirect()
-            ->route('medications.show', $medication)
+        // back() keeps the inline edit Sheet on the formulary index (the
+        // standalone show page is a legacy unlinked fallback).
+        return back()
             ->with('toast', ['type' => 'success', 'message' => __('medications.updated')]);
     }
 

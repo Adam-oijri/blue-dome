@@ -1,5 +1,15 @@
 import { Form, Head, Link } from '@inertiajs/react';
 
+import { Button } from '@/components/ui/button';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
+
 interface VitalSign {
     id: string;
     recorded_at: string;
@@ -32,6 +42,9 @@ interface Props {
     vital_signs: Paginator<VitalSign>;
 }
 
+const INPUT_CLASS = 'rounded border border-input px-2 py-1';
+const LABEL_CLASS = 'text-xs text-muted-foreground uppercase';
+
 export default function PatientVitalSigns({ patient, vital_signs }: Props) {
     return (
         <>
@@ -42,7 +55,7 @@ export default function PatientVitalSigns({ patient, vital_signs }: Props) {
                 <div className="mb-4">
                     <Link
                         href={`/patients/${patient.id}`}
-                        className="text-xs text-blue-600 hover:underline"
+                        className="text-xs text-muted-foreground hover:text-foreground hover:underline"
                     >
                         ← Back to patient
                     </Link>
@@ -51,8 +64,8 @@ export default function PatientVitalSigns({ patient, vital_signs }: Props) {
                     </h1>
                 </div>
 
-                <section className="mb-6 rounded border border-neutral-200 p-4">
-                    <h2 className="mb-3 text-sm font-semibold text-neutral-500 uppercase">
+                <section className="mb-6 rounded border border-border p-4">
+                    <h2 className="mb-3 text-sm font-semibold text-muted-foreground uppercase">
                         Record new reading
                     </h2>
                     <Form
@@ -63,91 +76,83 @@ export default function PatientVitalSigns({ patient, vital_signs }: Props) {
                         {({ errors, processing }) => (
                             <>
                                 <label className="flex flex-col gap-1">
-                                    <span className="text-xs text-neutral-500 uppercase">
+                                    <span className={LABEL_CLASS}>
                                         Temp (°C)
                                     </span>
                                     <input
                                         type="number"
                                         step="0.1"
                                         name="temperature_c"
-                                        className="rounded border border-neutral-300 px-2 py-1"
+                                        className={INPUT_CLASS}
                                     />
                                     {errors.temperature_c && (
-                                        <span className="text-xs text-red-600">
+                                        <span className="text-xs text-danger">
                                             {errors.temperature_c}
                                         </span>
                                     )}
                                 </label>
                                 <label className="flex flex-col gap-1">
-                                    <span className="text-xs text-neutral-500 uppercase">
-                                        BP sys
-                                    </span>
+                                    <span className={LABEL_CLASS}>BP sys</span>
                                     <input
                                         type="number"
                                         name="blood_pressure_sys"
-                                        className="rounded border border-neutral-300 px-2 py-1"
+                                        className={INPUT_CLASS}
                                     />
                                 </label>
                                 <label className="flex flex-col gap-1">
-                                    <span className="text-xs text-neutral-500 uppercase">
-                                        BP dia
-                                    </span>
+                                    <span className={LABEL_CLASS}>BP dia</span>
                                     <input
                                         type="number"
                                         name="blood_pressure_dia"
-                                        className="rounded border border-neutral-300 px-2 py-1"
+                                        className={INPUT_CLASS}
                                     />
                                 </label>
                                 <label className="flex flex-col gap-1">
-                                    <span className="text-xs text-neutral-500 uppercase">
-                                        HR
-                                    </span>
+                                    <span className={LABEL_CLASS}>HR</span>
                                     <input
                                         type="number"
                                         name="heart_rate"
-                                        className="rounded border border-neutral-300 px-2 py-1"
+                                        className={INPUT_CLASS}
                                     />
                                 </label>
                                 <label className="flex flex-col gap-1">
-                                    <span className="text-xs text-neutral-500 uppercase">
+                                    <span className={LABEL_CLASS}>
                                         Weight (kg)
                                     </span>
                                     <input
                                         type="number"
                                         step="0.1"
                                         name="weight_kg"
-                                        className="rounded border border-neutral-300 px-2 py-1"
+                                        className={INPUT_CLASS}
                                     />
                                 </label>
                                 <label className="flex flex-col gap-1">
-                                    <span className="text-xs text-neutral-500 uppercase">
+                                    <span className={LABEL_CLASS}>
                                         Height (cm)
                                     </span>
                                     <input
                                         type="number"
                                         step="0.1"
                                         name="height_cm"
-                                        className="rounded border border-neutral-300 px-2 py-1"
+                                        className={INPUT_CLASS}
                                     />
                                 </label>
                                 <label className="col-span-3 flex flex-col gap-1">
-                                    <span className="text-xs text-neutral-500 uppercase">
-                                        Notes
-                                    </span>
+                                    <span className={LABEL_CLASS}>Notes</span>
                                     <textarea
                                         name="notes"
                                         rows={2}
-                                        className="rounded border border-neutral-300 px-2 py-1"
+                                        className={INPUT_CLASS}
                                     />
                                 </label>
                                 <div className="col-span-3 mt-2 flex justify-end">
-                                    <button
+                                    <Button
                                         type="submit"
                                         disabled={processing}
-                                        className="rounded bg-blue-600 px-4 py-2 text-white disabled:opacity-50"
+                                        className="bg-olive-600 text-white hover:bg-olive-700"
                                     >
                                         Record
-                                    </button>
+                                    </Button>
                                 </div>
                             </>
                         )}
@@ -155,54 +160,63 @@ export default function PatientVitalSigns({ patient, vital_signs }: Props) {
                 </section>
 
                 <section>
-                    <h2 className="mb-3 text-sm font-semibold text-neutral-500 uppercase">
+                    <h2 className="mb-3 text-sm font-semibold text-muted-foreground uppercase">
                         History ({vital_signs.total})
                     </h2>
                     {vital_signs.data.length === 0 ? (
-                        <p className="text-xs text-neutral-400">
+                        <p className="text-xs text-muted-foreground">
                             No vital signs recorded yet.
                         </p>
                     ) : (
-                        <table className="w-full text-left text-xs">
-                            <thead className="border-b border-neutral-200 text-neutral-500 uppercase">
-                                <tr>
-                                    <th className="px-2 py-1">When</th>
-                                    <th className="px-2 py-1">Temp</th>
-                                    <th className="px-2 py-1">BP</th>
-                                    <th className="px-2 py-1">HR</th>
-                                    <th className="px-2 py-1">BMI</th>
-                                    <th className="px-2 py-1">Pain</th>
-                                </tr>
-                            </thead>
-                            <tbody>
+                        <Table className="text-xs">
+                            <TableHeader>
+                                <TableRow className="bg-muted/50">
+                                    <TableHead className="px-2 py-1 text-[11px] tracking-wider uppercase">
+                                        When
+                                    </TableHead>
+                                    <TableHead className="px-2 py-1 text-[11px] tracking-wider uppercase">
+                                        Temp
+                                    </TableHead>
+                                    <TableHead className="px-2 py-1 text-[11px] tracking-wider uppercase">
+                                        BP
+                                    </TableHead>
+                                    <TableHead className="px-2 py-1 text-[11px] tracking-wider uppercase">
+                                        HR
+                                    </TableHead>
+                                    <TableHead className="px-2 py-1 text-[11px] tracking-wider uppercase">
+                                        BMI
+                                    </TableHead>
+                                    <TableHead className="px-2 py-1 text-[11px] tracking-wider uppercase">
+                                        Pain
+                                    </TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
                                 {vital_signs.data.map((v) => (
-                                    <tr
-                                        key={v.id}
-                                        className="border-b border-neutral-100"
-                                    >
-                                        <td className="px-2 py-1 font-mono">
+                                    <TableRow key={v.id}>
+                                        <TableCell className="px-2 py-1 font-mono">
                                             {v.recorded_at}
-                                        </td>
-                                        <td className="px-2 py-1">
+                                        </TableCell>
+                                        <TableCell className="px-2 py-1">
                                             {v.temperature_c ?? '—'}
-                                        </td>
-                                        <td className="px-2 py-1">
+                                        </TableCell>
+                                        <TableCell className="px-2 py-1">
                                             {v.blood_pressure_sys}/
                                             {v.blood_pressure_dia}
-                                        </td>
-                                        <td className="px-2 py-1">
+                                        </TableCell>
+                                        <TableCell className="px-2 py-1">
                                             {v.heart_rate ?? '—'}
-                                        </td>
-                                        <td className="px-2 py-1">
+                                        </TableCell>
+                                        <TableCell className="px-2 py-1">
                                             {v.bmi ?? '—'}
-                                        </td>
-                                        <td className="px-2 py-1">
+                                        </TableCell>
+                                        <TableCell className="px-2 py-1">
                                             {v.pain_score ?? '—'}
-                                        </td>
-                                    </tr>
+                                        </TableCell>
+                                    </TableRow>
                                 ))}
-                            </tbody>
-                        </table>
+                            </TableBody>
+                        </Table>
                     )}
                 </section>
             </div>

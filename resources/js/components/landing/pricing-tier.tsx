@@ -6,14 +6,23 @@ import { FADE_UP } from '@/components/landing/shared/animations';
 import type { TIERS } from '@/components/landing/shared/content';
 import type { Lang } from '@/components/landing/shared/types';
 import { Button } from '@/components/ui/button';
+import { useLocale } from '@/lib/i18n/use-locale';
 import { cn } from '@/lib/utils';
+import { login } from '@/routes';
 
 interface PricingTierProps {
     tier: (typeof TIERS)[number];
     lang: Lang;
+    canRegister?: boolean;
 }
 
-export function PricingTier({ tier, lang }: PricingTierProps) {
+export function PricingTier({
+    tier,
+    lang,
+    canRegister = false,
+}: PricingTierProps) {
+    const { slug: locale } = useLocale();
+
     return (
         <motion.div
             variants={FADE_UP}
@@ -113,7 +122,7 @@ export function PricingTier({ tier, lang }: PricingTierProps) {
                         : 'bg-navy-900 text-white hover:bg-navy-800',
                 )}
             >
-                <Link href="/register">
+                <Link href={canRegister ? '/register' : login({ locale })}>
                     {tier.cta[lang]}
                     <ArrowRight className="size-3.5 transition-transform group-hover/cta:translate-x-0.5" />
                 </Link>

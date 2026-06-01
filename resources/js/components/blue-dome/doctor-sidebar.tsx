@@ -1,7 +1,6 @@
 import { Link, usePage } from '@inertiajs/react';
 import {
     Activity,
-    Box,
     Calendar,
     FlaskConical,
     Home,
@@ -31,7 +30,6 @@ import { useDoctorLang } from '@/lib/i18n/doctor-context';
 import { useLocale } from '@/lib/i18n/use-locale';
 import { cn } from '@/lib/utils';
 import doctor from '@/routes/doctor';
-import inventory from '@/routes/inventory';
 import labOrders from '@/routes/lab-orders';
 import medicalRecords from '@/routes/medical-records';
 import patients from '@/routes/patients';
@@ -86,9 +84,9 @@ export function DoctorSidebar() {
             icon: Users,
         },
         {
-            key: 'follow-up',
-            label: t.follow_up,
-            href: doctor.followUp.url({ locale }),
+            key: 'confirmations',
+            label: t.confirmations,
+            href: doctor.confirmations.url({ locale }),
             icon: Activity,
         },
     ];
@@ -116,12 +114,6 @@ export function DoctorSidebar() {
 
     const admin: NavEntry[] = [
         {
-            key: 'inventory',
-            label: t.inventory,
-            href: inventory.index.url({ locale }),
-            icon: Box,
-        },
-        {
             key: 'settings',
             label: t.settings,
             href: doctor.settings.url({ locale }),
@@ -135,10 +127,10 @@ export function DoctorSidebar() {
                 <div className="flex items-center gap-2.5 px-2 py-1.5">
                     <BrandIconMark />
                     <div className="grid min-w-0 leading-tight group-data-[collapsible=icon]:hidden">
-                        <span className="text-[15px] font-bold tracking-wide text-white">
+                        <span className="text-[15px] font-bold tracking-wide text-sidebar-foreground">
                             {t.brand}
                         </span>
-                        <span className="text-[11px] text-slate-500">
+                        <span className="text-[11px] text-sidebar-foreground/70">
                             {t.brand_sub}
                         </span>
                     </div>
@@ -181,7 +173,7 @@ function NavSection({
 }) {
     return (
         <SidebarGroup>
-            <SidebarGroupLabel className="text-[10px] tracking-[0.08em] text-slate-500 uppercase">
+            <SidebarGroupLabel className="text-[10px] tracking-[0.08em] uppercase">
                 {label}
             </SidebarGroupLabel>
             <SidebarGroupContent>
@@ -197,8 +189,9 @@ function NavSection({
                                     isActive={active}
                                     tooltip={entry.label}
                                     className={cn(
-                                        'text-slate-300 hover:bg-navy-900 hover:text-white',
-                                        'data-[active=true]:bg-navy-800 data-[active=true]:text-white',
+                                        'text-sidebar-foreground/80',
+                                        'data-[active=true]:bg-navy-100 data-[active=true]:font-medium data-[active=true]:text-navy-800',
+                                        'dark:data-[active=true]:bg-navy-900 dark:data-[active=true]:text-white',
                                         'data-[active=true]:before:absolute data-[active=true]:before:start-0 data-[active=true]:before:top-2 data-[active=true]:before:bottom-2 data-[active=true]:before:w-[3px] data-[active=true]:before:rounded-e data-[active=true]:before:bg-olive-500',
                                         'group-data-[collapsible=icon]:before:hidden',
                                     )}
@@ -211,8 +204,9 @@ function NavSection({
                                 {entry.badge && (
                                     <SidebarMenuBadge
                                         className={cn(
-                                            'bg-navy-800 text-[11px] text-slate-400',
-                                            active && 'bg-olive-600 text-white',
+                                            'bg-navy-100 text-[11px] text-navy-700 dark:bg-navy-800 dark:text-slate-300',
+                                            active &&
+                                                'bg-olive-600 text-white dark:bg-olive-600 dark:text-white',
                                         )}
                                     >
                                         {entry.badge}

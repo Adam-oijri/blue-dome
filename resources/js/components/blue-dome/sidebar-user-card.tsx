@@ -32,15 +32,17 @@ export function SidebarUserCard() {
                 {initials}
             </div>
             <div className="min-w-0 flex-1 leading-tight group-data-[collapsible=icon]:hidden">
-                <div className="truncate text-[12px] font-semibold text-white">
+                <div className="truncate text-[12px] font-semibold text-sidebar-foreground">
                     {fullName}
                 </div>
-                <div className="text-[11px] text-slate-500">{roleLabel}</div>
+                <div className="text-[11px] text-sidebar-foreground/70">
+                    {roleLabel}
+                </div>
             </div>
             <Link
                 href={logout({ locale })}
                 as="button"
-                className="text-slate-400 group-data-[collapsible=icon]:hidden hover:text-white"
+                className="text-sidebar-foreground/70 group-data-[collapsible=icon]:hidden hover:text-sidebar-foreground"
                 aria-label="Sign out"
             >
                 <LogOut className="size-4" />

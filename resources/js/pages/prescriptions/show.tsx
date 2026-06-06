@@ -1,6 +1,7 @@
 import { Head, Link } from '@inertiajs/react';
-import { ChevronLeft, Edit3, Pill } from 'lucide-react';
+import { ChevronLeft, Edit3, FileDown, Pill } from 'lucide-react';
 
+import { EditPrescriptionsSheet } from '@/components/blue-dome/edit-prescriptions-sheet';
 import { SectionCard } from '@/components/blue-dome/section-card';
 import { StatusPill } from '@/components/blue-dome/status-pill';
 import type { StatusTone } from '@/components/blue-dome/status-pill';
@@ -178,22 +179,36 @@ export default function PrescriptionShow({
                             </span>
                         </div>
                     </div>
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        asChild
-                        className="gap-2"
-                    >
-                        <Link
-                            href={prescriptions.edit.url({
-                                locale,
-                                prescription: prescription.id,
-                            })}
+                    <div className="flex items-center gap-2">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            asChild
+                            className="gap-2"
                         >
-                            <Edit3 className="size-3.5" />
-                            {t.edit}
-                        </Link>
-                    </Button>
+                            <a
+                                href={prescriptions.pdf.url({
+                                    locale,
+                                    prescription: prescription.id,
+                                })}
+                                target="_blank"
+                                rel="noreferrer"
+                            >
+                                <FileDown className="size-3.5" />
+                                {t.export_pdf}
+                            </a>
+                        </Button>
+                        <EditPrescriptionsSheet prescription={prescription}>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="gap-2"
+                            >
+                                <Edit3 className="size-3.5" />
+                                {t.edit}
+                            </Button>
+                        </EditPrescriptionsSheet>
+                    </div>
                 </div>
 
                 <SectionCard

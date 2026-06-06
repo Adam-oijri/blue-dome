@@ -1,6 +1,7 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { ArrowLeft, Edit3, FileText, Receipt, Repeat, Trash2 } from 'lucide-react';
 
+import { EditExpensesSheet } from '@/components/blue-dome/edit-expenses-sheet';
 import { PageHeader } from '@/components/blue-dome/page-header';
 import { SectionCard } from '@/components/blue-dome/section-card';
 import { StatusPill } from '@/components/blue-dome/status-pill';
@@ -109,22 +110,16 @@ export default function ExpenseShow({ expense }: { expense: Expense }) {
                                     {enumLabel(t.recurring_frequency_opts, expense.recurring_frequency)}
                                 </StatusPill>
                             )}
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                asChild
-                                className="gap-2"
-                            >
-                                <Link
-                                    href={expenses.edit.url({
-                                        locale,
-                                        expense: expense.id,
-                                    })}
+                            <EditExpensesSheet expense={expense}>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="gap-2"
                                 >
                                     <Edit3 className="size-3.5" />
                                     {t.edit}
-                                </Link>
-                            </Button>
+                                </Button>
+                            </EditExpensesSheet>
                             <Button
                                 variant="outline"
                                 size="sm"

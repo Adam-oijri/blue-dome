@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import type { ReactNode } from 'react';
 
+import { EditVendorsSheet } from '@/components/blue-dome/edit-vendors-sheet';
 import { PageHeader } from '@/components/blue-dome/page-header';
 import { SectionCard } from '@/components/blue-dome/section-card';
 import { StatusPill } from '@/components/blue-dome/status-pill';
@@ -130,22 +131,16 @@ export default function VendorShow({ vendor }: Props) {
                     }
                     actions={
                         <div className="flex items-center gap-2">
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                asChild
-                                className="gap-2"
-                            >
-                                <Link
-                                    href={vendors.edit.url({
-                                        locale,
-                                        vendor: vendor.id,
-                                    })}
+                            <EditVendorsSheet vendor={vendor}>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="gap-2"
                                 >
                                     <Edit3 className="size-3.5" />
                                     {t.edit}
-                                </Link>
-                            </Button>
+                                </Button>
+                            </EditVendorsSheet>
                             <Button
                                 variant="outline"
                                 size="sm"

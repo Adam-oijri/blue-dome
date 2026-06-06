@@ -19,7 +19,7 @@ it('overrides config(mail.from) when the authenticated clinic has an email integ
     config(['mail.from.address' => 'default@bluedome.local', 'mail.from.name' => 'Blue Dome']);
 
     $this->actingAs($admin)
-        ->get('/ma-fr/dashboard')
+        ->get('/ma-fr/secretary')
         ->assertOk();
 
     expect(config('mail.from.address'))->toBe('appointments@tazi.ma')
@@ -33,7 +33,7 @@ it('leaves the default config(mail.from) intact when no integration exists', fun
     config(['mail.from.address' => 'default@bluedome.local', 'mail.from.name' => 'Blue Dome']);
 
     $this->actingAs($admin)
-        ->get('/ma-fr/dashboard')
+        ->get('/ma-fr/secretary')
         ->assertOk();
 
     expect(config('mail.from.address'))->toBe('default@bluedome.local')

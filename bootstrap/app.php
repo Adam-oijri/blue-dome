@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\ApplyClinicMailFrom;
+use App\Http\Middleware\EnsureClinicActive;
 use App\Http\Middleware\EnsureRole;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
@@ -11,6 +12,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets;
+use Illuminate\Http\Request;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -32,7 +34,23 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'role' => EnsureRole::class,
             'locale' => SetLocale::class,
+            'clinic.active' => EnsureClinicActive::class,
         ]);
+
+        // Every login route is locale-prefixed ({locale}/login). Laravel's
+        // default unauthenticated redirect calls route('login') with no locale
+        // and throws UrlGenerationException (500) before SetLocale's URL
+        // default applies. Resolve the slug from the request and redirect to
+        // the localized login so a dropped/expired session lands on the login
+        // page instead of crashing.
+        $middleware->redirectGuestsTo(function (Request $request): string {
+            $segment = (string) $request->segment(1);
+            $slug = array_key_exists($segment, config('locales.supported'))
+                ? $segment
+                : config('locales.default');
+
+            return route('login', ['locale' => $slug]);
+        });
     })
     ->withSchedule(function (Schedule $schedule): void {
         // Phase 9: weekly field_changes retention sweep (open question #16).
@@ -40,6 +58,14 @@ return Application::configure(basePath: dirname(__DIR__))
         // retention floor in IG §security rules.
         $schedule->command('app:rotate-field-changes')
             ->weeklyOn(1, '03:00')
+            ->withoutOverlapping()
+            ->runInBackground();
+
+        // Reconcile lapsed free trials (trial → expired) once a day. The
+        // EnsureClinicActive gate already enforces expiry in real time; this
+        // keeps the stored status accurate for the super-admin panel.
+        $schedule->command('app:expire-trials')
+            ->dailyAt('02:00')
             ->withoutOverlapping()
             ->runInBackground();
     })

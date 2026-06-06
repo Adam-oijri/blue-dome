@@ -1,10 +1,12 @@
-import { Form, Head } from '@inertiajs/react';
+import { Form, Head, setLayoutProps } from '@inertiajs/react';
+
 import InputError from '@/components/input-error';
 import PasswordInput from '@/components/password-input';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
+import { useAuthLang } from '@/lib/i18n/auth-context';
 import { useLocale } from '@/lib/i18n/use-locale';
 import { accept } from '@/routes/invitations';
 
@@ -24,21 +26,24 @@ export default function AcceptInvite({
     clinicName,
 }: Props) {
     const { slug: locale } = useLocale();
+    const { t } = useAuthLang();
     const isDoctor = role === 'doctor';
+
+    setLayoutProps({ title: t.invite_title, description: t.invite_desc });
 
     return (
         <>
-            <Head title="Accept invitation" />
+            <Head title={t.invite_title} />
 
-            <div className="mb-2 rounded-lg border border-border bg-muted/40 p-3 text-sm">
-                You&apos;re invited as{' '}
+            <div className="mb-4 rounded-lg border border-border bg-muted/40 p-3 text-sm">
+                {t.invited_as}{' '}
                 <span className="font-semibold">
                     {isDoctor ? 'Dr. ' : ''}
                     {firstName} {lastName}
                 </span>
                 <span className="text-muted-foreground">
-                    {' '}
-                    · {isDoctor ? 'Doctor' : 'Secretary'}
+                    {' · '}
+                    {isDoctor ? t.role_doctor : t.role_secretary}
                     {clinicName ? ` · ${clinicName}` : ''}
                 </span>
             </div>
@@ -51,7 +56,7 @@ export default function AcceptInvite({
                 {({ processing, errors }) => (
                     <div className="grid gap-6">
                         <div className="grid gap-2">
-                            <Label htmlFor="email">Email address</Label>
+                            <Label htmlFor="email">{t.email_label}</Label>
                             <Input
                                 id="email"
                                 type="email"
@@ -59,33 +64,33 @@ export default function AcceptInvite({
                                 required
                                 autoFocus
                                 autoComplete="email"
-                                placeholder="email@example.com"
+                                placeholder={t.email_ph}
                             />
                             <InputError message={errors.email} />
                         </div>
 
                         <div className="grid gap-2">
-                            <Label htmlFor="password">Password</Label>
+                            <Label htmlFor="password">{t.password_label}</Label>
                             <PasswordInput
                                 id="password"
                                 name="password"
                                 required
                                 autoComplete="new-password"
-                                placeholder="Password"
+                                placeholder={t.password_ph}
                             />
                             <InputError message={errors.password} />
                         </div>
 
                         <div className="grid gap-2">
                             <Label htmlFor="password_confirmation">
-                                Confirm password
+                                {t.confirm_password_label}
                             </Label>
                             <PasswordInput
                                 id="password_confirmation"
                                 name="password_confirmation"
                                 required
                                 autoComplete="new-password"
-                                placeholder="Confirm password"
+                                placeholder={t.confirm_password_ph}
                             />
                             <InputError
                                 message={errors.password_confirmation}
@@ -94,11 +99,11 @@ export default function AcceptInvite({
 
                         <Button
                             type="submit"
-                            className="mt-2 w-full"
+                            className="mt-2 w-full bg-olive-600 text-white hover:bg-olive-700"
                             disabled={processing}
                         >
                             {processing && <Spinner />}
-                            Create my account
+                            {t.create_account_btn}
                         </Button>
                     </div>
                 )}
@@ -106,8 +111,3 @@ export default function AcceptInvite({
         </>
     );
 }
-
-AcceptInvite.layout = {
-    title: 'Accept your invitation',
-    description: 'Set your email and password to activate your account',
-};

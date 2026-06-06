@@ -1,4 +1,5 @@
-import { Form, Head } from '@inertiajs/react';
+import { Form, Head, setLayoutProps } from '@inertiajs/react';
+
 import InputError from '@/components/input-error';
 import PasswordInput from '@/components/password-input';
 import TextLink from '@/components/text-link';
@@ -7,6 +8,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
+import { useAuthLang } from '@/lib/i18n/auth-context';
 import { useLocale } from '@/lib/i18n/use-locale';
 import { store } from '@/routes/login';
 import { request } from '@/routes/password';
@@ -23,10 +25,13 @@ export default function Login({
     canRegister,
 }: Props) {
     const { slug: locale } = useLocale();
+    const { t } = useAuthLang();
+
+    setLayoutProps({ title: t.login_title, description: t.login_desc });
 
     return (
         <>
-            <Head title="Log in" />
+            <Head title={t.login_title} />
 
             <Form
                 {...store.form({ locale })}
@@ -37,7 +42,7 @@ export default function Login({
                     <>
                         <div className="grid gap-6">
                             <div className="grid gap-2">
-                                <Label htmlFor="email">Email address</Label>
+                                <Label htmlFor="email">{t.email_label}</Label>
                                 <Input
                                     id="email"
                                     type="email"
@@ -46,21 +51,23 @@ export default function Login({
                                     autoFocus
                                     tabIndex={1}
                                     autoComplete="email"
-                                    placeholder="email@example.com"
+                                    placeholder={t.email_ph}
                                 />
                                 <InputError message={errors.email} />
                             </div>
 
                             <div className="grid gap-2">
                                 <div className="flex items-center">
-                                    <Label htmlFor="password">Password</Label>
+                                    <Label htmlFor="password">
+                                        {t.password_label}
+                                    </Label>
                                     {canResetPassword && (
                                         <TextLink
                                             href={request({ locale })}
-                                            className="ml-auto text-sm"
+                                            className="ms-auto text-sm"
                                             tabIndex={5}
                                         >
-                                            Forgot password?
+                                            {t.forgot_link}
                                         </TextLink>
                                     )}
                                 </div>
@@ -70,37 +77,40 @@ export default function Login({
                                     required
                                     tabIndex={2}
                                     autoComplete="current-password"
-                                    placeholder="Password"
+                                    placeholder={t.password_ph}
                                 />
                                 <InputError message={errors.password} />
                             </div>
 
-                            <div className="flex items-center space-x-3">
+                            <div className="flex items-center gap-3">
                                 <Checkbox
                                     id="remember"
                                     name="remember"
                                     tabIndex={3}
                                 />
-                                <Label htmlFor="remember">Remember me</Label>
+                                <Label htmlFor="remember">{t.remember_me}</Label>
                             </div>
 
                             <Button
                                 type="submit"
-                                className="mt-4 w-full"
+                                className="mt-4 w-full bg-olive-600 text-white hover:bg-olive-700"
                                 tabIndex={4}
                                 disabled={processing}
                                 data-test="login-button"
                             >
                                 {processing && <Spinner />}
-                                Log in
+                                {t.log_in_btn}
                             </Button>
                         </div>
 
                         {canRegister && (
                             <div className="text-center text-sm text-muted-foreground">
-                                Don't have an account?{' '}
-                                <TextLink href="/register" tabIndex={5}>
-                                    Sign up
+                                {t.no_account}{' '}
+                                <TextLink
+                                    href={`/${locale}/register`}
+                                    tabIndex={5}
+                                >
+                                    {t.sign_up}
                                 </TextLink>
                             </div>
                         )}
@@ -109,15 +119,10 @@ export default function Login({
             </Form>
 
             {status && (
-                <div className="mb-4 text-center text-sm font-medium text-green-600">
+                <div className="mt-4 text-center text-sm font-medium text-success">
                     {status}
                 </div>
             )}
         </>
     );
 }
-
-Login.layout = {
-    title: 'Log in to your account',
-    description: 'Enter your email and password below to log in',
-};

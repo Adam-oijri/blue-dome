@@ -1,0 +1,27 @@
+# VCS / CI / editor
+.git
+.github
+.idea
+.vscode
+.claude
+
+# Rebuilt inside the image
+node_modules
+vendor
+public/build
+public/hot
+
+# Secrets & local state (env is injected at runtime, never baked in)
+.env
+.env.*
+!.env.example
+
+# Runtime-generated storage
+storage/logs/*
+storage/framework/cache/data/*
+storage/framework/sessions/*
+storage/framework/views/*
+
+# Tests & docs not needed in the runtime image
+tests
+*.md

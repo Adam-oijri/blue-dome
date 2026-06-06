@@ -18,6 +18,7 @@ import { useSecretaryLang } from '@/lib/i18n/secretary-context';
 import { useLocale } from '@/lib/i18n/use-locale';
 import { cn } from '@/lib/utils';
 import { reports as reportsRoute } from '@/routes/secretary';
+import { exportMethod as reportsExport } from '@/routes/secretary/reports';
 
 type Period = '7d' | '30d' | 'qtr';
 
@@ -127,17 +128,26 @@ export default function SecretaryReports({
                     actions={
                         <>
                             <Button
+                                asChild
                                 variant="outline"
                                 size="sm"
                                 className="gap-2"
                             >
-                                <Archive className="size-3.5" />
-                                {t.action_export}
+                                <a
+                                    href={reportsExport.url(
+                                        { locale },
+                                        { query: { period } },
+                                    )}
+                                >
+                                    <Archive className="size-3.5" />
+                                    {t.action_export}
+                                </a>
                             </Button>
                             <Button
                                 variant="outline"
                                 size="sm"
                                 className="gap-2"
+                                onClick={() => window.print()}
                             >
                                 <Printer className="size-3.5" />
                                 {t.action_print}

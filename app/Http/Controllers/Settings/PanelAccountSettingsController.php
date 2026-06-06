@@ -5,8 +5,6 @@ namespace App\Http\Controllers\Settings;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Settings\TwoFactorAuthenticationRequest;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Illuminate\Routing\Controllers\HasMiddleware;
-use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Validation\Rules\Password;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -18,7 +16,7 @@ use Laravel\Fortify\Features;
  * Appearance forms backed by the existing settings routes; only the Inertia
  * page differs.
  */
-abstract class PanelAccountSettingsController extends Controller implements HasMiddleware
+abstract class PanelAccountSettingsController extends Controller
 {
     /**
      * The Inertia page component that renders this panel's account settings.
@@ -26,17 +24,11 @@ abstract class PanelAccountSettingsController extends Controller implements HasM
     abstract protected function view(): string;
 
     /**
-     * Mirror SecurityController's password-confirmation gate so the embedded
-     * two-factor flow behaves identically to the standalone security page.
+     * Opening the panel's account settings does NOT require password
+     * confirmation. The embedded two-factor mutations stay protected by
+     * Fortify's own `password.confirm` guard on the two-factor.* routes
+     * (active while `confirmPassword` is enabled in config/fortify.php).
      */
-    public static function middleware(): array
-    {
-        return Features::canManageTwoFactorAuthentication()
-            && Features::optionEnabled(Features::twoFactorAuthentication(), 'confirmPassword')
-                ? [new Middleware('password.confirm', only: ['edit'])]
-                : [];
-    }
-
     public function edit(TwoFactorAuthenticationRequest $request): Response
     {
         $props = [

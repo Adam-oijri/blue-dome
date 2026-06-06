@@ -1,27 +1,32 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, setLayoutProps } from '@inertiajs/react';
+
 import { Button } from '@/components/ui/button';
+import { useAuthLang } from '@/lib/i18n/auth-context';
 import { useLocale } from '@/lib/i18n/use-locale';
 
 export default function InviteInvalid() {
     const { slug: locale } = useLocale();
+    const { t } = useAuthLang();
+
+    setLayoutProps({
+        title: t.invite_invalid_title,
+        description: t.invite_invalid_desc,
+    });
 
     return (
         <>
-            <Head title="Invitation unavailable" />
+            <Head title={t.invite_invalid_title} />
 
             <p className="text-center text-sm text-muted-foreground">
-                This invitation link is invalid, has expired, or has already
-                been used. Ask your administrator to send a new one.
+                {t.invite_invalid_body}
             </p>
 
-            <Button asChild className="mt-6 w-full">
-                <Link href={`/${locale}`}>Go to homepage</Link>
+            <Button
+                asChild
+                className="mt-6 w-full bg-olive-600 text-white hover:bg-olive-700"
+            >
+                <Link href={`/${locale}`}>{t.go_home}</Link>
             </Button>
         </>
     );
 }
-
-InviteInvalid.layout = {
-    title: 'Invitation unavailable',
-    description: 'This link can no longer be used',
-};

@@ -1,9 +1,10 @@
 import { router } from '@inertiajs/react';
-import { Bell, Plus, Search } from 'lucide-react';
+import { Plus, Search } from 'lucide-react';
 import { useState } from 'react';
 import type { FormEvent } from 'react';
 
 import { CreateAppointmentSheet } from '@/components/blue-dome/create-appointment-sheet';
+import { NotificationBell } from '@/components/blue-dome/notification-bell';
 import { Button } from '@/components/ui/button';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { useSecretaryLang } from '@/lib/i18n/secretary-context';
@@ -48,14 +49,7 @@ export function SecretaryTopbar() {
             </form>
 
             <div className="ms-auto flex items-center gap-2">
-                <Button
-                    variant="outline"
-                    size="icon"
-                    className="size-9"
-                    aria-label={t.notifications}
-                >
-                    <Bell className="size-4" />
-                </Button>
+                <NotificationBell />
 
                 <CreateAppointmentSheet>
                     <Button className="bg-olive-600 text-white hover:bg-olive-700">

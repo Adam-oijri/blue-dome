@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
  * Secretary reports — clinic-scoped operational insights over a selectable
@@ -57,6 +58,33 @@ class ReportsController extends Controller
                 'period' => $period,
             ],
         ]);
+    }
+
+    /**
+     * Stream the daily appointment volume for the selected window as a CSV.
+     */
+    public function export(Request $request): StreamedResponse
+    {
+        $clinicId = $request->user()->clinic_id;
+
+        $period = $request->string('period')->toString();
+        if (! array_key_exists($period, self::PERIOD_DAYS)) {
+            $period = '7d';
+        }
+
+        $today = CarbonImmutable::today();
+        $windowStart = $today->subDays(self::PERIOD_DAYS[$period] - 1);
+        $series = $this->appointmentsPerDay($clinicId, $windowStart, $today);
+
+        return response()->streamDownload(function () use ($series): void {
+            $out = fopen('php://output', 'w');
+            fwrite($out, "\xEF\xBB\xBF"); // UTF-8 BOM so Excel reads accents correctly.
+            fputcsv($out, ['Date', 'Appointments']);
+            foreach ($series as $row) {
+                fputcsv($out, [$row['date'], $row['count']]);
+            }
+            fclose($out);
+        }, 'report-'.$period.'-'.$today->format('Y-m-d').'.csv', ['Content-Type' => 'text/csv; charset=UTF-8']);
     }
 
     /**

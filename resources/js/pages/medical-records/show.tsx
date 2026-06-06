@@ -1,6 +1,7 @@
 import { Head, Link } from '@inertiajs/react';
 import { Check, ChevronLeft, Edit3, FileText, ShieldAlert } from 'lucide-react';
 
+import { EditMedicalRecordsSheet } from '@/components/blue-dome/edit-medical-records-sheet';
 import { SectionCard } from '@/components/blue-dome/section-card';
 import { StatusPill } from '@/components/blue-dome/status-pill';
 import type { FieldChangeEntry } from '@/components/provenance-panel';
@@ -158,22 +159,19 @@ export default function MedicalRecordShow({
                     </div>
                     <div className="flex items-center gap-2">
                         {!record.is_signed && (
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                asChild
-                                className="gap-2"
+                            <EditMedicalRecordsSheet
+                                record={record}
+                                clinical={clinical}
                             >
-                                <Link
-                                    href={medicalRecords.edit.url({
-                                        locale,
-                                        medical_record: record.id,
-                                    })}
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="gap-2"
                                 >
                                     <Edit3 className="size-3.5" />
                                     {t.edit}
-                                </Link>
-                            </Button>
+                                </Button>
+                            </EditMedicalRecordsSheet>
                         )}
                         {!record.is_signed && (
                             <Button

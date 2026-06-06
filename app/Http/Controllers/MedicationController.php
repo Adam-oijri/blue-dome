@@ -38,13 +38,6 @@ class MedicationController extends Controller
         ]);
     }
 
-    public function create(): Response
-    {
-        $this->authorize('create', Medication::class);
-
-        return Inertia::render('medications/create');
-    }
-
     public function store(StoreMedicationRequest $request): RedirectResponse
     {
         Medication::create($request->validated() + [
@@ -61,16 +54,6 @@ class MedicationController extends Controller
         $this->authorize('view', $medication);
 
         return Inertia::render('medications/show', [
-            'medication' => $medication,
-        ]);
-    }
-
-    public function edit(string $locale, Medication $medication): Response
-    {
-        unset($locale);
-        $this->authorize('update', $medication);
-
-        return Inertia::render('medications/edit', [
             'medication' => $medication,
         ]);
     }

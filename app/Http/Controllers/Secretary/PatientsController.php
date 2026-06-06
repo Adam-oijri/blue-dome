@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Secretary;
 
+use App\Http\Controllers\Concerns\ExportsCsv;
 use App\Http\Controllers\Controller;
 use App\Models\Appointment;
 use App\Models\Patient;
@@ -10,6 +11,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
  * Secretary patient directory — clinic-scoped roster with search, a chronic
@@ -17,6 +19,8 @@ use Inertia\Response;
  */
 class PatientsController extends Controller
 {
+    use ExportsCsv;
+
     /** Appointments in these states don't count toward last-visit / next-appointment. */
     private const EXCLUDED_STATUSES = ['cancelled', 'no_show'];
 
@@ -96,5 +100,49 @@ class PatientsController extends Controller
                 'filter' => $filter !== '' ? $filter : null,
             ],
         ]);
+    }
+
+    /**
+     * Stream the clinic patient roster (honouring the current search/chronic
+     * filter) as a CSV download.
+     */
+    public function export(Request $request): StreamedResponse
+    {
+        $clinicId = $request->user()->clinic_id;
+        $search = trim((string) $request->string('q'));
+        $filter = (string) $request->string('filter');
+
+        $query = Patient::query()
+            ->where('clinic_id', $clinicId)
+            ->when($search !== '', function (Builder $sub) use ($search): void {
+                $sub->where(function (Builder $inner) use ($search): void {
+                    $inner->where('first_name', 'ILIKE', "%{$search}%")
+                        ->orWhere('last_name', 'ILIKE', "%{$search}%");
+                });
+            })
+            ->when($filter === 'chronic', function (Builder $sub): void {
+                $sub->whereNotNull('chronic_diseases')->where('chronic_diseases', '<>', '');
+            })
+            ->orderBy('first_name')
+            ->orderBy('last_name');
+
+        return $this->streamCsv(
+            $query,
+            'patients-'.CarbonImmutable::now()->format('Y-m-d').'.csv',
+            ['Code', 'First name', 'Last name', 'Gender', 'Date of birth', 'Phone', 'Blood type', 'Chronic', 'Insurance', 'Registered', 'Active'],
+            fn (Patient $patient): array => [
+                $patient->patient_code,
+                $patient->first_name,
+                $patient->last_name,
+                $patient->gender,
+                $patient->date_of_birth,
+                $patient->phone,
+                $patient->blood_type,
+                filled($patient->chronic_diseases) ? 'yes' : 'no',
+                $patient->insurance_company,
+                $patient->registration_date,
+                $patient->is_active ? 'yes' : 'no',
+            ],
+        );
     }
 }

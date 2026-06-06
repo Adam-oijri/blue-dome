@@ -10,7 +10,7 @@ import { FADE_UP, STAGGER } from '@/components/landing/shared/animations';
 import type { SectionProps } from '@/components/landing/shared/types';
 import { Button } from '@/components/ui/button';
 import { useLocale } from '@/lib/i18n/use-locale';
-import { login } from '@/routes';
+import { login, register } from '@/routes';
 
 const WORD_FADE: Variants = {
     hidden: { opacity: 0, y: 18 },
@@ -135,7 +135,7 @@ export function Hero({
                                 <Link
                                     href={
                                         canRegister
-                                            ? '/register'
+                                            ? register({ locale })
                                             : login({ locale })
                                     }
                                 >

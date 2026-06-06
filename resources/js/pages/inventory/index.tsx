@@ -1,4 +1,4 @@
-import { Head, router, usePage } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import { AlertTriangle, Box, Clock, Pencil, Plus } from 'lucide-react';
 
 import { CreateInventorySheet } from '@/components/blue-dome/create-inventory-sheet';
@@ -147,9 +147,16 @@ export default function InventoryIndex({
                     description={`${inventory.total} ${t.items_tracked}`}
                     actions={
                         <>
-                            <Button variant="outline" size="sm" className="gap-2">
-                                <AlertTriangle className="size-3.5" />
-                                {t.reorder_list}
+                            <Button
+                                asChild
+                                variant="outline"
+                                size="sm"
+                                className="gap-2"
+                            >
+                                <Link href={inventoryRoutes.alerts.url({ locale })}>
+                                    <AlertTriangle className="size-3.5" />
+                                    {t.reorder_list}
+                                </Link>
                             </Button>
                             {canEdit && (
                                 <CreateInventorySheet

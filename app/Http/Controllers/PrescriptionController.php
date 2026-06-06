@@ -9,6 +9,7 @@ use App\Models\Medication;
 use App\Models\Patient;
 use App\Models\Prescription;
 use App\Models\PrescriptionItem;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -73,23 +74,6 @@ class PrescriptionController extends Controller
                 ->orderBy('first_name')
                 ->get(['id', 'first_name', 'last_name', 'patient_code']),
             'medicationSuggestions' => $medicationSuggestions,
-        ]);
-    }
-
-    public function create(Request $request): Response
-    {
-        $this->authorize('create', Prescription::class);
-
-        return Inertia::render('prescriptions/create', [
-            'patients' => Patient::query()
-                ->where('clinic_id', $request->user()->clinic_id)
-                ->orderBy('first_name')
-                ->get(['id', 'first_name', 'last_name', 'patient_code']),
-            'medications' => Medication::query()
-                ->where('clinic_id', $request->user()->clinic_id)
-                ->where('is_active', true)
-                ->orderBy('trade_name')
-                ->get(['id', 'trade_name', 'generic_name', 'strength', 'form']),
         ]);
     }
 
@@ -234,16 +218,22 @@ class PrescriptionController extends Controller
         ]);
     }
 
-    public function edit(string $locale, Prescription $prescription): Response
+    /**
+     * Stream a printable PDF of the prescription (clinic letterhead, patient +
+     * prescriber, medications table, signature line) as a downloadable file.
+     */
+    public function pdf(string $locale, Prescription $prescription): \Illuminate\Http\Response
     {
         unset($locale);
-        $this->authorize('update', $prescription);
+        $this->authorize('view', $prescription);
 
-        $prescription->load(['items.medication:id,trade_name,strength,form']);
+        $prescription->load(['clinic', 'patient', 'doctor', 'items.medication']);
 
-        return Inertia::render('prescriptions/edit', [
+        return Pdf::loadView('pdf.prescription', [
             'prescription' => $prescription,
-        ]);
+            'clinic' => $prescription->clinic,
+            'generatedAt' => now()->toDayDateTimeString(),
+        ])->download('prescription-'.($prescription->prescription_number ?? $prescription->id).'.pdf');
     }
 
     public function update(UpdatePrescriptionRequest $request, string $locale, Prescription $prescription): RedirectResponse

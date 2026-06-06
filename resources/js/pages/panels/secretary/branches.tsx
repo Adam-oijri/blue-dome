@@ -1,9 +1,8 @@
 import { Head } from '@inertiajs/react';
-import { Building2, LayoutGrid, MapPin, Phone, Plus } from 'lucide-react';
+import { Building2, MapPin, Phone } from 'lucide-react';
 
 import { PageHeader } from '@/components/blue-dome/page-header';
 import { StatusPill } from '@/components/blue-dome/status-pill';
-import { Button } from '@/components/ui/button';
 import { useSecretaryLang } from '@/lib/i18n/secretary-context';
 import { cn } from '@/lib/utils';
 
@@ -83,19 +82,7 @@ export default function SecretaryBranches({ branches, totals }: Props) {
             <Head title={t.nav_branches} />
 
             <div className="px-6 py-5 lg:px-8">
-                <PageHeader
-                    title={t.nav_branches}
-                    description={description}
-                    actions={
-                        <Button
-                            size="sm"
-                            className="gap-2 bg-olive-600 text-white hover:bg-olive-700"
-                        >
-                            <Plus className="size-3.5" />
-                            {t.br_new_branch}
-                        </Button>
-                    }
-                />
+                <PageHeader title={t.nav_branches} description={description} />
 
                 <div className="grid gap-4 md:grid-cols-2">
                     {branches.length === 0 && (
@@ -180,15 +167,6 @@ export default function SecretaryBranches({ branches, totals }: Props) {
                                         </div>
                                     ))}
                                 </div>
-
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="w-full gap-2"
-                                >
-                                    <LayoutGrid className="size-3.5" />
-                                    {t.br_view_dashboard}
-                                </Button>
                             </div>
                         </div>
                     ))}

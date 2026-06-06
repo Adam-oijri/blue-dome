@@ -1,6 +1,8 @@
 <?php
 
 use App\Models\User;
+use Illuminate\Auth\Notifications\VerifyEmail;
+use Illuminate\Support\Facades\Notification;
 
 test('profile page is displayed', function () {
     $user = User::factory()->create();
@@ -51,6 +53,42 @@ test('email verification status is unchanged when the email address is unchanged
         ->assertRedirect(route('profile.edit'));
 
     expect($user->refresh()->email_verified_at)->not->toBeNull();
+});
+
+test('changing the email re-sends a verification email and unverifies the account', function () {
+    Notification::fake();
+
+    $user = User::factory()->create();
+
+    $this->actingAs($user)
+        ->patch(route('profile.update'), [
+            'first_name' => $user->first_name,
+            'last_name' => $user->last_name,
+            'email' => 'changed@example.com',
+        ])
+        ->assertSessionHasNoErrors();
+
+    $user->refresh();
+    expect($user->email_verified_at)->toBeNull();
+    expect($user->email_verified)->toBeFalse();
+
+    Notification::assertSentTo($user, VerifyEmail::class);
+});
+
+test('updating the profile without changing the email sends no verification email', function () {
+    Notification::fake();
+
+    $user = User::factory()->create();
+
+    $this->actingAs($user)
+        ->patch(route('profile.update'), [
+            'first_name' => 'Renamed',
+            'last_name' => $user->last_name,
+            'email' => $user->email,
+        ])
+        ->assertSessionHasNoErrors();
+
+    Notification::assertNotSentTo($user, VerifyEmail::class);
 });
 
 test('user can delete their account', function () {

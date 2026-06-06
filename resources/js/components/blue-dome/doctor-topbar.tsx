@@ -3,6 +3,7 @@ import { Plus, Search } from 'lucide-react';
 import { useState } from 'react';
 
 import { CreateAppointmentSheet } from '@/components/blue-dome/create-appointment-sheet';
+import { NotificationBell } from '@/components/blue-dome/notification-bell';
 import { Button } from '@/components/ui/button';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { useDoctorLang } from '@/lib/i18n/doctor-context';
@@ -41,6 +42,7 @@ export function DoctorTopbar() {
             </div>
 
             <div className="ms-auto flex items-center gap-2">
+                <NotificationBell />
                 <CreateAppointmentSheet>
                     <Button className="bg-olive-600 text-white hover:bg-olive-700">
                         <Plus className="size-4" />

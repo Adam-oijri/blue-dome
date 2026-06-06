@@ -2,6 +2,8 @@
 
 namespace App\Http\Middleware;
 
+use App\Services\Messaging\MessagingService;
+use App\Services\Notifications\NotificationFeedService;
 use App\Support\LocaleRegistry;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
@@ -42,9 +44,30 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => $request->user(),
             ],
+            'notifications' => $request->user()
+                ? ['unread' => app(NotificationFeedService::class)->unreadCount($request->user())]
+                : null,
+            'messages' => $this->resolveMessagesBadge($request),
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
             'locale' => $this->resolveLocale($request),
         ];
+    }
+
+    /**
+     * Unread chat count for the sidebar badge — for the roles that have a
+     * Messages panel (super admin, doctor, secretary).
+     *
+     * @return array{unread: int}|null
+     */
+    private function resolveMessagesBadge(Request $request): ?array
+    {
+        $user = $request->user();
+
+        if ($user === null || ! in_array($user->role, ['super_admin', 'doctor', 'secretary'], true)) {
+            return null;
+        }
+
+        return ['unread' => app(MessagingService::class)->unreadTotal($user)];
     }
 
     /**

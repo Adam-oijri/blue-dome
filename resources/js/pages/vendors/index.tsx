@@ -1,6 +1,7 @@
 import { Head, Link } from '@inertiajs/react';
 import { Building2, ChevronRight, Plus } from 'lucide-react';
 
+import { CreateVendorsSheet } from '@/components/blue-dome/create-vendors-sheet';
 import { PageHeader } from '@/components/blue-dome/page-header';
 import { SectionCard } from '@/components/blue-dome/section-card';
 import { StatusPill } from '@/components/blue-dome/status-pill';
@@ -54,7 +55,7 @@ export default function VendorsIndex({
                     title={t.vendors}
                     description={`${paginated.total} ${t.vendors}`}
                     actions={
-                        <Link href={vendors.create.url({ locale })}>
+                        <CreateVendorsSheet>
                             <Button
                                 size="sm"
                                 className="gap-2 bg-olive-600 text-white hover:bg-olive-700"
@@ -62,7 +63,7 @@ export default function VendorsIndex({
                                 <Plus className="size-3.5" />
                                 {t.new_vendor}
                             </Button>
-                        </Link>
+                        </CreateVendorsSheet>
                     }
                 />
 

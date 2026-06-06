@@ -3,7 +3,12 @@
 namespace App\Providers;
 
 use App\Contracts\WhatsAppGateway;
+use App\Events\AppointmentConfirmed;
 use App\Events\AppointmentCreated;
+use App\Listeners\NotifyAppointmentConfirmed;
+use App\Listeners\NotifyAppointmentCreated;
+use App\Listeners\NotifyTwoFactorChangedListener;
+use App\Listeners\RecordLoginDeviceListener;
 use App\Listeners\SendAppointmentConfirmationListener;
 use App\Models\Appointment;
 use App\Models\Clinic;
@@ -51,6 +56,10 @@ use App\Services\Messaging\NullWhatsAppGateway;
 use App\Services\Payments\PaymentGatewayManager;
 use App\Support\LocaleRegistry;
 use Carbon\CarbonImmutable;
+use Illuminate\Auth\Events\Login;
+use Illuminate\Auth\Notifications\ResetPassword;
+use Illuminate\Auth\Notifications\VerifyEmail;
+use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
@@ -58,6 +67,8 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
+use Laravel\Fortify\Events\TwoFactorAuthenticationConfirmed;
+use Laravel\Fortify\Events\TwoFactorAuthenticationDisabled;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -80,6 +91,7 @@ class AppServiceProvider extends ServiceProvider
         $this->registerPolicies();
         $this->registerObservers();
         $this->registerEvents();
+        $this->registerMailLocalization();
     }
 
     /**
@@ -131,6 +143,50 @@ class AppServiceProvider extends ServiceProvider
     protected function registerEvents(): void
     {
         Event::listen(AppointmentCreated::class, SendAppointmentConfirmationListener::class);
+
+        // In-app notification feed: appointment booked / patient-confirmed.
+        Event::listen(AppointmentCreated::class, NotifyAppointmentCreated::class);
+        Event::listen(AppointmentConfirmed::class, NotifyAppointmentConfirmed::class);
+
+        // Security-alert emails: 2FA toggled, and sign-in from a new device.
+        Event::listen(TwoFactorAuthenticationConfirmed::class, NotifyTwoFactorChangedListener::class);
+        Event::listen(TwoFactorAuthenticationDisabled::class, NotifyTwoFactorChangedListener::class);
+        Event::listen(Login::class, RecordLoginDeviceListener::class);
+    }
+
+    /**
+     * Render the built-in verification + password-reset emails from our own
+     * `lang/{en,fr,ar}/emails.php` copy so they are on-brand and localized.
+     * Combined with `User::preferredLocale()`, each renders in the recipient's
+     * language.
+     */
+    protected function registerMailLocalization(): void
+    {
+        VerifyEmail::toMailUsing(fn ($notifiable, string $url): MailMessage => (new MailMessage)
+            ->subject(__('emails.verify.subject'))
+            ->greeting(__('emails.verify.greeting'))
+            ->line(__('emails.verify.line_1'))
+            ->action(__('emails.verify.action'), $url)
+            ->line(__('emails.verify.line_2'))
+            ->salutation(__('emails.salutation')));
+
+        ResetPassword::toMailUsing(function ($notifiable, string $token): MailMessage {
+            $url = url(route('password.reset', [
+                'token' => $token,
+                'email' => $notifiable->getEmailForPasswordReset(),
+            ], false));
+
+            $expire = config('auth.passwords.'.config('auth.defaults.passwords', 'users').'.expire');
+
+            return (new MailMessage)
+                ->subject(__('emails.reset.subject'))
+                ->greeting(__('emails.reset.greeting'))
+                ->line(__('emails.reset.line_1'))
+                ->action(__('emails.reset.action'), $url)
+                ->line(__('emails.reset.expire', ['count' => $expire]))
+                ->line(__('emails.reset.line_2'))
+                ->salutation(__('emails.salutation'));
+        });
     }
 
     /**

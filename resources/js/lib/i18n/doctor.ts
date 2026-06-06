@@ -23,6 +23,7 @@ export type DoctorDictionary = {
     settings: string;
     follow_up: string;
     confirmations: string;
+    messages: string;
     no_appointments: string;
     all_confirmed: string;
 
@@ -435,6 +436,28 @@ export type DoctorDictionary = {
     insurance_claim_number: string;
     insurance_coverage_pct: string;
 
+    // Documents pages
+    documents: string;
+    document: string;
+    folders: string;
+    folder: string;
+    no_documents: string;
+    no_folders: string;
+    new_document: string;
+    new_folder: string;
+    upload: string;
+    download: string;
+    export_pdf: string;
+    preview_label: string;
+    file: string;
+    document_type: string;
+    uploaded_by: string;
+    size: string;
+    expires: string;
+    private_label: string;
+    system_label: string;
+    all_folders: string;
+
     // Enum-label maps (raw DB value → localized label)
     invoice_status_opts: Record<string, string>;
     payment_status_opts: Record<string, string>;
@@ -442,6 +465,16 @@ export type DoctorDictionary = {
     lab_status_opts: Record<string, string>;
     urgency_opts: Record<string, string>;
     appt_status_opts: Record<string, string>;
+    appt_type_opts: Record<string, string>;
+    appt_priority_opts: Record<string, string>;
+    appt_start: string;
+    appt_end: string;
+    chief_complaint: string;
+    priority_label: string;
+    status_label: string;
+    confirmation_label: string;
+    cancel_appointment: string;
+    cancel_reason_ph: string;
     prescription_status_opts: Record<string, string>;
     record_type_opts: Record<string, string>;
     gender_opts: Record<string, string>;
@@ -452,6 +485,7 @@ export type DoctorDictionary = {
     recurring_frequency_opts: Record<string, string>;
     inventory_txn_opts: Record<string, string>;
     invoice_item_type_opts: Record<string, string>;
+    document_type_opts: Record<string, string>;
 };
 
 const en: DoctorDictionary = {
@@ -473,6 +507,7 @@ const en: DoctorDictionary = {
     settings: 'Settings',
     follow_up: 'Follow-up Calls',
     confirmations: 'Confirmations',
+    messages: 'Messages',
     no_appointments: 'No appointments',
     all_confirmed: 'All upcoming appointments are confirmed',
     search_placeholder: 'Search patients, appointments, prescriptions…',
@@ -745,10 +780,10 @@ const en: DoctorDictionary = {
     result_col: 'Result',
     clinical_diagnosis: 'Clinical diagnosis',
     fasting_required: 'Fasting required',
-    images_label: 'Images',
-    no_images: 'No images attached.',
-    add_images: 'Add images',
-    attached_images: 'Attached images',
+    images_label: 'Attachments',
+    no_images: 'No files attached.',
+    add_images: 'Add files (images / PDF)',
+    attached_images: 'Attachments',
     order_date: 'Order date',
     ordered_label: 'Ordered',
 
@@ -914,6 +949,31 @@ const en: DoctorDictionary = {
         cancelled: 'Cancelled',
         no_show: 'No show',
     },
+    appt_type_opts: {
+        consultation: 'Consultation',
+        follow_up: 'Follow-up',
+        emergency: 'Emergency',
+        routine_checkup: 'Routine checkup',
+        vaccination: 'Vaccination',
+        procedure: 'Procedure',
+        lab_test: 'Lab test',
+        tele_consultation: 'Teleconsultation',
+        home_visit: 'Home visit',
+    },
+    appt_priority_opts: {
+        low: 'Low',
+        normal: 'Normal',
+        high: 'High',
+        emergency: 'Emergency',
+    },
+    appt_start: 'Start',
+    appt_end: 'End',
+    chief_complaint: 'Reason / chief complaint',
+    priority_label: 'Priority',
+    status_label: 'Status',
+    confirmation_label: 'Confirmation',
+    cancel_appointment: 'Cancel appointment',
+    cancel_reason_ph: 'Reason for cancellation',
     prescription_status_opts: {
         draft: 'Draft',
         active: 'Active',
@@ -1006,6 +1066,44 @@ const en: DoctorDictionary = {
         supplies: 'Supplies',
         other: 'Other',
     },
+    documents: 'Documents',
+    document: 'Document',
+    folders: 'Folders',
+    folder: 'Folder',
+    no_documents: 'No documents',
+    no_folders: 'No folders',
+    new_document: 'New document',
+    new_folder: 'New folder',
+    upload: 'Upload',
+    download: 'Download',
+    export_pdf: 'Export PDF',
+    preview_label: 'Preview',
+    file: 'File',
+    document_type: 'Type',
+    uploaded_by: 'Uploaded by',
+    size: 'Size',
+    expires: 'Expires',
+    private_label: 'Private',
+    system_label: 'System',
+    all_folders: 'All folders',
+    document_type_opts: {
+        patient_record: 'Patient record',
+        lab_result: 'Lab result',
+        imaging: 'Imaging',
+        prescription: 'Prescription',
+        invoice: 'Invoice',
+        consent_form: 'Consent form',
+        insurance_card: 'Insurance card',
+        national_id: 'National ID',
+        doctor_license: 'Doctor license',
+        clinic_license: 'Clinic license',
+        contract: 'Contract',
+        report: 'Report',
+        certificate: 'Certificate',
+        medical_report: 'Medical report',
+        discharge_summary: 'Discharge summary',
+        other: 'Other',
+    },
 };
 
 const fr: DoctorDictionary = {
@@ -1027,6 +1125,7 @@ const fr: DoctorDictionary = {
     settings: 'Paramètres',
     follow_up: 'Appels de suivi',
     confirmations: 'Confirmations',
+    messages: 'Messagerie',
     no_appointments: 'Aucun rendez-vous',
     all_confirmed: 'Tous les rendez-vous à venir sont confirmés',
     search_placeholder: 'Rechercher patients, rendez-vous, ordonnances…',
@@ -1301,10 +1400,10 @@ const fr: DoctorDictionary = {
     result_col: 'Résultat',
     clinical_diagnosis: 'Diagnostic clinique',
     fasting_required: 'À jeun requis',
-    images_label: 'Images',
-    no_images: 'Aucune image jointe.',
-    add_images: 'Ajouter des images',
-    attached_images: 'Images jointes',
+    images_label: 'Pièces jointes',
+    no_images: 'Aucun fichier joint.',
+    add_images: 'Ajouter des fichiers (images / PDF)',
+    attached_images: 'Pièces jointes',
     order_date: 'Date de commande',
     ordered_label: 'Commandé le',
 
@@ -1474,6 +1573,31 @@ const fr: DoctorDictionary = {
         cancelled: 'Annulé',
         no_show: 'Absent',
     },
+    appt_type_opts: {
+        consultation: 'Consultation',
+        follow_up: 'Suivi',
+        emergency: 'Urgence',
+        routine_checkup: 'Bilan de routine',
+        vaccination: 'Vaccination',
+        procedure: 'Intervention',
+        lab_test: 'Analyse',
+        tele_consultation: 'Téléconsultation',
+        home_visit: 'Visite à domicile',
+    },
+    appt_priority_opts: {
+        low: 'Basse',
+        normal: 'Normale',
+        high: 'Haute',
+        emergency: 'Urgence',
+    },
+    appt_start: 'Début',
+    appt_end: 'Fin',
+    chief_complaint: 'Motif / plainte principale',
+    priority_label: 'Priorité',
+    status_label: 'Statut',
+    confirmation_label: 'Confirmation',
+    cancel_appointment: 'Annuler le rendez-vous',
+    cancel_reason_ph: "Motif d'annulation",
     prescription_status_opts: {
         draft: 'Brouillon',
         active: 'Active',
@@ -1566,6 +1690,44 @@ const fr: DoctorDictionary = {
         supplies: 'Fournitures',
         other: 'Autre',
     },
+    documents: 'Documents',
+    document: 'Document',
+    folders: 'Dossiers',
+    folder: 'Dossier',
+    no_documents: 'Aucun document',
+    no_folders: 'Aucun dossier',
+    new_document: 'Nouveau document',
+    new_folder: 'Nouveau dossier',
+    upload: 'Téléverser',
+    download: 'Télécharger',
+    export_pdf: 'Exporter en PDF',
+    preview_label: 'Aperçu',
+    file: 'Fichier',
+    document_type: 'Type',
+    uploaded_by: 'Téléversé par',
+    size: 'Taille',
+    expires: 'Expire',
+    private_label: 'Privé',
+    system_label: 'Système',
+    all_folders: 'Tous les dossiers',
+    document_type_opts: {
+        patient_record: 'Dossier patient',
+        lab_result: 'Résultat de laboratoire',
+        imaging: 'Imagerie',
+        prescription: 'Ordonnance',
+        invoice: 'Facture',
+        consent_form: 'Formulaire de consentement',
+        insurance_card: 'Carte d’assurance',
+        national_id: 'Carte d’identité nationale',
+        doctor_license: 'Licence du médecin',
+        clinic_license: 'Licence de la clinique',
+        contract: 'Contrat',
+        report: 'Rapport',
+        certificate: 'Certificat',
+        medical_report: 'Rapport médical',
+        discharge_summary: 'Compte rendu de sortie',
+        other: 'Autre',
+    },
 };
 
 const ar: DoctorDictionary = {
@@ -1587,6 +1749,7 @@ const ar: DoctorDictionary = {
     settings: 'الإعدادات',
     follow_up: 'مكالمات المتابعة',
     confirmations: 'التأكيدات',
+    messages: 'الرسائل',
     no_appointments: 'لا توجد مواعيد',
     all_confirmed: 'جميع المواعيد القادمة مؤكدة',
     search_placeholder: 'ابحث عن مرضى، مواعيد، وصفات...',
@@ -1857,10 +2020,10 @@ const ar: DoctorDictionary = {
     result_col: 'النتيجة',
     clinical_diagnosis: 'التشخيص السريري',
     fasting_required: 'الصيام مطلوب',
-    images_label: 'الصور',
-    no_images: 'لا توجد صور مرفقة.',
-    add_images: 'إضافة صور',
-    attached_images: 'الصور المرفقة',
+    images_label: 'المرفقات',
+    no_images: 'لا توجد ملفات مرفقة.',
+    add_images: 'إضافة ملفات (صور / PDF)',
+    attached_images: 'المرفقات',
     order_date: 'تاريخ الطلب',
     ordered_label: 'تاريخ الطلب',
 
@@ -2023,6 +2186,31 @@ const ar: DoctorDictionary = {
         cancelled: 'ملغى',
         no_show: 'لم يحضر',
     },
+    appt_type_opts: {
+        consultation: 'استشارة',
+        follow_up: 'متابعة',
+        emergency: 'طارئ',
+        routine_checkup: 'فحص روتيني',
+        vaccination: 'تطعيم',
+        procedure: 'إجراء',
+        lab_test: 'تحليل',
+        tele_consultation: 'استشارة عن بعد',
+        home_visit: 'زيارة منزلية',
+    },
+    appt_priority_opts: {
+        low: 'منخفضة',
+        normal: 'عادية',
+        high: 'عالية',
+        emergency: 'طارئة',
+    },
+    appt_start: 'البداية',
+    appt_end: 'النهاية',
+    chief_complaint: 'السبب / الشكوى الرئيسية',
+    priority_label: 'الأولوية',
+    status_label: 'الحالة',
+    confirmation_label: 'التأكيد',
+    cancel_appointment: 'إلغاء الموعد',
+    cancel_reason_ph: 'سبب الإلغاء',
     prescription_status_opts: {
         draft: 'مسودة',
         active: 'نشطة',
@@ -2113,6 +2301,44 @@ const ar: DoctorDictionary = {
         medication: 'دواء',
         vaccination: 'تطعيم',
         supplies: 'مستلزمات',
+        other: 'أخرى',
+    },
+    documents: 'المستندات',
+    document: 'مستند',
+    folders: 'المجلدات',
+    folder: 'مجلد',
+    no_documents: 'لا توجد مستندات',
+    no_folders: 'لا توجد مجلدات',
+    new_document: 'مستند جديد',
+    new_folder: 'مجلد جديد',
+    upload: 'رفع',
+    download: 'تنزيل',
+    export_pdf: 'تصدير PDF',
+    preview_label: 'معاينة',
+    file: 'ملف',
+    document_type: 'النوع',
+    uploaded_by: 'رُفع بواسطة',
+    size: 'الحجم',
+    expires: 'تنتهي الصلاحية',
+    private_label: 'خاص',
+    system_label: 'النظام',
+    all_folders: 'جميع المجلدات',
+    document_type_opts: {
+        patient_record: 'سجل المريض',
+        lab_result: 'نتيجة مخبرية',
+        imaging: 'تصوير',
+        prescription: 'وصفة طبية',
+        invoice: 'فاتورة',
+        consent_form: 'نموذج موافقة',
+        insurance_card: 'بطاقة التأمين',
+        national_id: 'البطاقة الوطنية',
+        doctor_license: 'ترخيص الطبيب',
+        clinic_license: 'ترخيص العيادة',
+        contract: 'عقد',
+        report: 'تقرير',
+        certificate: 'شهادة',
+        medical_report: 'تقرير طبي',
+        discharge_summary: 'ملخص الخروج',
         other: 'أخرى',
     },
 };

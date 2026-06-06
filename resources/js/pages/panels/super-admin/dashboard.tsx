@@ -18,6 +18,7 @@ import { useMemo, useState } from 'react';
 import type { ComponentType } from 'react';
 
 import { KpiCard } from '@/components/blue-dome/kpi-card';
+import { NotificationsPanel } from '@/components/blue-dome/notifications-panel';
 import { PageHeader } from '@/components/blue-dome/page-header';
 import { SectionCard } from '@/components/blue-dome/section-card';
 import { StatusPill } from '@/components/blue-dome/status-pill';
@@ -43,6 +44,7 @@ import { useSuperAdminLang } from '@/lib/i18n/super-admin-context';
 import { useLocale } from '@/lib/i18n/use-locale';
 import { cn } from '@/lib/utils';
 import superAdmin from '@/routes/super-admin';
+import type { NotificationItem } from '@/types/notifications';
 
 interface MrrSummary {
     currency: string;
@@ -147,6 +149,7 @@ interface Props {
     operations_today?: OperationsRow[];
     alerts?: AlertRow[];
     recent_activity?: ActivityRow[];
+    recent_notifications: NotificationItem[];
 }
 
 const ALERT_TONE_CLASS: Record<string, string> = {
@@ -185,6 +188,7 @@ export default function SuperAdminDashboard({
     operations_today,
     alerts,
     recent_activity,
+    recent_notifications,
 }: Props) {
     const { t, lang } = useSuperAdminLang();
     const { slug: locale } = useLocale();
@@ -298,6 +302,7 @@ export default function SuperAdminDashboard({
 
                 <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_340px]">
                     <div className="flex flex-col gap-5">
+                        <NotificationsPanel items={recent_notifications} />
                         <SectionCard
                             title={t.revenue_title}
                             titleIcon={<Wallet className="size-4" />}

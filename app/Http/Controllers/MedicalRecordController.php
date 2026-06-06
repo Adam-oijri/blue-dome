@@ -51,18 +51,6 @@ class MedicalRecordController extends Controller
         ]);
     }
 
-    public function create(Request $request): Response
-    {
-        $this->authorize('create', MedicalRecord::class);
-
-        return Inertia::render('medical-records/create', [
-            'patients' => Patient::query()
-                ->where('clinic_id', $request->user()->clinic_id)
-                ->orderBy('first_name')
-                ->get(['id', 'first_name', 'last_name', 'patient_code']),
-        ]);
-    }
-
     public function store(StoreMedicalRecordRequest $request): RedirectResponse
     {
         MedicalRecord::create($request->validated() + [
@@ -103,23 +91,6 @@ class MedicalRecordController extends Controller
                     ])
                     ->get()
             ),
-        ]);
-    }
-
-    public function edit(string $locale, MedicalRecord $medicalRecord): Response
-    {
-        unset($locale);
-        $this->authorize('update', $medicalRecord);
-
-        return Inertia::render('medical-records/edit', [
-            'record' => $medicalRecord,
-            'clinical' => [
-                'content' => $medicalRecord->content,
-                'subjective' => $medicalRecord->subjective,
-                'objective' => $medicalRecord->objective,
-                'assessment' => $medicalRecord->assessment,
-                'plan' => $medicalRecord->plan,
-            ],
         ]);
     }
 

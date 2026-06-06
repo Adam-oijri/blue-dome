@@ -93,18 +93,7 @@ export default function SecretaryFollowUp({ follow_ups, kpis }: Props) {
             <Head title={t.nav_followups} />
 
             <div className="px-6 py-5 lg:px-8">
-                <PageHeader
-                    title={t.nav_followups}
-                    actions={
-                        <Button
-                            size="sm"
-                            className="gap-2 bg-olive-600 text-white hover:bg-olive-700"
-                        >
-                            <Phone className="size-3.5" />
-                            {t.wr_action_call}
-                        </Button>
-                    }
-                />
+                <PageHeader title={t.nav_followups} />
 
                 <div className="mb-5 grid grid-cols-2 gap-3 md:grid-cols-3">
                     <KpiCard
@@ -227,13 +216,19 @@ export default function SecretaryFollowUp({ follow_ups, kpis }: Props) {
                                         </TableCell>
                                         <TableCell>
                                             <div className="flex items-center justify-end gap-1.5">
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    className="h-7"
-                                                >
-                                                    {t.wr_action_call}
-                                                </Button>
+                                                {p?.phone && (
+                                                    <Button
+                                                        asChild
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        className="h-7 gap-1.5"
+                                                    >
+                                                        <a href={`tel:${p.phone}`}>
+                                                            <Phone className="size-3.5" />
+                                                            {t.wr_action_call}
+                                                        </a>
+                                                    </Button>
+                                                )}
                                             </div>
                                         </TableCell>
                                     </TableRow>

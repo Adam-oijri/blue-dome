@@ -1,7 +1,8 @@
 import { Link, router, usePage } from '@inertiajs/react';
-import { Bell, Search, UserPlus } from 'lucide-react';
+import { Search, UserPlus } from 'lucide-react';
 import { useState } from 'react';
 
+import { NotificationBell } from '@/components/blue-dome/notification-bell';
 import { Button } from '@/components/ui/button';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { useSuperAdminLang } from '@/lib/i18n/super-admin-context';
@@ -94,16 +95,7 @@ export function SuperAdminTopbar() {
             )}
 
             <div className="ms-auto flex items-center gap-2">
-                <Button
-                    variant="outline"
-                    size="icon"
-                    className="size-9"
-                    asChild
-                >
-                    <Link href={superAdmin.activityLog.url({ locale })}>
-                        <Bell className="size-4" />
-                    </Link>
-                </Button>
+                <NotificationBell />
 
                 <Button
                     className="bg-olive-600 text-white hover:bg-olive-700"

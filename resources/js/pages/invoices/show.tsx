@@ -1,10 +1,11 @@
 import { Head, Link } from '@inertiajs/react';
-import { ArrowLeft, Receipt, Wallet } from 'lucide-react';
+import { ArrowLeft, FileDown, Receipt, Wallet } from 'lucide-react';
 
 import { PageHeader } from '@/components/blue-dome/page-header';
 import { SectionCard } from '@/components/blue-dome/section-card';
 import { StatusPill } from '@/components/blue-dome/status-pill';
 import type { StatusTone } from '@/components/blue-dome/status-pill';
+import { Button } from '@/components/ui/button';
 import {
     Table,
     TableBody,
@@ -115,9 +116,29 @@ export default function InvoiceShow({ invoice }: { invoice: Invoice }) {
                     title={invoice.invoice_number ?? 'Invoice'}
                     description={`${personName(invoice.patient)}${invoice.patient?.patient_code ? ` · ${invoice.patient.patient_code}` : ''}`}
                     actions={
-                        <StatusPill tone={statusTone}>
-                            {enumLabel(t.invoice_status_opts, invoice.status)}
-                        </StatusPill>
+                        <div className="flex items-center gap-2">
+                            <StatusPill tone={statusTone}>
+                                {enumLabel(t.invoice_status_opts, invoice.status)}
+                            </StatusPill>
+                            <Button
+                                asChild
+                                variant="outline"
+                                size="sm"
+                                className="gap-2"
+                            >
+                                <a
+                                    href={invoices.pdf.url({
+                                        locale,
+                                        invoice: invoice.id,
+                                    })}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                >
+                                    <FileDown className="size-3.5" />
+                                    {t.export_pdf}
+                                </a>
+                            </Button>
+                        </div>
                     }
                 />
 

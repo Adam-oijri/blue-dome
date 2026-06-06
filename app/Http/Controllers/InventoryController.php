@@ -58,13 +58,6 @@ class InventoryController extends Controller
         ]);
     }
 
-    public function create(): Response
-    {
-        $this->authorize('create', Inventory::class);
-
-        return Inertia::render('inventory/create');
-    }
-
     public function store(StoreInventoryRequest $request): RedirectResponse
     {
         Inventory::create($request->validated() + [
@@ -91,16 +84,6 @@ class InventoryController extends Controller
                     ->limit(50)
                     ->get(['id', 'transaction_type', 'quantity', 'unit_price', 'total_amount', 'transaction_date', 'notes'])
             ),
-        ]);
-    }
-
-    public function edit(string $locale, Inventory $inventory): Response
-    {
-        unset($locale);
-        $this->authorize('update', $inventory);
-
-        return Inertia::render('inventory/edit', [
-            'inventory' => $inventory,
         ]);
     }
 

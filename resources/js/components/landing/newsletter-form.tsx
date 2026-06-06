@@ -1,24 +1,41 @@
+import { router } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Check, Mail, Send } from 'lucide-react';
 import { useState } from 'react';
 import type { FormEvent } from 'react';
 
 import type { Lang } from '@/components/landing/shared/types';
+import { useLocale } from '@/lib/i18n/use-locale';
+import { subscribe } from '@/routes/newsletter';
 
 export function NewsletterForm({ lang }: { lang: Lang }) {
+    const { slug: locale } = useLocale();
     const [email, setEmail] = useState('');
+    const [submitting, setSubmitting] = useState(false);
     const [submitted, setSubmitted] = useState(false);
 
     const handleSubmit = (e: FormEvent) => {
         e.preventDefault();
 
-        if (!email) {
+        if (!email || submitting) {
             return;
         }
 
-        setSubmitted(true);
-        setEmail('');
-        setTimeout(() => setSubmitted(false), 3500);
+        // Emails the address a localized confirmation + sign-in link.
+        router.post(
+            subscribe.url({ locale }),
+            { email },
+            {
+                preserveScroll: true,
+                onStart: () => setSubmitting(true),
+                onFinish: () => setSubmitting(false),
+                onSuccess: () => {
+                    setSubmitted(true);
+                    setEmail('');
+                    setTimeout(() => setSubmitted(false), 3500);
+                },
+            },
+        );
     };
 
     return (
@@ -48,9 +65,10 @@ export function NewsletterForm({ lang }: { lang: Lang }) {
                 />
                 <motion.button
                     type="submit"
+                    disabled={submitting}
                     whileHover={{ scale: 1.03 }}
                     whileTap={{ scale: 0.97 }}
-                    className="inline-flex h-8 items-center gap-1.5 rounded-md bg-navy-900 px-3 text-[12px] font-semibold text-white transition-colors hover:bg-navy-800"
+                    className="inline-flex h-8 items-center gap-1.5 rounded-md bg-navy-900 px-3 text-[12px] font-semibold text-white transition-colors hover:bg-navy-800 disabled:opacity-60"
                 >
                     <AnimatePresence mode="wait">
                         {submitted ? (

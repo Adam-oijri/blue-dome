@@ -1,12 +1,5 @@
 import { Head, router } from '@inertiajs/react';
-import {
-    Calendar as CalendarIcon,
-    Check,
-    ChevronLeft,
-    ChevronRight,
-    Clock,
-    X,
-} from 'lucide-react';
+import { Calendar as CalendarIcon, Check, Clock, X } from 'lucide-react';
 
 import { CreateAppointmentSheet } from '@/components/blue-dome/create-appointment-sheet';
 import { KpiCard } from '@/components/blue-dome/kpi-card';
@@ -333,14 +326,6 @@ function MiniCalendar({
         <div className="self-start rounded-xl border border-border bg-card p-4">
             <div className="mb-3 flex items-center justify-between">
                 <span className="text-[13px] font-semibold">{monthLabel}</span>
-                <div className="flex items-center gap-1">
-                    <Button variant="ghost" size="icon" className="size-6">
-                        <ChevronLeft className="size-3" />
-                    </Button>
-                    <Button variant="ghost" size="icon" className="size-6">
-                        <ChevronRight className="size-3" />
-                    </Button>
-                </div>
             </div>
             <div className="grid grid-cols-7 gap-1 text-center text-[11px]">
                 {weekdayLetters.map((d, i) => (

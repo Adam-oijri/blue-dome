@@ -39,11 +39,14 @@ class SetLocale
         URL::defaults(['locale' => $slug]);
 
         // Fortify's built-in logout / post-verification redirects are bare
-        // config paths ("/", "/dashboard") that drop the {locale} segment.
-        // Repoint them at the locale-prefixed routes now that the default is set.
+        // config paths that drop the {locale} segment. Repoint them at the
+        // locale-prefixed routes now that the default is set. Verification
+        // lands the user on their role panel (null-safe for guest requests).
         config([
             'fortify.redirects.logout' => route('home'),
-            'fortify.redirects.email-verification' => route('dashboard'),
+            'fortify.redirects.email-verification' => route(
+                $request->user()?->homeRouteName() ?? 'home',
+            ),
         ]);
 
         $request->attributes->set('locale_slug', $slug);

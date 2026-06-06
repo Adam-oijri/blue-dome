@@ -1,4 +1,4 @@
-import { Head, router } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import { Archive, Heart, Search, UserPlus, Users } from 'lucide-react';
 import { useRef, useState } from 'react';
 
@@ -23,6 +23,7 @@ import { cn } from '@/lib/utils';
 import { Pagination } from '@/pages/panels/super-admin/users';
 import { show as patientShow } from '@/routes/patients';
 import { patients as patientsRoute } from '@/routes/secretary';
+import { exportMethod as patientsExport } from '@/routes/secretary/patients';
 
 type PatientRow = {
     id: string;
@@ -150,12 +151,29 @@ export default function SecretaryPatients({ patients, kpis, filters }: Props) {
                     actions={
                         <>
                             <Button
+                                asChild
                                 variant="outline"
                                 size="sm"
                                 className="gap-2"
                             >
-                                <Archive className="size-3.5" />
-                                {t.pt_export}
+                                <a
+                                    href={patientsExport.url(
+                                        { locale },
+                                        {
+                                            query: {
+                                                ...(filters.q
+                                                    ? { q: filters.q }
+                                                    : {}),
+                                                ...(filters.filter
+                                                    ? { filter: filters.filter }
+                                                    : {}),
+                                            },
+                                        },
+                                    )}
+                                >
+                                    <Archive className="size-3.5" />
+                                    {t.pt_export}
+                                </a>
                             </Button>
                             <CreatePatientsSheet>
                                 <Button
@@ -361,11 +379,22 @@ export default function SecretaryPatients({ patients, kpis, filters }: Props) {
                                         </TableCell>
                                         <TableCell>
                                             <Button
+                                                asChild
                                                 variant="ghost"
                                                 size="sm"
                                                 className="h-7"
                                             >
-                                                {t.pt_view}
+                                                <Link
+                                                    href={patientShow.url({
+                                                        locale,
+                                                        patient: p.id,
+                                                    })}
+                                                    onClick={(e) =>
+                                                        e.stopPropagation()
+                                                    }
+                                                >
+                                                    {t.pt_view}
+                                                </Link>
                                             </Button>
                                         </TableCell>
                                     </TableRow>

@@ -15,7 +15,6 @@ test('renders the account settings page for super admin', function () {
     $superAdmin = User::factory()->superAdmin()->create();
 
     $this->actingAs($superAdmin)
-        ->withSession(['auth.password_confirmed_at' => time()])
         ->get(route('super-admin.settings'))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
@@ -27,7 +26,7 @@ test('renders the account settings page for super admin', function () {
         );
 });
 
-test('settings page requires password confirmation when 2FA confirmPassword is enabled', function () {
+test('settings page opens without password confirmation', function () {
     $this->skipUnlessFortifyHas(Features::twoFactorAuthentication());
 
     Features::twoFactorAuthentication([
@@ -37,9 +36,12 @@ test('settings page requires password confirmation when 2FA confirmPassword is e
 
     $superAdmin = User::factory()->superAdmin()->create();
 
+    // Opening the page no longer bounces to the confirm-password screen; only
+    // the embedded 2FA mutations stay gated by Fortify.
     $this->actingAs($superAdmin)
         ->get(route('super-admin.settings'))
-        ->assertRedirect(route('password.confirm'));
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page->component('panels/super-admin/settings'));
 });
 
 test('blocks non-super-admin roles', function (callable $factory) {

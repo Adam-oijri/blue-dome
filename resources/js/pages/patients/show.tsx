@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 
 import { CreateAppointmentSheet } from '@/components/blue-dome/create-appointment-sheet';
+import { EditPatientsSheet } from '@/components/blue-dome/edit-patients-sheet';
 import { SectionCard } from '@/components/blue-dome/section-card';
 import { StatusPill } from '@/components/blue-dome/status-pill';
 import type { FieldChangeEntry } from '@/components/provenance-panel';
@@ -41,6 +42,7 @@ type Patient = {
     date_of_birth: string | null;
     gender: string | null;
     phone: string | null;
+    phone_e164: string | null;
     email: string | null;
     address: string | null;
     city: string | null;
@@ -184,7 +186,7 @@ export default function PatientShow({
                                     : t.inactive_label}
                             </StatusPill>
                         </div>
-                        <div className="mt-2 flex flex-wrap gap-4 text-[13px] text-slate-300">
+                        <div className="mt-2 flex flex-wrap gap-4 text-[13px] text-navy-100">
                             <span className="flex items-center gap-1.5">
                                 <UserIcon className="size-3.5" />
                                 {ageFrom(patient.date_of_birth)} · {genderLabel}
@@ -207,22 +209,20 @@ export default function PatientShow({
                         </div>
                     </div>
                     <div className="relative flex items-center gap-2 self-start">
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            asChild
-                            className="gap-2 border-white/20 bg-white/10 text-white hover:bg-white/15"
+                        <EditPatientsSheet
+                            patient={patient}
+                            national_id={national_id}
+                            insurance_number={insurance_number}
                         >
-                            <Link
-                                href={patients.edit.url({
-                                    locale,
-                                    patient: patient.id,
-                                })}
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="gap-2 border-white/20 bg-white/10 text-white hover:bg-white/15"
                             >
                                 <Edit3 className="size-3.5" />
                                 {t.edit}
-                            </Link>
-                        </Button>
+                            </Button>
+                        </EditPatientsSheet>
                         <CreateAppointmentSheet
                             lockedPatient={{ id: patient.id, name }}
                         >

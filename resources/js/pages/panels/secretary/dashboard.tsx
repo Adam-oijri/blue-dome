@@ -3,9 +3,7 @@ import {
     AlertTriangle,
     Calendar as CalendarIcon,
     CircleDollarSign,
-    Filter,
     MessageCircle,
-    MoreHorizontal,
     Plus,
     RefreshCcw,
     Stethoscope,
@@ -16,6 +14,7 @@ import { useState } from 'react';
 import type { FormEvent } from 'react';
 
 import { KpiCard } from '@/components/blue-dome/kpi-card';
+import { NotificationsPanel } from '@/components/blue-dome/notifications-panel';
 import { PageHeader } from '@/components/blue-dome/page-header';
 import { SectionCard } from '@/components/blue-dome/section-card';
 import { StatusPill } from '@/components/blue-dome/status-pill';
@@ -41,6 +40,8 @@ import {
     destroy as destroyChecklistItemRoute,
     store as storeChecklistItemRoute,
 } from '@/routes/secretary/checklist/items';
+import { advance as advanceWaitingRoom } from '@/routes/secretary/waiting-room';
+import type { NotificationItem } from '@/types/notifications';
 
 type ScheduleStatus =
     | 'confirmed'
@@ -103,6 +104,7 @@ interface Props {
     now_label: string;
     checklist_done: string[];
     checklist_custom: { id: string; label: string }[];
+    recent_notifications: NotificationItem[];
 }
 
 const SCHEDULE_TOTAL_MIN = 600;
@@ -183,6 +185,7 @@ export default function SecretaryDashboard({
     now_label,
     checklist_done,
     checklist_custom,
+    recent_notifications,
 }: Props) {
     const { t } = useSecretaryLang();
     const { slug: locale } = useLocale();
@@ -190,6 +193,18 @@ export default function SecretaryDashboard({
         100,
         Math.max(0, (now_minute / SCHEDULE_TOTAL_MIN) * 100),
     );
+
+    const refreshWaitingRoom = (): void => {
+        router.reload({ only: ['waiting_room', 'kpis'] });
+    };
+
+    const advancePatient = (row: WaitingRoomRow): void => {
+        router.post(
+            advanceWaitingRoom.url({ locale, appointment: row.id }),
+            {},
+            { preserveScroll: true },
+        );
+    };
 
     // Local, optimistic checklist state so ticking an item is instant — the
     // server save happens in the background and only rolls back on failure.
@@ -508,16 +523,9 @@ export default function SecretaryDashboard({
                                     size="icon"
                                     className="size-7"
                                     aria-label={t.db_refresh}
+                                    onClick={refreshWaitingRoom}
                                 >
                                     <RefreshCcw className="size-3.5" />
-                                </Button>
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="size-7"
-                                    aria-label={t.db_filter}
-                                >
-                                    <Filter className="size-3.5" />
                                 </Button>
                             </>
                         }
@@ -664,6 +672,9 @@ export default function SecretaryDashboard({
                                                         <Button
                                                             size="sm"
                                                             className="h-7 gap-1 bg-navy-900 text-[11px] text-white hover:bg-navy-800"
+                                                            onClick={() =>
+                                                                advancePatient(r)
+                                                            }
                                                         >
                                                             {t.wr_action_call}
                                                         </Button>
@@ -673,19 +684,14 @@ export default function SecretaryDashboard({
                                                             variant="outline"
                                                             size="sm"
                                                             className="h-7 gap-1 text-[11px]"
+                                                            onClick={() =>
+                                                                advancePatient(r)
+                                                            }
                                                         >
                                                             <Stethoscope className="size-3" />
-                                                            {t.wr_action_call}
+                                                            {t.wr_action_done}
                                                         </Button>
                                                     )}
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        className="size-7"
-                                                        aria-label={t.db_more}
-                                                    >
-                                                        <MoreHorizontal className="size-3.5" />
-                                                    </Button>
                                                 </div>
                                             </TableCell>
                                         </TableRow>
@@ -696,6 +702,7 @@ export default function SecretaryDashboard({
                     </SectionCard>
 
                     <div className="flex flex-col gap-4">
+                        <NotificationsPanel items={recent_notifications} />
                         <SectionCard
                             title={t.wa_title}
                             titleIcon={<MessageCircle className="size-4" />}

@@ -75,6 +75,7 @@ export function CreateInvoicesSheet({
 
     const form = useForm<{
         patient_id: string;
+        invoice_date: string;
         due_date: string;
         notes: string;
         tax_percentage: number | string;
@@ -82,6 +83,7 @@ export function CreateInvoicesSheet({
         items: LineItem[];
     }>({
         patient_id: '',
+        invoice_date: '',
         due_date: '',
         notes: '',
         tax_percentage: '',
@@ -179,6 +181,22 @@ export function CreateInvoicesSheet({
                                     ))}
                                 </select>
                                 <InputError message={form.errors.patient_id} />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="invoice_date">{t.issued}</Label>
+                                <input
+                                    id="invoice_date"
+                                    type="date"
+                                    value={form.data.invoice_date}
+                                    onChange={(e) =>
+                                        form.setData(
+                                            'invoice_date',
+                                            e.target.value,
+                                        )
+                                    }
+                                    className={FIELD_CLASS}
+                                />
+                                <InputError message={form.errors.invoice_date} />
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="due_date">{t.due}</Label>

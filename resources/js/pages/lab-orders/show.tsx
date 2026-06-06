@@ -1,6 +1,7 @@
 import { Head, Link } from '@inertiajs/react';
-import { ChevronLeft, Edit3, FlaskConical } from 'lucide-react';
+import { ChevronLeft, Edit3, FileText, FlaskConical } from 'lucide-react';
 
+import { EditLabOrdersSheet } from '@/components/blue-dome/edit-lab-orders-sheet';
 import { SectionCard } from '@/components/blue-dome/section-card';
 import { StatusPill } from '@/components/blue-dome/status-pill';
 import type { StatusTone } from '@/components/blue-dome/status-pill';
@@ -57,6 +58,7 @@ type LabOrder = {
     fasting_required: boolean | null;
     clinical_diagnosis: string | null;
     notes: string | null;
+    external_lab_id: string | null;
     patient?: Person;
     doctor?: Person;
     external_lab?: { lab_name: string | null } | null;
@@ -66,6 +68,7 @@ type LabOrder = {
 interface Props {
     lab_order: LabOrder;
     images: LabImage[];
+    external_labs: Array<{ id: string; lab_name: string | null }>;
     provenance?: FieldChangeEntry[];
 }
 
@@ -86,7 +89,12 @@ function personName(person: Person): string {
     );
 }
 
-export default function LabOrderShow({ lab_order, images, provenance }: Props) {
+export default function LabOrderShow({
+    lab_order,
+    images,
+    external_labs,
+    provenance,
+}: Props) {
     const { t } = useDoctorLang();
     const { slug: locale } = useLocale();
 
@@ -158,22 +166,20 @@ export default function LabOrderShow({ lab_order, images, provenance }: Props) {
                             </span>
                         </div>
                     </div>
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        asChild
-                        className="gap-2"
+                    <EditLabOrdersSheet
+                        lab_order={lab_order}
+                        images={images}
+                        external_labs={external_labs}
                     >
-                        <Link
-                            href={labOrders.edit.url({
-                                locale,
-                                lab_order: lab_order.id,
-                            })}
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            className="gap-2"
                         >
                             <Edit3 className="size-3.5" />
                             {t.edit}
-                        </Link>
-                    </Button>
+                        </Button>
+                    </EditLabOrdersSheet>
                 </div>
 
                 {(lab_order.clinical_diagnosis || lab_order.notes) && (
@@ -282,6 +288,13 @@ export default function LabOrderShow({ lab_order, images, provenance }: Props) {
                                     locale,
                                     document: image.id,
                                 });
+                                const isImage = (
+                                    image.mime_type ?? ''
+                                ).startsWith('image/');
+                                const name =
+                                    image.file_name ??
+                                    image.document_name ??
+                                    'Lab attachment';
 
                                 return (
                                     <a
@@ -290,23 +303,21 @@ export default function LabOrderShow({ lab_order, images, provenance }: Props) {
                                         target="_blank"
                                         rel="noreferrer"
                                         className="group block overflow-hidden rounded-lg border border-border"
-                                        title={
-                                            image.file_name ??
-                                            image.document_name ??
-                                            'Lab image'
-                                        }
+                                        title={name}
                                     >
-                                        <img
-                                            src={href}
-                                            alt={
-                                                image.document_name ??
-                                                'Lab image'
-                                            }
-                                            className="aspect-square w-full object-cover transition group-hover:opacity-90"
-                                        />
+                                        {isImage ? (
+                                            <img
+                                                src={href}
+                                                alt={name}
+                                                className="aspect-square w-full object-cover transition group-hover:opacity-90"
+                                            />
+                                        ) : (
+                                            <div className="flex aspect-square w-full items-center justify-center bg-muted">
+                                                <FileText className="size-10 text-muted-foreground" />
+                                            </div>
+                                        )}
                                         <span className="block truncate px-2 py-1 text-[11px] text-muted-foreground">
-                                            {image.file_name ??
-                                                image.document_name}
+                                            {name}
                                         </span>
                                     </a>
                                 );

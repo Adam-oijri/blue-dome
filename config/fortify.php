@@ -73,7 +73,9 @@ return [
     |
     */
 
-    'home' => '/dashboard',
+    // Generic fallback only — login & email-verification redirects are made
+    // role-aware in SetLocale / LoginResponse. There is no generic /dashboard.
+    'home' => '/',
 
     /*
     |--------------------------------------------------------------------------
@@ -144,10 +146,11 @@ return [
     */
 
     'features' => [
-        // Features::registration() — DISABLED. Phase 1 introduces a clinic
-        // onboarding wizard with billing/plan selection; until then, the only
-        // way to gain a clinic account is via the seeder or the super-admin
-        // invitation flow.
+        // Public self-service signup: each registrant gets a brand-new clinic
+        // on a free trial (config('billing.trial_days')). CreateNewUser
+        // provisions the clinic + its managing secretary + main branch, and
+        // EnsureClinicActive gates access once the trial lapses.
+        Features::registration(),
         Features::resetPasswords(),
         Features::emailVerification(),
         Features::twoFactorAuthentication([

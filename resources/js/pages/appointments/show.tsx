@@ -1,7 +1,19 @@
 import { Form, Head, Link } from '@inertiajs/react';
+import { ChevronLeft, Edit3 } from 'lucide-react';
 
+import { EditAppointmentsSheet } from '@/components/blue-dome/edit-appointments-sheet';
+import { SectionCard } from '@/components/blue-dome/section-card';
+import { StatusPill } from '@/components/blue-dome/status-pill';
+import type { StatusTone } from '@/components/blue-dome/status-pill';
 import type { FieldChangeEntry } from '@/components/provenance-panel';
 import { ProvenancePanel } from '@/components/provenance-panel';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { enumLabel } from '@/lib/i18n/doctor';
+import { useDoctorLang } from '@/lib/i18n/doctor-context';
+import { useLocaleSlug } from '@/lib/i18n/use-locale';
+import appointments from '@/routes/appointments';
+import patients from '@/routes/patients';
 
 interface Appointment {
     id: string;
@@ -9,6 +21,7 @@ interface Appointment {
     scheduled_start: string;
     scheduled_end: string;
     status: string;
+    priority: string | null;
     confirmation_status: string;
     confirmation_at: string | null;
     chief_complaint: string | null;
@@ -30,132 +43,159 @@ interface Props {
     provenance?: FieldChangeEntry[];
 }
 
+const STATUS_TONE: Record<string, StatusTone> = {
+    scheduled: 'neutral',
+    confirmed: 'info',
+    arrived: 'olive',
+    in_progress: 'olive',
+    completed: 'success',
+    cancelled: 'danger',
+    no_show: 'warning',
+};
+
+function personName(person?: { first_name: string; last_name: string } | null): string {
+    return `${person?.first_name ?? ''} ${person?.last_name ?? ''}`.trim() || '—';
+}
+
 export default function AppointmentShow({ appointment, provenance }: Props) {
+    const { t } = useDoctorLang();
+    const locale = useLocaleSlug();
+
+    const number = appointment.appointment_number ?? appointment.id.slice(0, 8);
+
     return (
         <>
-            <Head
-                title={`Appointment ${appointment.appointment_number ?? appointment.id.slice(0, 8)}`}
-            />
-            <div className="flex h-full flex-col p-6">
-                <div className="mb-4 flex items-center justify-between">
-                    <div>
-                        <h1 className="text-2xl font-semibold">
-                            {appointment.appointment_number ?? 'pending'}
-                        </h1>
-                        <p className="font-mono text-xs text-neutral-500">
-                            {appointment.scheduled_start} →{' '}
-                            {appointment.scheduled_end}
-                        </p>
-                    </div>
-                    <div className="flex gap-2">
-                        <Link
-                            href={`/appointments/${appointment.id}/edit`}
-                            className="rounded border border-neutral-300 px-3 py-2 text-sm hover:bg-neutral-50"
-                        >
-                            Edit
+            <Head title={number} />
+
+            <div className="px-8 py-6 lg:px-10">
+                <div className="mb-4 flex items-center gap-3 text-sm">
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        asChild
+                        className="-ms-2 gap-1.5"
+                    >
+                        <Link href={appointments.index.url({ locale })}>
+                            <ChevronLeft className="size-3.5" />
+                            {t.appointments}
                         </Link>
-                    </div>
+                    </Button>
+                    <span className="text-muted-foreground">/</span>
+                    <span className="text-[13px] font-medium tabular-nums">
+                        {number}
+                    </span>
                 </div>
 
-                <section className="mb-6 grid grid-cols-2 gap-4 rounded border border-neutral-200 p-4 text-sm">
+                <div className="mb-5 flex flex-wrap items-start justify-between gap-4 rounded-xl border border-border bg-card p-6">
                     <div>
-                        <dt className="text-xs text-neutral-500 uppercase">
-                            Patient
-                        </dt>
-                        <dd>
-                            {appointment.patient ? (
-                                <Link
-                                    href={`/patients/${appointment.patient.id}`}
-                                    className="text-blue-600 hover:underline"
-                                >
-                                    {appointment.patient.first_name}{' '}
-                                    {appointment.patient.last_name}
-                                </Link>
-                            ) : (
-                                '—'
-                            )}
-                        </dd>
+                        <div className="flex items-center gap-3">
+                            <h1 className="text-[20px] font-semibold tabular-nums">
+                                {number}
+                            </h1>
+                            <StatusPill
+                                tone={STATUS_TONE[appointment.status] ?? 'neutral'}
+                                withDot
+                            >
+                                {enumLabel(t.appt_status_opts, appointment.status)}
+                            </StatusPill>
+                        </div>
+                        <div className="mt-2 grid gap-1 text-[13px] text-muted-foreground">
+                            <span>
+                                {t.col_patient}:{' '}
+                                {appointment.patient ? (
+                                    <Link
+                                        href={patients.show.url({
+                                            locale,
+                                            patient: appointment.patient.id,
+                                        })}
+                                        className="font-medium text-foreground hover:underline"
+                                    >
+                                        {personName(appointment.patient)}
+                                    </Link>
+                                ) : (
+                                    '—'
+                                )}
+                            </span>
+                            <span>
+                                {t.doctor_label}: {personName(appointment.doctor)}
+                            </span>
+                            <span>
+                                {appointment.scheduled_start} →{' '}
+                                {appointment.scheduled_end}
+                            </span>
+                            <span>
+                                {t.confirmation_label}:{' '}
+                                {appointment.confirmation_status}
+                                {appointment.confirmation_at
+                                    ? ` · ${appointment.confirmation_at}`
+                                    : ''}
+                            </span>
+                        </div>
                     </div>
-                    <div>
-                        <dt className="text-xs text-neutral-500 uppercase">
-                            Doctor
-                        </dt>
-                        <dd>
-                            {appointment.doctor
-                                ? `Dr. ${appointment.doctor.first_name} ${appointment.doctor.last_name}`
-                                : '—'}
-                        </dd>
+                    <EditAppointmentsSheet appointment={appointment}>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            className="gap-2"
+                        >
+                            <Edit3 className="size-3.5" />
+                            {t.edit}
+                        </Button>
+                    </EditAppointmentsSheet>
+                </div>
+
+                {appointment.chief_complaint && (
+                    <div className="mb-5 rounded-lg border border-border bg-card p-4 text-[13px]">
+                        <div className="mb-1 text-[11px] font-medium tracking-wider text-muted-foreground uppercase">
+                            {t.chief_complaint}
+                        </div>
+                        {appointment.chief_complaint}
                     </div>
-                    <div>
-                        <dt className="text-xs text-neutral-500 uppercase">
-                            Status
-                        </dt>
-                        <dd>{appointment.status}</dd>
-                    </div>
-                    <div>
-                        <dt className="text-xs text-neutral-500 uppercase">
-                            Confirmation
-                        </dt>
-                        <dd>
-                            {appointment.confirmation_status}{' '}
-                            {appointment.confirmation_at &&
-                                `(${appointment.confirmation_at})`}
-                        </dd>
-                    </div>
-                    <div className="col-span-2">
-                        <dt className="text-xs text-neutral-500 uppercase">
-                            Chief complaint
-                        </dt>
-                        <dd>{appointment.chief_complaint ?? '—'}</dd>
-                    </div>
-                </section>
+                )}
 
                 {appointment.status !== 'cancelled' && (
-                    <section className="mb-6 rounded border border-rose-200 p-4">
-                        <h2 className="mb-3 text-sm font-semibold text-rose-700 uppercase">
-                            Cancel appointment
-                        </h2>
+                    <SectionCard
+                        title={t.cancel_appointment}
+                        className="mb-5"
+                        bodyClassName="p-5"
+                    >
                         <Form
-                            action={`/appointments/${appointment.id}/cancel`}
+                            action={appointments.cancel.url({
+                                locale,
+                                appointment: appointment.id,
+                            })}
                             method="post"
-                            className="flex gap-2 text-sm"
+                            className="flex flex-wrap items-start gap-2"
                         >
                             {({ errors, processing }) => (
                                 <>
-                                    <input
-                                        name="cancelled_reason"
-                                        required
-                                        placeholder="Reason for cancellation"
-                                        className="flex-1 rounded border border-neutral-300 px-3 py-2"
-                                    />
-                                    {errors.cancelled_reason && (
-                                        <span className="text-xs text-red-600">
-                                            {errors.cancelled_reason}
-                                        </span>
-                                    )}
-                                    <button
+                                    <div className="grid flex-1 gap-1.5">
+                                        <Input
+                                            name="cancelled_reason"
+                                            required
+                                            placeholder={t.cancel_reason_ph}
+                                        />
+                                        {errors.cancelled_reason && (
+                                            <span className="text-[12px] text-danger">
+                                                {errors.cancelled_reason}
+                                            </span>
+                                        )}
+                                    </div>
+                                    <Button
                                         type="submit"
                                         disabled={processing}
-                                        className="rounded bg-rose-600 px-4 py-2 text-white disabled:opacity-50"
+                                        variant="outline"
+                                        className="border-danger text-danger hover:bg-danger-soft"
                                     >
-                                        Cancel
-                                    </button>
+                                        {t.cancel_label}
+                                    </Button>
                                 </>
                             )}
                         </Form>
-                    </section>
+                    </SectionCard>
                 )}
 
-                <div className="mb-6">
-                    <ProvenancePanel
-                        deferredKey="provenance"
-                        entries={provenance}
-                    />
-                </div>
-
-                <p className="mt-auto text-center text-xs text-neutral-400">
-                    Placeholder. Carbon panel will replace this view.
-                </p>
+                <ProvenancePanel deferredKey="provenance" entries={provenance} />
             </div>
         </>
     );

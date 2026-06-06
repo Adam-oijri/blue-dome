@@ -1,4 +1,4 @@
-import { Link } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 import { BookOpen, FolderGit2, LayoutGrid } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavFooter } from '@/components/nav-footer';
@@ -14,7 +14,7 @@ import {
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { useLocale } from '@/lib/i18n/use-locale';
-import { dashboard } from '@/routes';
+import { roleHomeUrl } from '@/lib/role-home';
 import type { NavItem } from '@/types';
 
 const footerNavItems: NavItem[] = [
@@ -32,11 +32,13 @@ const footerNavItems: NavItem[] = [
 
 export function AppSidebar() {
     const { slug: locale } = useLocale();
+    const role = usePage().props.auth?.user?.role;
+    const homeUrl = roleHomeUrl(role, locale);
 
     const mainNavItems: NavItem[] = [
         {
             title: 'Dashboard',
-            href: dashboard({ locale }),
+            href: homeUrl,
             icon: LayoutGrid,
         },
     ];
@@ -47,7 +49,7 @@ export function AppSidebar() {
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <SidebarMenuButton size="lg" asChild>
-                            <Link href={dashboard({ locale })} prefetch>
+                            <Link href={homeUrl} prefetch>
                                 <AppLogo />
                             </Link>
                         </SidebarMenuButton>

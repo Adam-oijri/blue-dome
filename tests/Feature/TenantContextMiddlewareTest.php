@@ -44,8 +44,9 @@ it('flips is_super_admin for a super_admin user', function () {
 
 it('leaves the GUCs empty when no user is authenticated', function () {
     // The shared beforeEach in tests/Pest.php sets app.is_super_admin so
-    // factories can bypass RLS. Clear it here to prove the middleware does
-    // not touch the GUCs for an unauthenticated request.
+    // factories can bypass RLS. Pre-set the GUCs here to prove the middleware
+    // CLEARS them for an unauthenticated request — session-scoped GUCs persist
+    // on a reused connection, so a guest must not inherit a prior user's tenant.
     DB::statement("SELECT set_config('app.current_user_id', '', true)");
     DB::statement("SELECT set_config('app.current_clinic_id', '', true)");
     DB::statement("SELECT set_config('app.is_super_admin', '', true)");

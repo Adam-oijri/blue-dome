@@ -75,12 +75,14 @@ const DOCTOR_PAGE_PREFIXES = [
     'medications/',
     'expenses/',
     'vendors/',
+    'documents/',
+    'document-folders/',
 ];
 
 createInertiaApp({
     title: (title) => (title ? `${title} - ${appName}` : appName),
 
-    layout: (name) => {
+    layout: (name, page) => {
         switch (true) {
             case name === 'welcome':
                 return null;
@@ -93,6 +95,23 @@ createInertiaApp({
 
             case name.startsWith('panels/super-admin/'):
                 return SuperAdminLayout;
+
+            // Shared staff-chat page — render it inside the viewer's own panel
+            // (super admin, doctor, or secretary) so the role sidebar + Messages
+            // nav stay put.
+            case name === 'messages/index': {
+                const role = (
+                    page?.props as
+                        | { auth?: { user?: { role?: string } } }
+                        | undefined
+                )?.auth?.user?.role;
+
+                if (role === 'super_admin') {
+                    return SuperAdminLayout;
+                }
+
+                return role === 'secretary' ? SecretaryLayout : DoctorLayout;
+            }
 
             case name.startsWith('panels/secretary/') ||
                 name === 'secretary/follow-up':

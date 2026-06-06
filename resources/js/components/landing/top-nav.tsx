@@ -1,4 +1,4 @@
-import { Link } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
 
@@ -10,7 +10,8 @@ import type { Lang } from '@/components/landing/shared/types';
 import { useActiveSection } from '@/components/landing/use-active-section';
 import { Button } from '@/components/ui/button';
 import { useLocale } from '@/lib/i18n/use-locale';
-import { dashboard, login } from '@/routes';
+import { roleHomeUrl } from '@/lib/role-home';
+import { login, register } from '@/routes';
 
 interface TopNavProps {
     lang: Lang;
@@ -28,6 +29,7 @@ export function TopNav({ lang, authed, canRegister }: TopNavProps) {
     const navBackdrop = useTransform(navBlur, (b) => `blur(${b}px)`);
     const activeSection = useActiveSection(SECTION_IDS);
     const { slug: locale } = useLocale();
+    const role = usePage().props.auth?.user?.role;
 
     return (
         <motion.header
@@ -109,7 +111,7 @@ export function TopNav({ lang, authed, canRegister }: TopNavProps) {
                                 asChild
                                 className="bg-navy-900 text-white hover:bg-navy-800"
                             >
-                                <Link href={dashboard({ locale })}>
+                                <Link href={roleHomeUrl(role, locale)}>
                                     Dashboard
                                     <ArrowRight className="size-3.5" />
                                 </Link>
@@ -129,7 +131,7 @@ export function TopNav({ lang, authed, canRegister }: TopNavProps) {
                                         asChild
                                         className="bg-navy-900 text-white hover:bg-navy-800"
                                     >
-                                        <Link href="/register">
+                                        <Link href={register({ locale })}>
                                             {lang === 'fr'
                                                 ? 'Démarrer'
                                                 : 'Get started'}

@@ -5,6 +5,7 @@ import {
     Calendar,
     FileBarChart,
     LayoutGrid,
+    MessageCircle,
     Settings as SettingsIcon,
     Stethoscope,
     Trash2,
@@ -14,6 +15,7 @@ import type { ComponentType } from 'react';
 
 import { BrandIconMark } from '@/components/blue-dome/brand-icon-mark';
 import { SidebarUserCard } from '@/components/blue-dome/sidebar-user-card';
+import { useMessagesPoller } from '@/components/blue-dome/use-messages-poller';
 import {
     Sidebar,
     SidebarContent,
@@ -23,12 +25,14 @@ import {
     SidebarGroupLabel,
     SidebarHeader,
     SidebarMenu,
+    SidebarMenuBadge,
     SidebarMenuButton,
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { useSuperAdminLang } from '@/lib/i18n/super-admin-context';
 import { useLocale } from '@/lib/i18n/use-locale';
 import { cn } from '@/lib/utils';
+import messages from '@/routes/messages';
 import superAdmin from '@/routes/super-admin';
 
 type NavEntry = {
@@ -36,6 +40,7 @@ type NavEntry = {
     label: string;
     href: string;
     icon: ComponentType<{ className?: string }>;
+    badge?: string;
     exact?: boolean;
 };
 
@@ -53,6 +58,9 @@ export function SuperAdminSidebar() {
     const { t } = useSuperAdminLang();
     const { url } = usePage();
     const { slug: locale } = useLocale();
+    const unreadMessages = usePage().props.messages?.unread ?? 0;
+
+    useMessagesPoller();
 
     const workspace: NavEntry[] = [
         {
@@ -73,6 +81,18 @@ export function SuperAdminSidebar() {
             label: t.nav_users,
             href: superAdmin.users.url({ locale }),
             icon: Users,
+        },
+        {
+            key: 'messages',
+            label: t.nav_messages,
+            href: messages.index.url({ locale }),
+            icon: MessageCircle,
+            badge:
+                unreadMessages > 0
+                    ? unreadMessages > 99
+                        ? '99+'
+                        : String(unreadMessages)
+                    : undefined,
         },
     ];
 
@@ -202,6 +222,17 @@ function NavSection({
                                         <span>{entry.label}</span>
                                     </Link>
                                 </SidebarMenuButton>
+                                {entry.badge && (
+                                    <SidebarMenuBadge
+                                        className={cn(
+                                            'bg-navy-100 text-[11px] text-navy-700 dark:bg-navy-800 dark:text-slate-300',
+                                            active &&
+                                                'bg-olive-600 text-white dark:bg-olive-600 dark:text-white',
+                                        )}
+                                    >
+                                        {entry.badge}
+                                    </SidebarMenuBadge>
+                                )}
                             </SidebarMenuItem>
                         );
                     })}

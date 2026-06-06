@@ -18,12 +18,7 @@ class LoginResponse implements LoginResponseContract
         /** @var Request $request */
         $user = $request->user();
 
-        $route = match ($user->role) {
-            'super_admin' => 'super-admin.dashboard',
-            'doctor' => 'doctor.dashboard',
-            'secretary' => 'secretary.dashboard',
-            default => 'dashboard',
-        };
+        $route = $user->homeRouteName();
 
         return $request->wantsJson()
             ? response()->json(['two_factor' => false, 'redirect' => route($route)])

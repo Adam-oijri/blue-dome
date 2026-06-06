@@ -1,10 +1,26 @@
 import { Head, Link, router } from '@inertiajs/react';
+import { CalendarDays, Plus } from 'lucide-react';
 import { useState } from 'react';
 
 import { CreateAppointmentSheet } from '@/components/blue-dome/create-appointment-sheet';
+import { PageHeader } from '@/components/blue-dome/page-header';
+import { SectionCard } from '@/components/blue-dome/section-card';
+import { StatusPill } from '@/components/blue-dome/status-pill';
+import type { StatusTone } from '@/components/blue-dome/status-pill';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
 import { enumLabel } from '@/lib/i18n/doctor';
 import { useDoctorLang } from '@/lib/i18n/doctor-context';
 import { useLocale } from '@/lib/i18n/use-locale';
+import { Pagination } from '@/pages/panels/super-admin/users';
 import appointmentRoutes from '@/routes/appointments';
 
 interface AppointmentRow {
@@ -22,6 +38,8 @@ interface AppointmentRow {
 interface Paginator<T> {
     data: T[];
     total: number;
+    current_page: number;
+    last_page: number;
     links: { url: string | null; label: string; active: boolean }[];
 }
 
@@ -30,13 +48,42 @@ interface Props {
     filters: { day: string | null; status: string | null };
 }
 
+const STATUS_VALUES = [
+    'scheduled',
+    'confirmed',
+    'arrived',
+    'in_progress',
+    'completed',
+    'cancelled',
+    'no_show',
+];
+
+const STATUS_TONE: Record<string, StatusTone> = {
+    scheduled: 'neutral',
+    confirmed: 'info',
+    arrived: 'olive',
+    in_progress: 'olive',
+    completed: 'success',
+    cancelled: 'danger',
+    no_show: 'warning',
+};
+
+const fieldClass =
+    'h-9 rounded-md border border-input bg-transparent px-3 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50';
+
+function personName(person?: { first_name: string; last_name: string }): string {
+    return person
+        ? `${person.first_name} ${person.last_name}`.trim() || '—'
+        : '—';
+}
+
 export default function AppointmentsIndex({ appointments, filters }: Props) {
     const { t } = useDoctorLang();
     const { slug: locale } = useLocale();
     const [day, setDay] = useState(filters.day ?? '');
     const [status, setStatus] = useState(filters.status ?? '');
 
-    const apply = (e: React.FormEvent) => {
+    const apply = (e: React.FormEvent): void => {
         e.preventDefault();
         router.get(
             appointmentRoutes.index.url({ locale }),
@@ -48,138 +95,162 @@ export default function AppointmentsIndex({ appointments, filters }: Props) {
     return (
         <>
             <Head title={t.appointments} />
-            <div className="flex h-full flex-col p-6">
-                <div className="mb-4 flex items-center justify-between">
-                    <div>
-                        <h1 className="text-2xl font-semibold">
-                            {t.appointments}
-                        </h1>
-                        <p className="text-xs text-neutral-500">
-                            {appointments.total} total
-                        </p>
-                    </div>
-                    <CreateAppointmentSheet>
-                        <button
-                            type="button"
-                            className="rounded bg-blue-600 px-3 py-2 text-sm text-white hover:bg-blue-700"
-                        >
-                            + {t.new_appointment}
-                        </button>
-                    </CreateAppointmentSheet>
-                </div>
 
-                <form onSubmit={apply} className="mb-4 flex gap-2 text-sm">
-                    <input
+            <div className="px-8 py-6 lg:px-10">
+                <PageHeader
+                    title={t.appointments}
+                    description={String(appointments.total)}
+                    actions={
+                        <CreateAppointmentSheet>
+                            <Button
+                                size="sm"
+                                className="gap-2 bg-olive-600 text-white hover:bg-olive-700"
+                            >
+                                <Plus className="size-3.5" />
+                                {t.new_appointment}
+                            </Button>
+                        </CreateAppointmentSheet>
+                    }
+                />
+
+                <form onSubmit={apply} className="mb-4 flex flex-wrap gap-2">
+                    <Input
                         type="date"
                         value={day}
                         onChange={(e) => setDay(e.target.value)}
-                        className="rounded border border-neutral-300 px-3 py-2"
+                        className="h-9 w-auto"
                     />
                     <select
                         value={status}
                         onChange={(e) => setStatus(e.target.value)}
-                        className="rounded border border-neutral-300 px-3 py-2"
+                        className={fieldClass}
                     >
                         <option value="">{t.all_statuses}</option>
-                        {[
-                            'scheduled',
-                            'confirmed',
-                            'arrived',
-                            'in_progress',
-                            'completed',
-                            'cancelled',
-                            'no_show',
-                        ].map((s) => (
+                        {STATUS_VALUES.map((s) => (
                             <option key={s} value={s}>
                                 {enumLabel(t.appt_status_opts, s)}
                             </option>
                         ))}
                     </select>
-                    <button
-                        type="submit"
-                        className="rounded border border-neutral-300 px-3 py-2"
-                    >
+                    <Button type="submit" variant="outline" size="sm">
                         {t.apply}
-                    </button>
+                    </Button>
                 </form>
 
-                <table className="w-full text-left text-sm">
-                    <thead className="border-b border-neutral-200 text-xs text-neutral-500 uppercase">
-                        <tr>
-                            <th className="px-3 py-2">#</th>
-                            <th className="px-3 py-2">{t.col_when}</th>
-                            <th className="px-3 py-2">{t.col_patient}</th>
-                            <th className="px-3 py-2">{t.col_doctor}</th>
-                            <th className="px-3 py-2">{t.col_status}</th>
-                            <th className="px-3 py-2">{t.confirmed_q}</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {appointments.data.length === 0 && (
-                            <tr>
-                                <td
-                                    colSpan={6}
-                                    className="px-3 py-8 text-center text-neutral-400"
-                                >
-                                    {t.no_appointments}
-                                </td>
-                            </tr>
-                        )}
-                        {appointments.data.map((a) => (
-                            <tr
-                                key={a.id}
-                                className="border-b border-neutral-100 hover:bg-neutral-50"
-                            >
-                                <td className="px-3 py-2 font-mono text-xs">
-                                    {a.appointment_number ?? '—'}
-                                </td>
-                                <td className="px-3 py-2 font-mono text-xs">
-                                    {a.scheduled_start}
-                                </td>
-                                <td className="px-3 py-2">
-                                    {a.patient ? (
-                                        <Link
-                                            href={appointmentRoutes.show.url({
-                                                locale,
-                                                appointment: a.id,
-                                            })}
-                                            className="text-blue-600 hover:underline"
-                                        >
-                                            {a.patient.first_name}{' '}
-                                            {a.patient.last_name}
-                                        </Link>
-                                    ) : (
-                                        '—'
-                                    )}
-                                </td>
-                                <td className="px-3 py-2">
-                                    {a.doctor
-                                        ? `Dr. ${a.doctor.last_name}`
-                                        : '—'}
-                                </td>
-                                <td className="px-3 py-2">
-                                    {enumLabel(t.appt_status_opts, a.status)}
-                                </td>
-                                <td className="px-3 py-2">
-                                    {a.confirmation_status ===
-                                    'confirmed_by_patient' ? (
-                                        <span className="rounded bg-emerald-50 px-2 py-0.5 text-xs text-emerald-700">
-                                            {t.confirmed}
-                                        </span>
-                                    ) : (
-                                        <span className="rounded bg-neutral-100 px-2 py-0.5 text-xs text-neutral-500">
-                                            {a.confirmation_status}
-                                        </span>
-                                    )}
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
+                <SectionCard
+                    titleIcon={<CalendarDays className="size-4" />}
+                    title={t.appointments}
+                    bodyClassName="p-0"
+                >
+                    <Table>
+                        <TableHeader>
+                            <TableRow className="bg-muted/50">
+                                <TableHead className="px-5 py-2.5 text-[11px] tracking-wider uppercase">
+                                    #
+                                </TableHead>
+                                <TableHead className="text-[11px] tracking-wider uppercase">
+                                    {t.col_when}
+                                </TableHead>
+                                <TableHead className="text-[11px] tracking-wider uppercase">
+                                    {t.col_patient}
+                                </TableHead>
+                                <TableHead className="text-[11px] tracking-wider uppercase">
+                                    {t.col_doctor}
+                                </TableHead>
+                                <TableHead className="text-[11px] tracking-wider uppercase">
+                                    {t.col_status}
+                                </TableHead>
+                                <TableHead className="text-[11px] tracking-wider uppercase">
+                                    {t.confirmed_q}
+                                </TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {appointments.data.length === 0 && (
+                                <TableRow>
+                                    <TableCell
+                                        colSpan={6}
+                                        className="py-12 text-center text-sm text-muted-foreground"
+                                    >
+                                        {t.no_appointments}
+                                    </TableCell>
+                                </TableRow>
+                            )}
+                            {appointments.data.map((a) => {
+                                const confirmed =
+                                    a.confirmation_status ===
+                                        'confirmed_by_patient' ||
+                                    a.confirmation_status === 'confirmed_by_call';
 
-                <p className="mt-auto text-center text-xs text-neutral-400">
-                    Placeholder. Carbon panel will replace this view.
-                </p>
+                                return (
+                                    <TableRow
+                                        key={a.id}
+                                        className="hover:bg-muted/50"
+                                    >
+                                        <TableCell className="px-5 py-3 font-mono text-[11px] text-muted-foreground tabular-nums">
+                                            {a.appointment_number ?? '—'}
+                                        </TableCell>
+                                        <TableCell className="text-[12px] tabular-nums">
+                                            {a.scheduled_start}
+                                        </TableCell>
+                                        <TableCell className="text-[13px]">
+                                            {a.patient ? (
+                                                <Link
+                                                    href={appointmentRoutes.show.url(
+                                                        {
+                                                            locale,
+                                                            appointment: a.id,
+                                                        },
+                                                    )}
+                                                    className="font-medium hover:underline"
+                                                >
+                                                    {personName(a.patient)}
+                                                </Link>
+                                            ) : (
+                                                '—'
+                                            )}
+                                        </TableCell>
+                                        <TableCell className="text-[13px] text-muted-foreground">
+                                            {personName(a.doctor)}
+                                        </TableCell>
+                                        <TableCell>
+                                            <StatusPill
+                                                tone={
+                                                    STATUS_TONE[a.status] ??
+                                                    'neutral'
+                                                }
+                                                withDot
+                                            >
+                                                {enumLabel(
+                                                    t.appt_status_opts,
+                                                    a.status,
+                                                )}
+                                            </StatusPill>
+                                        </TableCell>
+                                        <TableCell>
+                                            <StatusPill
+                                                tone={
+                                                    confirmed
+                                                        ? 'success'
+                                                        : 'neutral'
+                                                }
+                                            >
+                                                {confirmed
+                                                    ? t.confirmed
+                                                    : enumLabel(
+                                                          t.appt_status_opts,
+                                                          a.confirmation_status,
+                                                      )}
+                                            </StatusPill>
+                                        </TableCell>
+                                    </TableRow>
+                                );
+                            })}
+                        </TableBody>
+                    </Table>
+
+                    <Pagination paginated={appointments} t={{}} />
+                </SectionCard>
             </div>
         </>
     );

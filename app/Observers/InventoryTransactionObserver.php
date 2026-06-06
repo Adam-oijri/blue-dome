@@ -2,7 +2,9 @@
 
 namespace App\Observers;
 
+use App\Models\Inventory;
 use App\Models\InventoryTransaction;
+use App\Services\Notifications\NotificationService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
@@ -15,6 +17,8 @@ class InventoryTransactionObserver
     private const POSITIVE = ['purchase', 'return', 'adjustment'];
 
     private const NEGATIVE = ['sale', 'consumption', 'expired', 'damaged', 'transfer'];
+
+    public function __construct(private readonly NotificationService $notifications) {}
 
     public function creating(InventoryTransaction $tx): void
     {
@@ -39,6 +43,38 @@ class InventoryTransactionObserver
                 'quantity_in_stock' => DB::raw('quantity_in_stock + ('.((float) $delta).')'),
                 'updated_at' => now(),
             ]);
+
+        // Alert clinic secretaries only when a *decrease* drops the item to or
+        // below its threshold — avoids noise on restock/positive transactions.
+        if ($delta < 0) {
+            $this->maybeAlertLowStock($tx->inventory_id);
+        }
+    }
+
+    private function maybeAlertLowStock(string $inventoryId): void
+    {
+        $item = Inventory::query()->find($inventoryId);
+
+        if ($item === null) {
+            return;
+        }
+
+        $qty = (float) $item->quantity_in_stock;
+        $min = (float) ($item->min_stock_level ?? 0);
+
+        if ($qty > 0 && $qty > $min) {
+            return;
+        }
+
+        $this->notifications->send(
+            recipients: $this->notifications->clinicRole($item->clinic_id, 'secretary'),
+            type: 'inventory_low',
+            params: ['item' => $item->item_name ?? '—'],
+            actionUrl: route('inventory.alerts'),
+            referenceType: 'Inventory',
+            referenceId: $item->id,
+            important: true,
+        );
     }
 
     private function resolveDelta(InventoryTransaction $tx): ?float

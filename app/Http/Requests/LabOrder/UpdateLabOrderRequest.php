@@ -33,7 +33,7 @@ class UpdateLabOrderRequest extends FormRequest
                     ->whereNull('deleted_at'),
             ],
             'images' => ['nullable', 'array', 'max:10'],
-            'images.*' => ['file', 'image', 'mimes:jpg,jpeg,png,webp', 'max:10240'],
+            'images.*' => ['file', 'mimes:jpg,jpeg,png,webp,pdf', 'max:10240'],
         ];
     }
 }

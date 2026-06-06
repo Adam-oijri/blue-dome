@@ -21,7 +21,9 @@ class StoreDocumentRequest extends FormRequest
         $clinicId = $this->user()->clinic_id;
 
         return [
-            'file' => ['required', 'file', 'max:20480'],
+            // Whitelist medical-relevant types only: images + PDF. Blocks
+            // executable/script uploads (file-upload hardening).
+            'file' => ['required', 'file', 'max:20480', 'mimes:jpg,jpeg,png,webp,pdf'],
             'document_name' => ['required', 'string', 'max:255'],
             'document_type' => ['required', 'in:patient_record,lab_result,imaging,prescription,invoice,consent_form,insurance_card,national_id,doctor_license,clinic_license,contract,report,certificate,medical_report,discharge_summary,other'],
             'entity_type' => ['required', 'string', 'max:50'],

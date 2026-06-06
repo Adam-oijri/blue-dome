@@ -10,12 +10,17 @@ use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Pushes the authenticated user, their clinic, and a super-admin flag into the
- * Postgres session via `set_config(..., true)`. Every clinic-scoped query and
- * every RLS policy reads from these GUCs through `fn_current_clinic_id()` and
- * `fn_is_super_admin()`. The third argument `true` scopes the value to the
- * current transaction — Laravel runs HTTP requests inside the implicit
- * connection-level transaction RefreshDatabase uses for tests, and inside an
- * explicit `DB::transaction()` for write paths in app code.
+ * Postgres session via `set_config(..., false)` (session-scoped). Every
+ * clinic-scoped query and every RLS policy reads from these GUCs through
+ * `fn_current_clinic_id()` / `fn_is_super_admin()`.
+ *
+ * Session scope (NOT transaction-local) is required: a normal HTTP request
+ * runs OUTSIDE any transaction, so a `set_config(..., true)` (SET LOCAL) value
+ * is discarded the moment that statement's implicit transaction ends — leaving
+ * the GUCs empty and every RLS-protected read returning zero rows under a
+ * non-BYPASSRLS database role (the production `blue_dome_app` role). For
+ * unauthenticated requests we reset the GUCs so a reused/pooled connection
+ * cannot inherit the previous request's tenant context.
  */
 class SetTenantContext
 {
@@ -24,20 +29,26 @@ class SetTenantContext
         $user = Auth::user();
 
         if ($user !== null) {
-            DB::statement('SELECT set_config(?, ?, true)', [
+            DB::statement('SELECT set_config(?, ?, false)', [
                 'app.current_user_id',
                 (string) $user->id,
             ]);
 
-            DB::statement('SELECT set_config(?, ?, true)', [
+            DB::statement('SELECT set_config(?, ?, false)', [
                 'app.current_clinic_id',
                 (string) ($user->clinic_id ?? ''),
             ]);
 
-            DB::statement('SELECT set_config(?, ?, true)', [
+            DB::statement('SELECT set_config(?, ?, false)', [
                 'app.is_super_admin',
                 $user->role === 'super_admin' ? 'true' : 'false',
             ]);
+        } else {
+            // Clear any tenant context left on a reused/pooled connection so a
+            // guest request can't inherit the previous user's clinic.
+            DB::statement('SELECT set_config(?, ?, false)', ['app.current_user_id', '']);
+            DB::statement('SELECT set_config(?, ?, false)', ['app.current_clinic_id', '']);
+            DB::statement('SELECT set_config(?, ?, false)', ['app.is_super_admin', '']);
         }
 
         return $next($request);

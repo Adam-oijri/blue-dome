@@ -20,6 +20,9 @@ import medications from '@/routes/medications';
 const FIELD_CLASS =
     'border-input focus-visible:border-ring focus-visible:ring-ring/50 h-9 w-full rounded-md border bg-transparent px-3 text-sm outline-none focus-visible:ring-[3px]';
 
+const TEXTAREA_CLASS =
+    'border-input focus-visible:border-ring focus-visible:ring-ring/50 w-full rounded-md border bg-transparent px-3 py-2 text-sm outline-none focus-visible:ring-[3px]';
+
 export type EditableMedication = {
     id: string;
     trade_name: string | null;
@@ -30,6 +33,10 @@ export type EditableMedication = {
     category: string | null;
     is_active: boolean;
     requires_prescription: boolean;
+    atc_code?: string | null;
+    side_effects?: string | null;
+    contraindications?: string | null;
+    storage_instructions?: string | null;
 };
 
 /**
@@ -61,8 +68,12 @@ export function EditMedicationsSheet({
         strength: medication.strength ?? '',
         manufacturer: medication.manufacturer ?? '',
         category: medication.category ?? '',
+        atc_code: medication.atc_code ?? '',
         requires_prescription: medication.requires_prescription ? '1' : '0',
         is_active: medication.is_active ? '1' : '0',
+        side_effects: medication.side_effects ?? '',
+        contraindications: medication.contraindications ?? '',
+        storage_instructions: medication.storage_instructions ?? '',
     });
 
     const submit = (e: React.FormEvent): void => {
@@ -172,6 +183,19 @@ export function EditMedicationsSheet({
                             <InputError message={form.errors.manufacturer} />
                         </div>
 
+                        <div className="grid gap-2">
+                            <Label htmlFor="edit_atc_code">ATC code</Label>
+                            <input
+                                id="edit_atc_code"
+                                value={form.data.atc_code}
+                                onChange={(e) =>
+                                    form.setData('atc_code', e.target.value)
+                                }
+                                className={FIELD_CLASS}
+                            />
+                            <InputError message={form.errors.atc_code} />
+                        </div>
+
                         <div className="grid grid-cols-2 gap-3">
                             <div className="grid gap-2">
                                 <Label htmlFor="edit_category">
@@ -233,6 +257,64 @@ export function EditMedicationsSheet({
                                 ))}
                             </select>
                             <InputError message={form.errors.is_active} />
+                        </div>
+
+                        <div className="grid gap-2">
+                            <Label htmlFor="edit_side_effects">
+                                Side effects
+                            </Label>
+                            <textarea
+                                id="edit_side_effects"
+                                rows={3}
+                                value={form.data.side_effects}
+                                onChange={(e) =>
+                                    form.setData('side_effects', e.target.value)
+                                }
+                                className={TEXTAREA_CLASS}
+                            />
+                            <InputError message={form.errors.side_effects} />
+                        </div>
+
+                        <div className="grid gap-2">
+                            <Label htmlFor="edit_contraindications">
+                                Contraindications
+                            </Label>
+                            <textarea
+                                id="edit_contraindications"
+                                rows={3}
+                                value={form.data.contraindications}
+                                onChange={(e) =>
+                                    form.setData(
+                                        'contraindications',
+                                        e.target.value,
+                                    )
+                                }
+                                className={TEXTAREA_CLASS}
+                            />
+                            <InputError
+                                message={form.errors.contraindications}
+                            />
+                        </div>
+
+                        <div className="grid gap-2">
+                            <Label htmlFor="edit_storage_instructions">
+                                Storage instructions
+                            </Label>
+                            <textarea
+                                id="edit_storage_instructions"
+                                rows={3}
+                                value={form.data.storage_instructions}
+                                onChange={(e) =>
+                                    form.setData(
+                                        'storage_instructions',
+                                        e.target.value,
+                                    )
+                                }
+                                className={TEXTAREA_CLASS}
+                            />
+                            <InputError
+                                message={form.errors.storage_instructions}
+                            />
                         </div>
                     </div>
 

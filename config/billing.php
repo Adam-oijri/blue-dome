@@ -28,4 +28,11 @@ return [
         'professional' => 499,
         'enterprise' => 1499,
     ],
+
+    /*
+    | Length of the free trial granted to a self-service signup. Single source
+    | of truth shared by CreateNewUser (sets subscription_expiry), the
+    | EnsureClinicActive gate, and the app:expire-trials command.
+    */
+    'trial_days' => 3,
 ];

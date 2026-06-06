@@ -93,18 +93,6 @@ class LabOrderController extends Controller
         ]);
     }
 
-    public function create(Request $request): Response
-    {
-        $this->authorize('create', LabOrder::class);
-
-        return Inertia::render('lab-orders/create', [
-            'external_labs' => ExternalLab::query()
-                ->where('clinic_id', $request->user()->clinic_id)
-                ->where('is_active', true)
-                ->get(['id', 'lab_name']),
-        ]);
-    }
-
     public function store(StoreLabOrderRequest $request): RedirectResponse
     {
         $validated = $request->validated();
@@ -133,13 +121,8 @@ class LabOrderController extends Controller
     }
 
     /**
-     * Store an uploaded lab-order image on the private `local` disk (under a
-     * clinic-prefixed path) and record it as a Document attached to the order,
-     * reusing the shared documents pipeline (guarded download, policies, RLS).
-     */
-    /**
-     * Image documents attached to a lab order, for the gallery on the show and
-     * edit pages.
+     * Attachment documents on a lab order (images + PDFs), for the gallery on
+     * the show page and the edit sheet.
      *
      * @return Collection<int, Document>
      */
@@ -149,11 +132,19 @@ class LabOrderController extends Controller
             ->where('entity_type', 'LabOrder')
             ->where('entity_id', $labOrder->id)
             ->where('clinic_id', $labOrder->clinic_id)
-            ->where('mime_type', 'like', 'image/%')
+            ->where(function ($query): void {
+                $query->where('mime_type', 'like', 'image/%')
+                    ->orWhere('mime_type', 'application/pdf');
+            })
             ->orderBy('uploaded_at')
             ->get(['id', 'document_name', 'file_name', 'mime_type', 'file_size', 'uploaded_at']);
     }
 
+    /**
+     * Store an uploaded lab-order image on the private `local` disk (under a
+     * clinic-prefixed path) and record it as a Document attached to the order,
+     * reusing the shared documents pipeline (guarded download, policies, RLS).
+     */
     private function attachImage(UploadedFile $image, LabOrder $labOrder, string $clinicId, string $userId): void
     {
         $hash = hash_file('sha256', $image->getRealPath());
@@ -195,6 +186,10 @@ class LabOrderController extends Controller
         return Inertia::render('lab-orders/show', [
             'lab_order' => $labOrder,
             'images' => $this->labOrderImages($labOrder),
+            'external_labs' => ExternalLab::query()
+                ->where('clinic_id', $labOrder->clinic_id)
+                ->where('is_active', true)
+                ->get(['id', 'lab_name']),
             'provenance' => Inertia::defer(
                 fn () => FieldChange::recentForEntity('LabOrder', $labOrder->id, 100)
                     ->with([
@@ -203,19 +198,6 @@ class LabOrderController extends Controller
                     ])
                     ->get()
             ),
-        ]);
-    }
-
-    public function edit(string $locale, LabOrder $labOrder): Response
-    {
-        unset($locale);
-        $this->authorize('update', $labOrder);
-
-        $labOrder->load(['items', 'externalLab:id,lab_name']);
-
-        return Inertia::render('lab-orders/edit', [
-            'lab_order' => $labOrder,
-            'images' => $this->labOrderImages($labOrder),
         ]);
     }
 

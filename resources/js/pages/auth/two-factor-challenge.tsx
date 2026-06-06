@@ -1,6 +1,7 @@
 import { Form, Head, setLayoutProps } from '@inertiajs/react';
 import { REGEXP_ONLY_DIGITS } from 'input-otp';
 import { useMemo, useState } from 'react';
+
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,6 +11,7 @@ import {
     InputOTPSlot,
 } from '@/components/ui/input-otp';
 import { OTP_MAX_LENGTH } from '@/hooks/use-two-factor-auth';
+import { useAuthLang } from '@/lib/i18n/auth-context';
 import { useLocale } from '@/lib/i18n/use-locale';
 import { store } from '@/routes/two-factor/login';
 
@@ -17,6 +19,7 @@ export default function TwoFactorChallenge() {
     const [showRecoveryInput, setShowRecoveryInput] = useState<boolean>(false);
     const [code, setCode] = useState<string>('');
     const { slug: locale } = useLocale();
+    const { t } = useAuthLang();
 
     const authConfigContent = useMemo<{
         title: string;
@@ -25,20 +28,18 @@ export default function TwoFactorChallenge() {
     }>(() => {
         if (showRecoveryInput) {
             return {
-                title: 'Recovery code',
-                description:
-                    'Please confirm access to your account by entering one of your emergency recovery codes.',
-                toggleText: 'login using an authentication code',
+                title: t.twofa_recovery_title,
+                description: t.twofa_recovery_desc,
+                toggleText: t.twofa_toggle_to_code,
             };
         }
 
         return {
-            title: 'Authentication code',
-            description:
-                'Enter the authentication code provided by your authenticator application.',
-            toggleText: 'login using a recovery code',
+            title: t.twofa_code_title,
+            description: t.twofa_code_desc,
+            toggleText: t.twofa_toggle_to_recovery,
         };
-    }, [showRecoveryInput]);
+    }, [showRecoveryInput, t]);
 
     setLayoutProps({
         title: authConfigContent.title,
@@ -53,7 +54,7 @@ export default function TwoFactorChallenge() {
 
     return (
         <>
-            <Head title="Two-factor authentication" />
+            <Head title={t.twofa_code_title} />
 
             <div className="space-y-6">
                 <Form
@@ -69,13 +70,11 @@ export default function TwoFactorChallenge() {
                                     <Input
                                         name="recovery_code"
                                         type="text"
-                                        placeholder="Enter recovery code"
+                                        placeholder={t.twofa_recovery_ph}
                                         autoFocus={showRecoveryInput}
                                         required
                                     />
-                                    <InputError
-                                        message={errors.recovery_code}
-                                    />
+                                    <InputError message={errors.recovery_code} />
                                 </>
                             ) : (
                                 <div className="flex flex-col items-center justify-center space-y-3 text-center">
@@ -108,17 +107,17 @@ export default function TwoFactorChallenge() {
 
                             <Button
                                 type="submit"
-                                className="w-full"
+                                className="w-full bg-olive-600 text-white hover:bg-olive-700"
                                 disabled={processing}
                             >
-                                Continue
+                                {t.continue_btn}
                             </Button>
 
                             <div className="text-center text-sm text-muted-foreground">
-                                <span>or you can </span>
+                                <span>{t.twofa_or_you_can} </span>
                                 <button
                                     type="button"
-                                    className="cursor-pointer text-foreground underline decoration-neutral-300 underline-offset-4 transition-colors duration-300 ease-out hover:decoration-current! dark:decoration-neutral-500"
+                                    className="cursor-pointer text-foreground underline underline-offset-4 transition-colors duration-300 ease-out hover:decoration-current"
                                     onClick={() =>
                                         toggleRecoveryMode(clearErrors)
                                     }

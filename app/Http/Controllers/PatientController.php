@@ -49,13 +49,6 @@ class PatientController extends Controller
         ]);
     }
 
-    public function create(): Response
-    {
-        $this->authorize('create', Patient::class);
-
-        return Inertia::render('patients/create');
-    }
-
     public function store(StorePatientRequest $request): RedirectResponse
     {
         Patient::create($request->validated() + [
@@ -96,20 +89,6 @@ class PatientController extends Controller
                     ])
                     ->get()
             ),
-        ]);
-    }
-
-    public function edit(string $locale, Patient $patient): Response
-    {
-        unset($locale);
-        $this->authorize('update', $patient);
-
-        $patient->load('communicationPreferences');
-
-        return Inertia::render('patients/edit', [
-            'patient' => $patient,
-            'national_id' => $patient->national_id,
-            'insurance_number' => $patient->insurance_number,
         ]);
     }
 

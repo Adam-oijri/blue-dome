@@ -1,12 +1,11 @@
 import { Head } from '@inertiajs/react';
-import { CheckCheck, MessageCircle, RefreshCcw, Send, X } from 'lucide-react';
+import { CheckCheck, MessageCircle, Send, X } from 'lucide-react';
 
 import { KpiCard } from '@/components/blue-dome/kpi-card';
 import { PageHeader } from '@/components/blue-dome/page-header';
 import { SectionCard } from '@/components/blue-dome/section-card';
 import { StatusPill } from '@/components/blue-dome/status-pill';
 import type { StatusTone } from '@/components/blue-dome/status-pill';
-import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { fmtNumber } from '@/lib/format';
 import { useSecretaryLang } from '@/lib/i18n/secretary-context';
@@ -71,28 +70,7 @@ export default function SecretaryWhatsApp({ messages, templates, kpis }: Props) 
             <Head title={t.nav_whatsapp} />
 
             <div className="px-6 py-5 lg:px-8">
-                <PageHeader
-                    title={t.nav_whatsapp}
-                    actions={
-                        <>
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                className="gap-2"
-                            >
-                                <RefreshCcw className="size-3.5" />
-                                {t.action_sync}
-                            </Button>
-                            <Button
-                                size="sm"
-                                className="gap-2 bg-olive-600 text-white hover:bg-olive-700"
-                            >
-                                <Send className="size-3.5" />
-                                {t.wa_send_template}
-                            </Button>
-                        </>
-                    }
-                />
+                <PageHeader title={t.nav_whatsapp} />
 
                 <div className="mb-5 grid grid-cols-2 gap-3 md:grid-cols-4">
                     <KpiCard
@@ -156,7 +134,6 @@ export default function SecretaryWhatsApp({ messages, templates, kpis }: Props) 
                             )}
                             <ul className="divide-y divide-border">
                                 {messages.map((row) => {
-                                    const stale = row.retry_count >= 2;
                                     const failed = row.status === 'failed';
                                     const seen =
                                         row.status === 'seen' ||
@@ -200,35 +177,6 @@ export default function SecretaryWhatsApp({ messages, templates, kpis }: Props) 
                                                     {t.wa_sent_at} {timeOf(row)}
                                                     {row.retry_count > 0 &&
                                                         ` · ${t.wa_retry} ${row.retry_count}`}
-                                                </div>
-                                                <div className="flex items-center gap-1.5">
-                                                    {failed ? (
-                                                        <Button
-                                                            size="sm"
-                                                            className="h-7 gap-1 bg-olive-600 text-[11px] text-white hover:bg-olive-700"
-                                                        >
-                                                            <RefreshCcw className="size-3" />
-                                                            {t.wa_resend}
-                                                        </Button>
-                                                    ) : (
-                                                        <Button
-                                                            variant="outline"
-                                                            size="sm"
-                                                            className="h-7 gap-1 text-[11px]"
-                                                        >
-                                                            <Send className="size-3" />
-                                                            {t.wa_send_template}
-                                                        </Button>
-                                                    )}
-                                                    {(failed || stale) && (
-                                                        <Button
-                                                            variant="outline"
-                                                            size="sm"
-                                                            className="h-7 gap-1 border-danger text-[11px] text-danger hover:bg-danger-soft"
-                                                        >
-                                                            {t.wa_to_call}
-                                                        </Button>
-                                                    )}
                                                 </div>
                                             </div>
                                         </li>
@@ -275,15 +223,7 @@ export default function SecretaryWhatsApp({ messages, templates, kpis }: Props) 
                                                 : t.empty_none}
                                         </StatusPill>
                                     </div>
-                                    <div className="text-end">
-                                        <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            className="h-7"
-                                        >
-                                            {t.action_edit}
-                                        </Button>
-                                    </div>
+                                    <div />
                                 </div>
                             ))}
                         </TabsContent>

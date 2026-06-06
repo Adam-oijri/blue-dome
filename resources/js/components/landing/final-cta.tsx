@@ -6,7 +6,7 @@ import { MagneticButton } from '@/components/landing/magnetic-button';
 import type { SectionProps } from '@/components/landing/shared/types';
 import { Button } from '@/components/ui/button';
 import { useLocale } from '@/lib/i18n/use-locale';
-import { login } from '@/routes';
+import { login, register } from '@/routes';
 
 export function FinalCta({
     lang,
@@ -83,7 +83,7 @@ export function FinalCta({
                                 <Link
                                     href={
                                         canRegister
-                                            ? '/register'
+                                            ? register({ locale })
                                             : login({ locale })
                                     }
                                 >

@@ -10,7 +10,7 @@ test('root path redirects to default locale landing', function (): void {
 });
 
 test('unprefixed paths inside the locale group redirect to default locale', function (): void {
-    $this->get('/dashboard')->assertRedirect('/ma-fr/dashboard');
+    $this->get('/super-admin')->assertRedirect('/ma-fr/super-admin');
 });
 
 test('unprefixed Fortify routes redirect to default locale equivalent', function (): void {
@@ -28,7 +28,7 @@ test('unsupported locale slugs return 404 (no fallback loop)', function (): void
 test('authenticated user locale syncs from URL', function (): void {
     $user = User::factory()->doctor()->create(['locale' => 'fr']);
 
-    $this->actingAs($user)->get('/ma-en/dashboard');
+    $this->actingAs($user)->get('/ma-en/doctor');
 
     expect($user->fresh()->locale)->toBe('en');
 });

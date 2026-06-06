@@ -51,7 +51,7 @@ class StoreLabOrderRequest extends FormRequest
             'items.*.normal_range' => ['nullable', 'string', 'max:255'],
             'items.*.unit' => ['nullable', 'string', 'max:50'],
             'images' => ['nullable', 'array', 'max:10'],
-            'images.*' => ['file', 'image', 'mimes:jpg,jpeg,png,webp', 'max:10240'],
+            'images.*' => ['file', 'mimes:jpg,jpeg,png,webp,pdf', 'max:10240'],
         ];
     }
 }

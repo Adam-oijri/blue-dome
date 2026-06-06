@@ -29,13 +29,6 @@ class VendorController extends Controller
         ]);
     }
 
-    public function create(): Response
-    {
-        $this->authorize('create', Vendor::class);
-
-        return Inertia::render('vendors/create');
-    }
-
     public function store(StoreVendorRequest $request): RedirectResponse
     {
         $vendor = Vendor::create($request->validated() + [
@@ -53,16 +46,6 @@ class VendorController extends Controller
         $this->authorize('view', $vendor);
 
         return Inertia::render('vendors/show', [
-            'vendor' => $vendor,
-        ]);
-    }
-
-    public function edit(string $locale, Vendor $vendor): Response
-    {
-        unset($locale);
-        $this->authorize('update', $vendor);
-
-        return Inertia::render('vendors/edit', [
             'vendor' => $vendor,
         ]);
     }

@@ -58,7 +58,7 @@ const TONE: Record<string, string> = {
     in_progress: 'bg-olive-100 text-olive-700 border-s-[3px] border-olive-600',
     arrived: 'bg-olive-100 text-olive-700 border-s-[3px] border-olive-600',
     completed:
-        'bg-emerald-50 text-emerald-700 border-s-[3px] border-emerald-500',
+        'bg-success-soft text-success border-s-[3px] border-success',
     no_show: 'bg-warning-soft text-warning border-s-[3px] border-warning',
     default: 'bg-navy-100 text-navy-900 border-s-[3px] border-navy-700',
 };

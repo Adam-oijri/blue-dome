@@ -6,6 +6,7 @@ use App\Http\Requests\Invoice\StoreInvoiceRequest;
 use App\Http\Requests\Invoice\UpdateInvoiceRequest;
 use App\Models\Invoice;
 use App\Models\Patient;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -70,13 +71,6 @@ class InvoiceController extends Controller
         ]);
     }
 
-    public function create(): Response
-    {
-        $this->authorize('create', Invoice::class);
-
-        return Inertia::render('invoices/create');
-    }
-
     public function store(StoreInvoiceRequest $request): RedirectResponse
     {
         $validated = $request->validated();
@@ -123,16 +117,22 @@ class InvoiceController extends Controller
         ]);
     }
 
-    public function edit(string $locale, Invoice $invoice): Response
+    /**
+     * Stream a printable PDF of the invoice (clinic letterhead + line items +
+     * totals) as a downloadable file.
+     */
+    public function pdf(string $locale, Invoice $invoice): \Illuminate\Http\Response
     {
         unset($locale);
-        $this->authorize('update', $invoice);
+        $this->authorize('view', $invoice);
 
-        $invoice->load(['items']);
+        $invoice->load(['clinic', 'patient', 'items', 'payments']);
 
-        return Inertia::render('invoices/edit', [
+        return Pdf::loadView('pdf.invoice', [
             'invoice' => $invoice,
-        ]);
+            'clinic' => $invoice->clinic,
+            'generatedAt' => now()->toDayDateTimeString(),
+        ])->download('invoice-'.($invoice->invoice_number ?? $invoice->id).'.pdf');
     }
 
     public function update(UpdateInvoiceRequest $request, string $locale, Invoice $invoice): RedirectResponse

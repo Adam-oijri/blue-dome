@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Doctor;
 use App\Http\Controllers\Controller;
 use App\Models\Appointment;
 use App\Models\Patient;
+use App\Services\Notifications\NotificationFeedService;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -20,7 +21,7 @@ class DashboardController extends Controller
 {
     private const CONFIRMED = ['confirmed_by_patient', 'confirmed_by_call'];
 
-    public function index(Request $request): Response
+    public function index(Request $request, NotificationFeedService $feed): Response
     {
         $user = $request->user();
         $today = CarbonImmutable::today();
@@ -44,6 +45,7 @@ class DashboardController extends Controller
 
         return Inertia::render('panels/doctor/dashboard', [
             'kpis' => $kpis,
+            'recent_notifications' => $feed->recent($user, 6),
             'today_schedule' => $base()
                 ->whereDate('appointment_day', $today)
                 ->with('patient:id,first_name,last_name,phone')

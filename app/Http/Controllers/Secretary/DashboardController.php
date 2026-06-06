@@ -8,7 +8,9 @@ use App\Models\MessageLog;
 use App\Models\Payment;
 use App\Models\SecretaryChecklistCustomItem;
 use App\Models\SecretaryChecklistItem;
+use App\Services\Notifications\NotificationFeedService;
 use Carbon\CarbonImmutable;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Inertia\Inertia;
@@ -33,7 +35,7 @@ class DashboardController extends Controller
      */
     private const DAY_START_HOUR = 8;
 
-    public function index(Request $request): Response
+    public function index(Request $request, NotificationFeedService $feed): Response
     {
         $user = $request->user();
         $clinicId = $user->clinic_id;
@@ -66,6 +68,7 @@ class DashboardController extends Controller
 
         return Inertia::render('panels/secretary/dashboard', [
             'kpis' => $kpis,
+            'recent_notifications' => $feed->recent($user, 6),
             'schedule' => $this->schedule($clinicId, $today),
             'waiting_room' => $this->waitingRoom($clinicId, $today, $now),
             'whatsapp' => $this->whatsapp($clinicId),
@@ -81,6 +84,27 @@ class DashboardController extends Controller
                 ->orderBy('created_at')
                 ->get(['id', 'label'])
                 ->all(),
+        ]);
+    }
+
+    /**
+     * Advance a waiting-room patient to the next stage — arrived → in
+     * consultation (in_progress) → completed — without leaving the dashboard.
+     */
+    public function advanceWaitingRoom(Request $request, string $locale, Appointment $appointment): RedirectResponse
+    {
+        unset($locale);
+
+        $this->authorize('update', $appointment);
+
+        abort_unless($appointment->clinic_id === $request->user()->clinic_id, 403);
+
+        $appointment->status = $appointment->status === 'arrived' ? 'in_progress' : 'completed';
+        $appointment->save();
+
+        return back()->with('toast', [
+            'type' => 'success',
+            'message' => __('appointments.updated'),
         ]);
     }
 

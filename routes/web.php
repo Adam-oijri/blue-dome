@@ -15,6 +15,9 @@ use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\LabOrderController;
 use App\Http\Controllers\MedicalRecordController;
 use App\Http\Controllers\MedicationController;
+use App\Http\Controllers\MessageController;
+use App\Http\Controllers\NewsletterController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\Patient\VitalSignsController;
 use App\Http\Controllers\PatientController;
 use App\Http\Controllers\PaymentController;
@@ -81,15 +84,25 @@ Route::prefix('{locale}')
             'canRegister' => Features::enabled(Features::registration()),
         ])->name('home');
 
+        // Public landing-page newsletter opt-in (emails a sign-in link).
+        Route::post('subscribe', [NewsletterController::class, 'store'])
+            ->middleware('throttle:5,1')
+            ->name('newsletter.subscribe');
+
         // Public, token-secured staff invitation acceptance.
         Route::get('invite/{token}', [InvitationController::class, 'show'])
             ->name('invitations.show');
         Route::post('invite/{token}', [InvitationController::class, 'accept'])
             ->name('invitations.accept');
 
+        // Trial-lapsed landing — authenticated + verified but intentionally
+        // OUTSIDE the clinic.active gate (else EnsureClinicActive would loop
+        // redirecting here). Logout lives on Fortify's own ungated route.
         Route::middleware(['auth', 'verified'])->group(function (): void {
-            Route::inertia('dashboard', 'dashboard')->name('dashboard');
+            Route::inertia('trial-expired', 'auth/trial-expired')->name('trial-expired');
+        });
 
+        Route::middleware(['auth', 'verified', 'clinic.active'])->group(function (): void {
             Route::middleware('role:super_admin')->prefix('super-admin')->name('super-admin.')->group(function (): void {
                 Route::get('/', [SuperAdminDashboardController::class, 'index'])->name('dashboard');
 
@@ -194,12 +207,15 @@ Route::prefix('{locale}')
 
             Route::middleware('role:secretary')->prefix('secretary')->name('secretary.')->group(function (): void {
                 Route::get('/', [SecretaryDashboardController::class, 'index'])->name('dashboard');
+                Route::post('waiting-room/{appointment}/advance', [SecretaryDashboardController::class, 'advanceWaitingRoom'])
+                    ->name('waiting-room.advance');
                 Route::post('checklist', [SecretaryChecklistController::class, 'toggle'])->name('checklist.toggle');
                 Route::post('checklist/items', [SecretaryChecklistController::class, 'storeItem'])->name('checklist.items.store');
                 Route::delete('checklist/items/{item}', [SecretaryChecklistController::class, 'destroyItem'])->name('checklist.items.destroy');
                 Route::get('follow-up', [FollowUpController::class, 'index'])->name('follow-up');
                 Route::get('appointments', [SecretaryAppointmentsController::class, 'index'])->name('appointments');
                 Route::get('patients', [SecretaryPatientsController::class, 'index'])->name('patients');
+                Route::get('patients/export', [SecretaryPatientsController::class, 'export'])->name('patients.export');
                 Route::get('walk-ins', [SecretaryWalkInsController::class, 'index'])->name('walkins');
                 Route::get('whatsapp', [SecretaryWhatsAppController::class, 'index'])->name('whatsapp');
                 Route::get('billing', [SecretaryBillingController::class, 'index'])->name('billing');
@@ -207,13 +223,32 @@ Route::prefix('{locale}')
                 Route::get('doctors', [SecretaryDoctorsController::class, 'index'])->name('doctors');
                 Route::get('branches', [SecretaryBranchesController::class, 'index'])->name('branches');
                 Route::get('reports', [SecretaryReportsController::class, 'index'])->name('reports');
+                Route::get('reports/export', [SecretaryReportsController::class, 'export'])->name('reports.export');
                 Route::get('settings', [SecretarySettingsController::class, 'edit'])->name('settings');
             });
 
             require __DIR__.'/settings.php';
 
+            // Internal staff chat — clinic channel + 1:1 DMs between a clinic's
+            // doctor(s) and secretary(ies), plus cross-clinic DMs with the
+            // platform super admin. Near-realtime via the JSON poller.
             Route::middleware('role:super_admin,doctor,secretary')->group(function (): void {
-                Route::resource('patients', PatientController::class);
+                Route::get('messages', [MessageController::class, 'index'])->name('messages.index');
+                Route::get('messages/poll', [MessageController::class, 'poll'])->name('messages.poll');
+                Route::post('messages', [MessageController::class, 'store'])->name('messages.store');
+                Route::post('messages/start', [MessageController::class, 'start'])->name('messages.start');
+                Route::post('messages/{conversation}/read', [MessageController::class, 'read'])->name('messages.read');
+            });
+
+            Route::middleware('role:super_admin,doctor,secretary')->group(function (): void {
+                // In-app notification feed (bell dropdown + dashboard panel).
+                Route::get('notifications', [NotificationController::class, 'index'])->name('notifications.index');
+                Route::get('notifications/feed', [NotificationController::class, 'feed'])->name('notifications.feed');
+                Route::post('notifications/read-all', [NotificationController::class, 'markAllRead'])->name('notifications.read-all');
+                Route::patch('notifications/{notification}/read', [NotificationController::class, 'markRead'])->name('notifications.read');
+
+                Route::resource('patients', PatientController::class)
+                    ->except(['create', 'edit']);
 
                 Route::get('patients/{patient}/vital-signs', [VitalSignsController::class, 'index'])
                     ->name('patients.vital-signs.index');
@@ -224,34 +259,46 @@ Route::prefix('{locale}')
                     ->name('appointments.form-options');
 
                 Route::resource('appointments', AppointmentController::class)
-                    ->except(['confirm']);
+                    ->except(['confirm', 'create', 'edit']);
 
                 Route::post('appointments/{appointment}/cancel', [AppointmentController::class, 'cancel'])
                     ->name('appointments.cancel');
                 Route::post('appointments/{appointment}/follow-up-call', [AppointmentController::class, 'recordFollowUp'])
                     ->name('appointments.follow-up-call');
 
-                Route::resource('medications', MedicationController::class);
-                Route::resource('prescriptions', PrescriptionController::class);
-                Route::resource('lab-orders', LabOrderController::class)->parameters(['lab-orders' => 'lab_order']);
+                Route::resource('medications', MedicationController::class)
+                    ->except(['create', 'edit']);
+                Route::resource('prescriptions', PrescriptionController::class)
+                    ->except(['create', 'edit']);
+                Route::get('prescriptions/{prescription}/pdf', [PrescriptionController::class, 'pdf'])
+                    ->name('prescriptions.pdf');
+                Route::resource('lab-orders', LabOrderController::class)
+                    ->except(['create', 'edit'])
+                    ->parameters(['lab-orders' => 'lab_order']);
                 Route::post('lab-orders/{lab_order}/results', [LabOrderController::class, 'recordResults'])
                     ->name('lab-orders.results');
                 Route::resource('medical-records', MedicalRecordController::class)
-                    ->except(['destroy'])
+                    ->except(['destroy', 'create', 'edit'])
                     ->parameters(['medical-records' => 'medical_record']);
                 Route::post('medical-records/{medical_record}/sign', [MedicalRecordController::class, 'sign'])
                     ->name('medical-records.sign');
 
-                Route::resource('invoices', InvoiceController::class);
+                Route::resource('invoices', InvoiceController::class)
+                    ->except(['create', 'edit']);
+                Route::get('invoices/{invoice}/pdf', [InvoiceController::class, 'pdf'])
+                    ->name('invoices.pdf');
                 Route::post('payments', [PaymentController::class, 'store'])->name('payments.store');
                 Route::post('payments/{payment}/refund', [PaymentController::class, 'refund'])
                     ->name('payments.refund');
-                Route::resource('expenses', ExpenseController::class);
-                Route::resource('vendors', VendorController::class);
+                Route::resource('expenses', ExpenseController::class)
+                    ->except(['create', 'edit']);
+                Route::resource('vendors', VendorController::class)
+                    ->except(['create', 'edit']);
 
                 Route::get('inventory/alerts', [InventoryController::class, 'alerts'])
                     ->name('inventory.alerts');
                 Route::resource('inventory', InventoryController::class)
+                    ->except(['create', 'edit'])
                     ->parameters(['inventory' => 'inventory']);
                 Route::post('inventory/{inventory}/transactions', [InventoryTransactionController::class, 'store'])
                     ->name('inventory.transactions.store');
@@ -263,6 +310,8 @@ Route::prefix('{locale}')
                     ->except(['create', 'edit', 'update']);
                 Route::get('documents/{document}/download', [DocumentController::class, 'download'])
                     ->name('documents.download');
+                Route::get('documents/{document}/preview', [DocumentController::class, 'preview'])
+                    ->name('documents.preview');
             });
         });
     });

@@ -40,13 +40,6 @@ class ExpenseController extends Controller
         ]);
     }
 
-    public function create(): Response
-    {
-        $this->authorize('create', Expense::class);
-
-        return Inertia::render('expenses/create');
-    }
-
     public function store(StoreExpenseRequest $request): RedirectResponse
     {
         Expense::create($request->validated() + [
@@ -66,16 +59,6 @@ class ExpenseController extends Controller
         $expense->load(['vendor:id,vendor_name', 'createdBy:id,first_name,last_name']);
 
         return Inertia::render('expenses/show', [
-            'expense' => $expense,
-        ]);
-    }
-
-    public function edit(string $locale, Expense $expense): Response
-    {
-        unset($locale);
-        $this->authorize('update', $expense);
-
-        return Inertia::render('expenses/edit', [
             'expense' => $expense,
         ]);
     }

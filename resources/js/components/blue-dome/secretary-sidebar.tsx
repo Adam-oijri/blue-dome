@@ -17,6 +17,7 @@ import type { ComponentType } from 'react';
 
 import { BrandIconMark } from '@/components/blue-dome/brand-icon-mark';
 import { SidebarUserCard } from '@/components/blue-dome/sidebar-user-card';
+import { useMessagesPoller } from '@/components/blue-dome/use-messages-poller';
 import {
     Sidebar,
     SidebarContent,
@@ -33,6 +34,7 @@ import {
 import { useSecretaryLang } from '@/lib/i18n/secretary-context';
 import { useLocale } from '@/lib/i18n/use-locale';
 import { cn } from '@/lib/utils';
+import messages from '@/routes/messages';
 import secretary from '@/routes/secretary';
 
 type NavEntry = {
@@ -58,6 +60,9 @@ export function SecretarySidebar() {
     const { t } = useSecretaryLang();
     const { url } = usePage();
     const { slug: locale } = useLocale();
+    const unreadMessages = usePage().props.messages?.unread ?? 0;
+
+    useMessagesPoller();
 
     const overview: NavEntry[] = [
         {
@@ -87,6 +92,18 @@ export function SecretarySidebar() {
             label: t.nav_walkins,
             href: secretary.walkins.url({ locale }),
             icon: UserPlus,
+        },
+        {
+            key: 'messages',
+            label: t.nav_messages,
+            href: messages.index.url({ locale }),
+            icon: MessageCircle,
+            badge:
+                unreadMessages > 0
+                    ? unreadMessages > 99
+                        ? '99+'
+                        : String(unreadMessages)
+                    : undefined,
         },
         {
             key: 'whatsapp',

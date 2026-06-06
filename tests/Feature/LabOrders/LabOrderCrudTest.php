@@ -157,7 +157,7 @@ it('attaches uploaded images when editing a lab order', function () {
     Storage::disk('local')->assertExists($doc->file_path);
 });
 
-it('lists attached images on the lab order show page', function () {
+it('lists attached images and PDFs on the lab order show page', function () {
     $doctor = User::factory()->doctor()->create(['clinic_id' => $this->clinic->id]);
     $order = LabOrder::factory()->create([
         'clinic_id' => $this->clinic->id,
@@ -165,29 +165,33 @@ it('lists attached images on the lab order show page', function () {
         'doctor_id' => $doctor->id,
     ]);
 
-    Document::create([
-        'clinic_id' => $this->clinic->id,
-        'document_name' => 'result.jpg',
-        'document_type' => 'lab_result',
-        'file_name' => 'result.jpg',
-        'file_path' => "clinics/{$this->clinic->id}/result.jpg",
-        'mime_type' => 'image/jpeg',
-        'entity_type' => 'LabOrder',
-        'entity_id' => $order->id,
-        'is_private' => true,
-        'uploaded_by' => $doctor->id,
-        'uploaded_at' => now(),
-    ]);
+    foreach ([
+        ['name' => 'result.jpg', 'mime' => 'image/jpeg'],
+        ['name' => 'report.pdf', 'mime' => 'application/pdf'],
+    ] as $file) {
+        Document::create([
+            'clinic_id' => $this->clinic->id,
+            'document_name' => $file['name'],
+            'document_type' => 'lab_result',
+            'file_name' => $file['name'],
+            'file_path' => "clinics/{$this->clinic->id}/{$file['name']}",
+            'mime_type' => $file['mime'],
+            'entity_type' => 'LabOrder',
+            'entity_id' => $order->id,
+            'is_private' => true,
+            'uploaded_by' => $doctor->id,
+            'uploaded_at' => now(),
+        ]);
+    }
 
     $this->actingAs($doctor)
         ->get(route('lab-orders.show', $order))
         ->assertInertia(fn ($page) => $page
             ->component('lab-orders/show')
-            ->has('images', 1)
-            ->where('images.0.file_name', 'result.jpg'));
+            ->has('images', 2));
 });
 
-it('rejects a non-image upload on a lab order', function () {
+it('accepts a PDF upload and attaches it as a document', function () {
     Storage::fake('local');
     $doctor = User::factory()->doctor()->create(['clinic_id' => $this->clinic->id]);
 
@@ -195,5 +199,27 @@ it('rejects a non-image upload on a lab order', function () {
         'patient_id' => $this->patient->id,
         'items' => [['test_name' => 'NFS']],
         'images' => [UploadedFile::fake()->create('notes.pdf', 100, 'application/pdf')],
+    ])->assertSessionHasNoErrors();
+
+    $labOrder = LabOrder::query()->where('patient_id', $this->patient->id)->firstOrFail();
+
+    $doc = Document::query()
+        ->where('entity_type', 'LabOrder')
+        ->where('entity_id', $labOrder->id)
+        ->firstOrFail();
+
+    expect($doc->mime_type)->toBe('application/pdf');
+    expect($doc->document_type)->toBe('lab_result');
+    Storage::disk('local')->assertExists($doc->file_path);
+});
+
+it('rejects a disallowed file type on a lab order', function () {
+    Storage::fake('local');
+    $doctor = User::factory()->doctor()->create(['clinic_id' => $this->clinic->id]);
+
+    $this->actingAs($doctor)->post(route('lab-orders.store'), [
+        'patient_id' => $this->patient->id,
+        'items' => [['test_name' => 'NFS']],
+        'images' => [UploadedFile::fake()->create('malware.txt', 10, 'text/plain')],
     ])->assertSessionHasErrors('images.0');
 });

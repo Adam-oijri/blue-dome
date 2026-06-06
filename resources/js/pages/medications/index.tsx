@@ -1,4 +1,4 @@
-import { Head, router } from '@inertiajs/react';
+import { Head, router, usePage } from '@inertiajs/react';
 import { Pencil, Pill, Plus, Search, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -24,6 +24,9 @@ import medications from '@/routes/medications';
 
 type MedicationRow = EditableMedication;
 
+/** Roles allowed to create/edit/delete medications (doctors are read-only). */
+const EDIT_ROLES = ['super_admin', 'secretary'];
+
 type Paginated<T> = {
     data: T[];
     total: number;
@@ -41,6 +44,8 @@ export default function MedicationsIndex({
 }) {
     const { t } = useDoctorLang();
     const { slug: locale } = useLocale();
+    const role = usePage().props.auth.user.role;
+    const canEdit = EDIT_ROLES.includes(role);
     const [q, setQ] = useState(filters.q ?? '');
 
     const search = (e: React.FormEvent): void => {
@@ -76,15 +81,17 @@ export default function MedicationsIndex({
                     title={t.medications}
                     description={`${medicationList.total} in formulary`}
                     actions={
-                        <CreateMedicationsSheet>
-                            <Button
-                                size="sm"
-                                className="gap-2 bg-olive-600 text-white hover:bg-olive-700"
-                            >
-                                <Plus className="size-3.5" />
-                                {t.new_medication}
-                            </Button>
-                        </CreateMedicationsSheet>
+                        canEdit ? (
+                            <CreateMedicationsSheet>
+                                <Button
+                                    size="sm"
+                                    className="gap-2 bg-olive-600 text-white hover:bg-olive-700"
+                                >
+                                    <Plus className="size-3.5" />
+                                    {t.new_medication}
+                                </Button>
+                            </CreateMedicationsSheet>
+                        ) : undefined
                     }
                 />
 
@@ -188,29 +195,33 @@ export default function MedicationsIndex({
                                         </StatusPill>
                                     </TableCell>
                                     <TableCell>
-                                        <div className="flex items-center gap-1">
-                                            <EditMedicationsSheet
-                                                medication={med}
-                                            >
+                                        {canEdit && (
+                                            <div className="flex items-center gap-1">
+                                                <EditMedicationsSheet
+                                                    medication={med}
+                                                >
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className="size-7"
+                                                        aria-label={
+                                                            t.edit_medication
+                                                        }
+                                                    >
+                                                        <Pencil className="size-3.5" />
+                                                    </Button>
+                                                </EditMedicationsSheet>
                                                 <Button
                                                     variant="ghost"
                                                     size="icon"
-                                                    className="size-7"
-                                                    aria-label={t.edit_medication}
+                                                    className="size-7 text-danger hover:text-danger"
+                                                    aria-label={t.delete_action}
+                                                    onClick={() => destroy(med)}
                                                 >
-                                                    <Pencil className="size-3.5" />
+                                                    <Trash2 className="size-3.5" />
                                                 </Button>
-                                            </EditMedicationsSheet>
-                                            <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                className="size-7 text-danger hover:text-danger"
-                                                aria-label={t.delete_action}
-                                                onClick={() => destroy(med)}
-                                            >
-                                                <Trash2 className="size-3.5" />
-                                            </Button>
-                                        </div>
+                                            </div>
+                                        )}
                                     </TableCell>
                                 </TableRow>
                             ))}

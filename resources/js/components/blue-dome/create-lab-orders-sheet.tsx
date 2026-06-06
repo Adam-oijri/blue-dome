@@ -70,9 +70,11 @@ function optionLabel(option: Option): string {
 export function CreateLabOrdersSheet({
     children,
     patients,
+    external_labs = [],
 }: {
     children: ReactNode;
     patients: Array<{ id: string; [k: string]: unknown }>;
+    external_labs?: Array<{ id: string; lab_name: string | null }>;
 }) {
     const { t } = useDoctorLang();
     const { slug: locale } = useLocale();
@@ -80,6 +82,7 @@ export function CreateLabOrdersSheet({
 
     const form = useForm<{
         patient_id: string;
+        external_lab_id: string;
         order_date: string;
         urgency: string;
         fasting_required: boolean;
@@ -89,6 +92,7 @@ export function CreateLabOrdersSheet({
         images: File[];
     }>({
         patient_id: '',
+        external_lab_id: '',
         order_date: '',
         urgency: 'routine',
         fasting_required: false,
@@ -171,6 +175,26 @@ export function CreateLabOrdersSheet({
                             ))}
                         </select>
                         <InputError message={err.patient_id} />
+                    </div>
+
+                    <div className="grid gap-2">
+                        <Label htmlFor="external_lab_id">{t.lab_col}</Label>
+                        <select
+                            id="external_lab_id"
+                            value={form.data.external_lab_id}
+                            onChange={(e) =>
+                                form.setData('external_lab_id', e.target.value)
+                            }
+                            className={FIELD_CLASS}
+                        >
+                            <option value="">{t.in_house}</option>
+                            {external_labs.map((lab) => (
+                                <option key={lab.id} value={lab.id}>
+                                    {lab.lab_name ?? '—'}
+                                </option>
+                            ))}
+                        </select>
+                        <InputError message={err.external_lab_id} />
                     </div>
 
                     <div className="grid grid-cols-2 gap-3">
@@ -257,12 +281,12 @@ export function CreateLabOrdersSheet({
                     </div>
 
                     <div className="grid gap-2">
-                        <Label htmlFor="images">Images</Label>
+                        <Label htmlFor="images">Attachments (images / PDF)</Label>
                         <input
                             id="images"
                             type="file"
                             multiple
-                            accept="image/*"
+                            accept="image/*,application/pdf"
                             onChange={(e) =>
                                 form.setData(
                                     'images',
@@ -273,7 +297,7 @@ export function CreateLabOrdersSheet({
                         />
                         {form.data.images.length > 0 && (
                             <p className="text-[12px] text-muted-foreground">
-                                {form.data.images.length} image(s) selected
+                                {form.data.images.length} file(s) selected
                             </p>
                         )}
                         <InputError message={err.images} />

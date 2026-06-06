@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\Document\StoreDocumentRequest;
 use App\Models\Document;
+use App\Models\DocumentFolder;
+use App\Models\Patient;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -41,6 +43,14 @@ class DocumentController extends Controller
         return Inertia::render('documents/index', [
             'documents' => $query->paginate(25)->withQueryString(),
             'filters' => ['folder_id' => $folderId ?: null],
+            'patients' => Patient::query()
+                ->where('clinic_id', $request->user()->clinic_id)
+                ->orderBy('first_name')
+                ->get(['id', 'first_name', 'last_name']),
+            'folders' => DocumentFolder::query()
+                ->where('clinic_id', $request->user()->clinic_id)
+                ->orderBy('folder_name')
+                ->get(['id', 'folder_name']),
         ]);
     }
 
@@ -58,7 +68,7 @@ class DocumentController extends Controller
             $storedName,
         );
 
-        $document = Document::create([
+        Document::create([
             'clinic_id' => $clinicId,
             'folder_id' => $request->input('folder_id'),
             'document_name' => $request->input('document_name'),
@@ -79,8 +89,7 @@ class DocumentController extends Controller
             'uploaded_at' => now(),
         ]);
 
-        return redirect()
-            ->route('documents.show', $document)
+        return back()
             ->with('toast', ['type' => 'success', 'message' => __('documents.uploaded')]);
     }
 
@@ -104,6 +113,20 @@ class DocumentController extends Controller
         abort_unless(Storage::disk(self::DISK)->exists($document->file_path), 404);
 
         return Storage::disk(self::DISK)->download($document->file_path, $document->file_name);
+    }
+
+    /**
+     * Serve the file inline (Content-Disposition: inline) so the browser can
+     * preview PDFs/images in a new tab rather than forcing a download.
+     */
+    public function preview(string $locale, Document $document): StreamedResponse
+    {
+        unset($locale);
+        $this->authorize('view', $document);
+
+        abort_unless(Storage::disk(self::DISK)->exists($document->file_path), 404);
+
+        return Storage::disk(self::DISK)->response($document->file_path, $document->file_name);
     }
 
     public function destroy(string $locale, Document $document): RedirectResponse

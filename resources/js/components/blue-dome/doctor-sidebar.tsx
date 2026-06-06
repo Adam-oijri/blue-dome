@@ -3,21 +3,21 @@ import {
     Activity,
     Calendar,
     FlaskConical,
+    FolderOpen,
     Home,
+    MessageCircle,
     Package,
     Pill,
-    Receipt,
     Settings as SettingsIcon,
     Stethoscope,
     Tablets,
-    Truck,
     Users,
-    Wallet,
 } from 'lucide-react';
 import type { ComponentType } from 'react';
 
 import { BrandIconMark } from '@/components/blue-dome/brand-icon-mark';
 import { SidebarUserCard } from '@/components/blue-dome/sidebar-user-card';
+import { useMessagesPoller } from '@/components/blue-dome/use-messages-poller';
 import {
     Sidebar,
     SidebarContent,
@@ -35,15 +35,14 @@ import { useDoctorLang } from '@/lib/i18n/doctor-context';
 import { useLocale } from '@/lib/i18n/use-locale';
 import { cn } from '@/lib/utils';
 import doctor from '@/routes/doctor';
-import expenses from '@/routes/expenses';
+import documents from '@/routes/documents';
 import inventory from '@/routes/inventory';
-import invoices from '@/routes/invoices';
 import labOrders from '@/routes/lab-orders';
 import medicalRecords from '@/routes/medical-records';
 import medications from '@/routes/medications';
+import messages from '@/routes/messages';
 import patients from '@/routes/patients';
 import prescriptions from '@/routes/prescriptions';
-import vendors from '@/routes/vendors';
 
 type NavEntry = {
     key: string;
@@ -71,6 +70,9 @@ export function DoctorSidebar() {
     const { url } = usePage();
     const { slug: locale } = useLocale();
     const calendarUrl = doctor.calendar.url({ locale });
+    const unreadMessages = usePage().props.messages?.unread ?? 0;
+
+    useMessagesPoller();
 
     const workspace: NavEntry[] = [
         {
@@ -92,6 +94,18 @@ export function DoctorSidebar() {
             label: t.patients,
             href: patients.index.url({ locale }),
             icon: Users,
+        },
+        {
+            key: 'messages',
+            label: t.messages,
+            href: messages.index.url({ locale }),
+            icon: MessageCircle,
+            badge:
+                unreadMessages > 0
+                    ? unreadMessages > 99
+                        ? '99+'
+                        : String(unreadMessages)
+                    : undefined,
         },
         {
             key: 'confirmations',
@@ -124,12 +138,6 @@ export function DoctorSidebar() {
 
     const admin: NavEntry[] = [
         {
-            key: 'invoices',
-            label: t.invoices,
-            href: invoices.index.url({ locale }),
-            icon: Receipt,
-        },
-        {
             key: 'inventory',
             label: t.inventory,
             href: inventory.index.url({ locale }),
@@ -142,16 +150,10 @@ export function DoctorSidebar() {
             icon: Tablets,
         },
         {
-            key: 'expenses',
-            label: t.expenses,
-            href: expenses.index.url({ locale }),
-            icon: Wallet,
-        },
-        {
-            key: 'vendors',
-            label: t.vendors,
-            href: vendors.index.url({ locale }),
-            icon: Truck,
+            key: 'documents',
+            label: t.documents,
+            href: documents.index.url({ locale }),
+            icon: FolderOpen,
         },
         {
             key: 'settings',

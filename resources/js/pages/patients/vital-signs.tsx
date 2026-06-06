@@ -10,6 +10,9 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import { useDoctorLang } from '@/lib/i18n/doctor-context';
+import { useLocaleSlug } from '@/lib/i18n/use-locale';
+import patients from '@/routes/patients';
+import patientVitalSigns from '@/routes/patients/vital-signs';
 
 interface VitalSign {
     id: string;
@@ -48,6 +51,7 @@ const LABEL_CLASS = 'text-xs text-muted-foreground uppercase';
 
 export default function PatientVitalSigns({ patient, vital_signs }: Props) {
     const { t } = useDoctorLang();
+    const locale = useLocaleSlug();
 
     return (
         <>
@@ -57,7 +61,7 @@ export default function PatientVitalSigns({ patient, vital_signs }: Props) {
             <div className="flex h-full flex-col p-6">
                 <div className="mb-4">
                     <Link
-                        href={`/patients/${patient.id}`}
+                        href={patients.show.url({ locale, patient: patient.id })}
                         className="text-xs text-muted-foreground hover:text-foreground hover:underline"
                     >
                         ← {t.back_to_patient}
@@ -73,7 +77,10 @@ export default function PatientVitalSigns({ patient, vital_signs }: Props) {
                         {t.record_new_reading}
                     </h2>
                     <Form
-                        action={`/patients/${patient.id}/vital-signs`}
+                        action={patientVitalSigns.store.url({
+                            locale,
+                            patient: patient.id,
+                        })}
                         method="post"
                         className="grid grid-cols-3 gap-3 text-sm"
                     >

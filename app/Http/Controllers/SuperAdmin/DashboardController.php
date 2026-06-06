@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\SuperAdmin;
 
 use App\Http\Controllers\Controller;
+use App\Services\Notifications\NotificationFeedService;
 use App\Services\SuperAdminMetricsService;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
@@ -20,7 +21,7 @@ class DashboardController extends Controller
 
     public function __construct(private readonly SuperAdminMetricsService $metrics) {}
 
-    public function index(Request $request): Response
+    public function index(Request $request, NotificationFeedService $feed): Response
     {
         $period = in_array($request->query('period'), self::PERIODS, true)
             ? (string) $request->query('period')
@@ -30,6 +31,7 @@ class DashboardController extends Controller
 
         return Inertia::render('panels/super-admin/dashboard', [
             'period' => $period,
+            'recent_notifications' => $feed->recent($request->user(), 6),
             'metrics' => [
                 'total_clinics' => $this->metrics->totalClinics(),
                 'active_clinics' => $this->metrics->activeClinics(),

@@ -8,7 +8,7 @@ import type { Lang } from '@/components/landing/shared/types';
 import { Button } from '@/components/ui/button';
 import { useLocale } from '@/lib/i18n/use-locale';
 import { cn } from '@/lib/utils';
-import { login } from '@/routes';
+import { login, register } from '@/routes';
 
 interface PricingTierProps {
     tier: (typeof TIERS)[number];
@@ -122,7 +122,7 @@ export function PricingTier({
                         : 'bg-navy-900 text-white hover:bg-navy-800',
                 )}
             >
-                <Link href={canRegister ? '/register' : login({ locale })}>
+                <Link href={canRegister ? register({ locale }) : login({ locale })}>
                     {tier.cta[lang]}
                     <ArrowRight className="size-3.5 transition-transform group-hover/cta:translate-x-0.5" />
                 </Link>

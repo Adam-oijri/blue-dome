@@ -7,7 +7,7 @@ test('the authenticated user is shared to the frontend with the fields the sideb
     $user = User::factory()->superAdmin()->create();
 
     $this->actingAs($user)
-        ->get(route('dashboard'))
+        ->get(route('super-admin.dashboard'))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->where('auth.user.id', $user->id)

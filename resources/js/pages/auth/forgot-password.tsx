@@ -1,24 +1,28 @@
-// Components
-import { Form, Head } from '@inertiajs/react';
-import { LoaderCircle } from 'lucide-react';
+import { Form, Head, setLayoutProps } from '@inertiajs/react';
+
 import InputError from '@/components/input-error';
 import TextLink from '@/components/text-link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Spinner } from '@/components/ui/spinner';
+import { useAuthLang } from '@/lib/i18n/auth-context';
 import { useLocale } from '@/lib/i18n/use-locale';
 import { login } from '@/routes';
 import { email } from '@/routes/password';
 
 export default function ForgotPassword({ status }: { status?: string }) {
     const { slug: locale } = useLocale();
+    const { t } = useAuthLang();
+
+    setLayoutProps({ title: t.forgot_title, description: t.forgot_desc });
 
     return (
         <>
-            <Head title="Forgot password" />
+            <Head title={t.forgot_title} />
 
             {status && (
-                <div className="mb-4 text-center text-sm font-medium text-green-600">
+                <div className="mb-4 text-center text-sm font-medium text-success">
                     {status}
                 </div>
             )}
@@ -28,29 +32,27 @@ export default function ForgotPassword({ status }: { status?: string }) {
                     {({ processing, errors }) => (
                         <>
                             <div className="grid gap-2">
-                                <Label htmlFor="email">Email address</Label>
+                                <Label htmlFor="email">{t.email_label}</Label>
                                 <Input
                                     id="email"
                                     type="email"
                                     name="email"
                                     autoComplete="off"
                                     autoFocus
-                                    placeholder="email@example.com"
+                                    placeholder={t.email_ph}
                                 />
 
                                 <InputError message={errors.email} />
                             </div>
 
-                            <div className="my-6 flex items-center justify-start">
+                            <div className="my-6">
                                 <Button
-                                    className="w-full"
+                                    className="w-full bg-olive-600 text-white hover:bg-olive-700"
                                     disabled={processing}
                                     data-test="email-password-reset-link-button"
                                 >
-                                    {processing && (
-                                        <LoaderCircle className="h-4 w-4 animate-spin" />
-                                    )}
-                                    Email password reset link
+                                    {processing && <Spinner />}
+                                    {t.send_reset_btn}
                                 </Button>
                             </div>
                         </>
@@ -58,15 +60,10 @@ export default function ForgotPassword({ status }: { status?: string }) {
                 </Form>
 
                 <div className="space-x-1 text-center text-sm text-muted-foreground">
-                    <span>Or, return to</span>
-                    <TextLink href={login({ locale })}>log in</TextLink>
+                    <span>{t.or_return_to}</span>{' '}
+                    <TextLink href={login({ locale })}>{t.log_in_link}</TextLink>
                 </div>
             </div>
         </>
     );
 }
-
-ForgotPassword.layout = {
-    title: 'Forgot password',
-    description: 'Enter your email to receive a password reset link',
-};

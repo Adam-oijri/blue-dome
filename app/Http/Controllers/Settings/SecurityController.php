@@ -5,30 +5,23 @@ namespace App\Http\Controllers\Settings;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Settings\PasswordUpdateRequest;
 use App\Http\Requests\Settings\TwoFactorAuthenticationRequest;
+use App\Notifications\PasswordChangedNotification;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Routing\Controllers\HasMiddleware;
-use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
 use Inertia\Inertia;
 use Inertia\Response;
 use Laravel\Fortify\Features;
 
-class SecurityController extends Controller implements HasMiddleware
+class SecurityController extends Controller
 {
     /**
-     * Get the middleware that should be assigned to the controller.
-     */
-    public static function middleware(): array
-    {
-        return Features::canManageTwoFactorAuthentication()
-            && Features::optionEnabled(Features::twoFactorAuthentication(), 'confirmPassword')
-                ? [new Middleware('password.confirm', only: ['edit'])]
-                : [];
-    }
-
-    /**
      * Show the user's security settings page.
+     *
+     * Opening this page does NOT require password confirmation — only the
+     * actual two-factor mutations do (Fortify attaches `password.confirm` to
+     * the two-factor.enable/disable/qr-code/recovery-codes routes while
+     * `confirmPassword` stays enabled in config/fortify.php).
      */
     public function edit(TwoFactorAuthenticationRequest $request): Response
     {
@@ -55,6 +48,8 @@ class SecurityController extends Controller implements HasMiddleware
         $request->user()->forceFill([
             'password_hash' => Hash::make($request->string('password')->toString()),
         ])->save();
+
+        $request->user()->notify(new PasswordChangedNotification);
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Password updated.')]);
 

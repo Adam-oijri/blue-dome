@@ -60,13 +60,6 @@ class AppointmentController extends Controller
         ]);
     }
 
-    public function create(): Response
-    {
-        $this->authorize('create', Appointment::class);
-
-        return Inertia::render('appointments/create');
-    }
-
     public function store(StoreAppointmentRequest $request): RedirectResponse
     {
         Appointment::create($request->validated() + [
@@ -118,16 +111,6 @@ class AppointmentController extends Controller
                     ])
                     ->get()
             ),
-        ]);
-    }
-
-    public function edit(string $locale, Appointment $appointment): Response
-    {
-        unset($locale);
-        $this->authorize('update', $appointment);
-
-        return Inertia::render('appointments/edit', [
-            'appointment' => $appointment,
         ]);
     }
 

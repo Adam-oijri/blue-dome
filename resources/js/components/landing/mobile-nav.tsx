@@ -1,4 +1,4 @@
-import { Link } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Menu, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -8,7 +8,8 @@ import { NAV } from '@/components/landing/shared/content';
 import type { Lang } from '@/components/landing/shared/types';
 import { Button } from '@/components/ui/button';
 import { useLocale } from '@/lib/i18n/use-locale';
-import { dashboard, login } from '@/routes';
+import { roleHomeUrl } from '@/lib/role-home';
+import { login, register } from '@/routes';
 
 interface MobileNavProps {
     lang: Lang;
@@ -19,6 +20,7 @@ interface MobileNavProps {
 export function MobileNav({ lang, authed, canRegister }: MobileNavProps) {
     const [open, setOpen] = useState(false);
     const { slug: locale } = useLocale();
+    const role = usePage().props.auth?.user?.role;
 
     useEffect(() => {
         if (!open) {
@@ -108,7 +110,7 @@ export function MobileNav({ lang, authed, canRegister }: MobileNavProps) {
                                         asChild
                                         className="w-full bg-navy-900 text-white hover:bg-navy-800"
                                     >
-                                        <Link href={dashboard({ locale })}>
+                                        <Link href={roleHomeUrl(role, locale)}>
                                             Dashboard
                                         </Link>
                                     </Button>
@@ -130,7 +132,7 @@ export function MobileNav({ lang, authed, canRegister }: MobileNavProps) {
                                                 asChild
                                                 className="w-full bg-navy-900 text-white hover:bg-navy-800"
                                             >
-                                                <Link href="/register">
+                                                <Link href={register({ locale })}>
                                                     {lang === 'fr'
                                                         ? 'Démarrer'
                                                         : 'Get started'}

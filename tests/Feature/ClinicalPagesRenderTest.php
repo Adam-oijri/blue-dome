@@ -79,21 +79,21 @@ it('renders the prescriptions index with data and filters', function () {
         );
 });
 
-it('renders the prescription create form with patient and medication options', function () {
+it('exposes patient and medication options on the prescriptions index for the create sheet', function () {
     Patient::factory()->create(['clinic_id' => $this->clinic->id]);
     Medication::factory()->create(['clinic_id' => $this->clinic->id, 'is_active' => true]);
 
     $this->actingAs($this->doctor)
-        ->get(route('prescriptions.create'))
+        ->get(route('prescriptions.index'))
         ->assertOk()
         ->assertInertia(fn ($page) => $page
-            ->component('prescriptions/create')
+            ->component('prescriptions/index')
             ->has('patients', 1)
-            ->has('medications', 1)
+            ->has('medicationSuggestions')
         );
 });
 
-it('renders the prescription show with items and edit form', function () {
+it('renders the prescription show with items', function () {
     $rx = Prescription::factory()->create([
         'clinic_id' => $this->clinic->id,
         'doctor_id' => $this->doctor->id,
@@ -107,14 +107,6 @@ it('renders the prescription show with items and edit form', function () {
             ->component('prescriptions/show')
             ->where('prescription.id', $rx->id)
             ->has('prescription.items')
-        );
-
-    $this->actingAs($this->doctor)
-        ->get(route('prescriptions.edit', $rx))
-        ->assertOk()
-        ->assertInertia(fn ($page) => $page
-            ->component('prescriptions/edit')
-            ->where('prescription.id', $rx->id)
         );
 });
 
@@ -136,19 +128,19 @@ it('renders the medical-records index with data and filters', function () {
         );
 });
 
-it('renders the medical record create form with patient options', function () {
+it('exposes patient options on the medical-records index for the create sheet', function () {
     Patient::factory()->create(['clinic_id' => $this->clinic->id]);
 
     $this->actingAs($this->doctor)
-        ->get(route('medical-records.create'))
+        ->get(route('medical-records.index'))
         ->assertOk()
         ->assertInertia(fn ($page) => $page
-            ->component('medical-records/create')
+            ->component('medical-records/index')
             ->has('patients', 1)
         );
 });
 
-it('renders the medical record show and edit with decrypted clinical props', function () {
+it('renders the medical record show with decrypted clinical props', function () {
     $record = MedicalRecord::factory()->create([
         'clinic_id' => $this->clinic->id,
         'recorded_by' => $this->doctor->id,
@@ -164,14 +156,5 @@ it('renders the medical record show and edit with decrypted clinical props', fun
             ->where('record.id', $record->id)
             ->has('clinical.subjective')
             ->has('clinical.plan')
-        );
-
-    $this->actingAs($this->doctor)
-        ->get(route('medical-records.edit', $record))
-        ->assertOk()
-        ->assertInertia(fn ($page) => $page
-            ->component('medical-records/edit')
-            ->where('record.id', $record->id)
-            ->has('clinical')
         );
 });

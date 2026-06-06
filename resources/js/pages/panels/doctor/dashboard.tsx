@@ -14,7 +14,9 @@ import {
 } from 'lucide-react';
 
 import { CreateAppointmentSheet } from '@/components/blue-dome/create-appointment-sheet';
+import { CreatePatientsSheet } from '@/components/blue-dome/create-patients-sheet';
 import { KpiCard } from '@/components/blue-dome/kpi-card';
+import { NotificationsPanel } from '@/components/blue-dome/notifications-panel';
 import { PageHeader } from '@/components/blue-dome/page-header';
 import { SectionCard } from '@/components/blue-dome/section-card';
 import { StatusPill } from '@/components/blue-dome/status-pill';
@@ -39,6 +41,7 @@ import labOrders from '@/routes/lab-orders';
 import medicalRecords from '@/routes/medical-records';
 import patients from '@/routes/patients';
 import prescriptions from '@/routes/prescriptions';
+import type { NotificationItem } from '@/types/notifications';
 
 type Person = {
     first_name: string | null;
@@ -80,6 +83,7 @@ interface Props {
     today_schedule: ScheduleAppt[];
     pending_confirmations_list: PendingAppt[];
     recent_patients: RecentPatient[];
+    recent_notifications: NotificationItem[];
 }
 
 const STATUS_TONE: Record<string, StatusTone> = {
@@ -109,6 +113,7 @@ export default function DoctorDashboard({
     today_schedule,
     pending_confirmations_list,
     recent_patients,
+    recent_notifications,
 }: Props) {
     const { t } = useDoctorLang();
     const { slug: locale } = useLocale();
@@ -269,6 +274,7 @@ export default function DoctorDashboard({
                     </SectionCard>
 
                     <div className="flex flex-col gap-4">
+                        <NotificationsPanel items={recent_notifications} />
                         {inProgress && (
                             <SectionCard
                                 title={t.in_progress}
@@ -295,15 +301,9 @@ export default function DoctorDashboard({
                                         className="w-full gap-2 bg-navy-900 text-white hover:bg-navy-800"
                                     >
                                         <Link
-                                            href={medicalRecords.create.url(
-                                                { locale },
-                                                {
-                                                    query: {
-                                                        appointment:
-                                                            inProgress.id,
-                                                    },
-                                                },
-                                            )}
+                                            href={medicalRecords.index.url({
+                                                locale,
+                                            })}
                                         >
                                             <Clock className="size-3.5" />
                                             {t.consultations}
@@ -386,11 +386,15 @@ export default function DoctorDashboard({
                             titleIcon={<Sparkles className="size-4" />}
                             bodyClassName="grid grid-cols-2 gap-2 p-4"
                         >
-                            <QuickAction
-                                icon={UserPlus}
-                                label={t.patients}
-                                href={patients.create.url({ locale })}
-                            />
+                            <CreatePatientsSheet>
+                                <Button
+                                    variant="outline"
+                                    className="h-16 flex-col gap-1 text-xs"
+                                >
+                                    <UserPlus className="size-[18px]" />
+                                    {t.patients}
+                                </Button>
+                            </CreatePatientsSheet>
                             <CreateAppointmentSheet>
                                 <Button
                                     variant="outline"
@@ -403,12 +407,12 @@ export default function DoctorDashboard({
                             <QuickAction
                                 icon={Pill}
                                 label={t.prescriptions}
-                                href={prescriptions.create.url({ locale })}
+                                href={prescriptions.index.url({ locale })}
                             />
                             <QuickAction
                                 icon={FlaskConical}
                                 label={t.lab_orders}
-                                href={labOrders.create.url({ locale })}
+                                href={labOrders.index.url({ locale })}
                             />
                         </SectionCard>
                     </div>

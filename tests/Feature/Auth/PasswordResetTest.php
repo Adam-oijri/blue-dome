@@ -4,6 +4,7 @@ use App\Contracts\WhatsAppGateway;
 use App\Models\Clinic;
 use App\Models\User;
 use App\Models\WhatsAppIntegration;
+use App\Notifications\PasswordResetCompletedNotification;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Support\Facades\Notification;
 use Laravel\Fortify\Features;
@@ -66,6 +67,27 @@ test('password can be reset with valid token', function () {
 
         return true;
     });
+});
+
+test('completing a password reset sends a confirmation alert', function () {
+    Notification::fake();
+
+    $user = User::factory()->create();
+
+    $this->post(route('password.email'), ['email' => $user->email]);
+
+    Notification::assertSentTo($user, ResetPassword::class, function ($notification) use ($user) {
+        $this->post(route('password.update'), [
+            'token' => $notification->token,
+            'email' => $user->email,
+            'password' => 'password',
+            'password_confirmation' => 'password',
+        ])->assertSessionHasNoErrors();
+
+        return true;
+    });
+
+    Notification::assertSentTo($user, PasswordResetCompletedNotification::class);
 });
 
 test('password cannot be reset with invalid token', function () {

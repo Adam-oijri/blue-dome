@@ -13,7 +13,6 @@ test('doctor sees a working account settings page', function () {
     ]);
 
     $this->actingAs(User::factory()->doctor()->create())
-        ->withSession(['auth.password_confirmed_at' => time()])
         ->get(route('doctor.settings'))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
@@ -33,7 +32,6 @@ test('secretary sees a working account settings page', function () {
     ]);
 
     $this->actingAs(User::factory()->secretary()->create())
-        ->withSession(['auth.password_confirmed_at' => time()])
         ->get(route('secretary.settings'))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
@@ -43,7 +41,7 @@ test('secretary sees a working account settings page', function () {
         );
 });
 
-test('panel settings require password confirmation when 2FA confirmPassword is enabled', function () {
+test('panel settings open without password confirmation', function () {
     $this->skipUnlessFortifyHas(Features::twoFactorAuthentication());
 
     Features::twoFactorAuthentication([
@@ -51,9 +49,12 @@ test('panel settings require password confirmation when 2FA confirmPassword is e
         'confirmPassword' => true,
     ]);
 
+    // Opening the panel account-settings page no longer bounces to the
+    // confirm-password screen; only the embedded 2FA mutations are gated.
     $this->actingAs(User::factory()->doctor()->create())
         ->get(route('doctor.settings'))
-        ->assertRedirect(route('password.confirm'));
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page->component('panels/doctor/settings'));
 });
 
 test('doctor settings is forbidden for non-doctor roles', function () {

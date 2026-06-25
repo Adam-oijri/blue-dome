@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
+import { useSuperAdminLang } from '@/lib/i18n/super-admin-context';
 import { useLocale } from '@/lib/i18n/use-locale';
 import superAdmin from '@/routes/super-admin';
 
@@ -44,12 +45,15 @@ export default function SuperAdminClinicInvoiceEdit({
     clinic: { id: string; name: string };
     invoice: Invoice;
 }) {
+    const { t } = useSuperAdminLang();
     const { slug: locale } = useLocale();
 
     return (
         <>
             <Head
-                title={`Edit invoice ${invoice.invoice_number ?? ''} — ${clinic.name}`}
+                title={t.cl_invoice_head_edit
+                    .replace('{number}', invoice.invoice_number ?? '')
+                    .replace('{clinic}', clinic.name)}
             />
 
             <div className="px-6 py-5 lg:px-8">
@@ -68,15 +72,20 @@ export default function SuperAdminClinicInvoiceEdit({
                             })}
                         >
                             <ChevronLeft className="size-3.5" />
-                            Invoice
+                            {t.cl_invoice_crumb_invoice}
                         </Link>
                     </Button>
                     <span className="text-muted-foreground">/</span>
-                    <span className="text-[13px] font-semibold">Edit</span>
+                    <span className="text-[13px] font-semibold">
+                        {t.cl_invoice_crumb_edit}
+                    </span>
                 </div>
 
                 <PageHeader
-                    title={`Edit invoice ${invoice.invoice_number ?? ''}`}
+                    title={t.cl_invoice_title_edit.replace(
+                        '{number}',
+                        invoice.invoice_number ?? '',
+                    )}
                     description={clinic.name}
                 />
 
@@ -94,7 +103,9 @@ export default function SuperAdminClinicInvoiceEdit({
                             <>
                                 <div className="grid gap-5 sm:grid-cols-2">
                                     <div className="grid gap-2">
-                                        <Label htmlFor="status">Status</Label>
+                                        <Label htmlFor="status">
+                                            {t.cl_invoice_status}
+                                        </Label>
                                         <select
                                             id="status"
                                             name="status"
@@ -111,7 +122,7 @@ export default function SuperAdminClinicInvoiceEdit({
                                     </div>
                                     <div className="grid gap-2">
                                         <Label htmlFor="due_date">
-                                            Due date
+                                            {t.cl_invoice_due_date}
                                         </Label>
                                         <Input
                                             id="due_date"
@@ -128,7 +139,7 @@ export default function SuperAdminClinicInvoiceEdit({
                                     </div>
                                     <div className="grid gap-2">
                                         <Label htmlFor="discount_amount">
-                                            Discount amount
+                                            {t.cl_invoice_discount}
                                         </Label>
                                         <Input
                                             id="discount_amount"
@@ -145,7 +156,7 @@ export default function SuperAdminClinicInvoiceEdit({
                                     </div>
                                     <div className="grid gap-2">
                                         <Label htmlFor="tax_percentage">
-                                            Tax %
+                                            {t.cl_invoice_tax}
                                         </Label>
                                         <Input
                                             id="tax_percentage"
@@ -163,7 +174,9 @@ export default function SuperAdminClinicInvoiceEdit({
                                 </div>
 
                                 <div className="grid gap-2">
-                                    <Label htmlFor="notes">Notes</Label>
+                                    <Label htmlFor="notes">
+                                        {t.cl_invoice_notes}
+                                    </Label>
                                     <textarea
                                         id="notes"
                                         name="notes"
@@ -180,7 +193,7 @@ export default function SuperAdminClinicInvoiceEdit({
                                     className="bg-navy-900 text-white hover:bg-navy-800"
                                 >
                                     {processing && <Spinner />}
-                                    Save changes
+                                    {t.cl_invoice_submit_save}
                                 </Button>
                             </>
                         )}

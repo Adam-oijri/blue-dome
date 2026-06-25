@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
+import { useSuperAdminLang } from '@/lib/i18n/super-admin-context';
 import { useLocale } from '@/lib/i18n/use-locale';
 import superAdmin from '@/routes/super-admin';
 
@@ -43,6 +44,7 @@ export default function SuperAdminClinicPatientEdit({
     clinic: { id: string; name: string };
     patient: Patient | null;
 }) {
+    const { t } = useSuperAdminLang();
     const { slug: locale } = useLocale();
     const isEdit = patient !== null;
 
@@ -57,7 +59,10 @@ export default function SuperAdminClinicPatientEdit({
     return (
         <>
             <Head
-                title={`${isEdit ? 'Edit' : 'New'} patient — ${clinic.name}`}
+                title={(isEdit
+                    ? t.cl_patient_head_edit
+                    : t.cl_patient_head_new
+                ).replace('{clinic}', clinic.name)}
             />
 
             <div className="px-6 py-5 lg:px-8">
@@ -75,17 +80,23 @@ export default function SuperAdminClinicPatientEdit({
                             })}
                         >
                             <ChevronLeft className="size-3.5" />
-                            Patients
+                            {t.cl_patients_crumb}
                         </Link>
                     </Button>
                     <span className="text-muted-foreground">/</span>
                     <span className="text-[13px] font-semibold">
-                        {isEdit ? 'Edit' : 'New patient'}
+                        {isEdit
+                            ? t.cl_invoice_crumb_edit
+                            : t.cl_patient_crumb_new}
                     </span>
                 </div>
 
                 <PageHeader
-                    title={isEdit ? 'Edit patient' : 'New patient'}
+                    title={
+                        isEdit
+                            ? t.cl_patient_title_edit
+                            : t.cl_patient_title_new
+                    }
                     description={clinic.name}
                 />
 
@@ -100,7 +111,7 @@ export default function SuperAdminClinicPatientEdit({
                                 <div className="grid gap-5 sm:grid-cols-2">
                                     <div className="grid gap-2">
                                         <Label htmlFor="first_name">
-                                            First name
+                                            {t.cl_patient_first_name}
                                         </Label>
                                         <Input
                                             id="first_name"
@@ -116,7 +127,7 @@ export default function SuperAdminClinicPatientEdit({
                                     </div>
                                     <div className="grid gap-2">
                                         <Label htmlFor="last_name">
-                                            Last name
+                                            {t.cl_patient_last_name}
                                         </Label>
                                         <Input
                                             id="last_name"
@@ -132,7 +143,7 @@ export default function SuperAdminClinicPatientEdit({
                                     </div>
                                     <div className="grid gap-2">
                                         <Label htmlFor="date_of_birth">
-                                            Date of birth
+                                            {t.cl_patient_dob}
                                         </Label>
                                         <Input
                                             id="date_of_birth"
@@ -150,7 +161,9 @@ export default function SuperAdminClinicPatientEdit({
                                         />
                                     </div>
                                     <div className="grid gap-2">
-                                        <Label htmlFor="gender">Gender</Label>
+                                        <Label htmlFor="gender">
+                                            {t.cl_patient_gender}
+                                        </Label>
                                         <select
                                             id="gender"
                                             name="gender"
@@ -166,7 +179,9 @@ export default function SuperAdminClinicPatientEdit({
                                         <InputError message={errors.gender} />
                                     </div>
                                     <div className="grid gap-2">
-                                        <Label htmlFor="phone">Phone</Label>
+                                        <Label htmlFor="phone">
+                                            {t.cl_patient_th_phone}
+                                        </Label>
                                         <Input
                                             id="phone"
                                             name="phone"
@@ -176,7 +191,7 @@ export default function SuperAdminClinicPatientEdit({
                                     </div>
                                     <div className="grid gap-2">
                                         <Label htmlFor="phone_e164">
-                                            Phone (E.164)
+                                            {t.cl_patient_phone_e164}
                                         </Label>
                                         <Input
                                             id="phone_e164"
@@ -191,7 +206,9 @@ export default function SuperAdminClinicPatientEdit({
                                         />
                                     </div>
                                     <div className="grid gap-2">
-                                        <Label htmlFor="email">Email</Label>
+                                        <Label htmlFor="email">
+                                            {t.clinic_form_email}
+                                        </Label>
                                         <Input
                                             id="email"
                                             name="email"
@@ -202,7 +219,7 @@ export default function SuperAdminClinicPatientEdit({
                                     </div>
                                     <div className="grid gap-2">
                                         <Label htmlFor="patient_code">
-                                            Patient code
+                                            {t.cl_patient_code}
                                         </Label>
                                         <Input
                                             id="patient_code"
@@ -217,7 +234,7 @@ export default function SuperAdminClinicPatientEdit({
                                     </div>
                                     <div className="grid gap-2">
                                         <Label htmlFor="national_id">
-                                            National ID
+                                            {t.cl_patient_national_id}
                                         </Label>
                                         <Input
                                             id="national_id"
@@ -232,7 +249,7 @@ export default function SuperAdminClinicPatientEdit({
                                     </div>
                                     <div className="grid gap-2">
                                         <Label htmlFor="blood_type">
-                                            Blood type
+                                            {t.cl_patient_blood_type}
                                         </Label>
                                         <select
                                             id="blood_type"
@@ -253,7 +270,9 @@ export default function SuperAdminClinicPatientEdit({
                                         />
                                     </div>
                                     <div className="grid gap-2">
-                                        <Label htmlFor="city">City</Label>
+                                        <Label htmlFor="city">
+                                            {t.clinic_form_city}
+                                        </Label>
                                         <Input
                                             id="city"
                                             name="city"
@@ -264,7 +283,7 @@ export default function SuperAdminClinicPatientEdit({
                                     {isEdit && (
                                         <div className="grid gap-2">
                                             <Label htmlFor="is_active">
-                                                Status
+                                                {t.cl_patient_status}
                                             </Label>
                                             <select
                                                 id="is_active"
@@ -277,10 +296,10 @@ export default function SuperAdminClinicPatientEdit({
                                                 className={selectClass}
                                             >
                                                 <option value="1">
-                                                    Active
+                                                    {t.status_active}
                                                 </option>
                                                 <option value="0">
-                                                    Inactive
+                                                    {t.status_inactive}
                                                 </option>
                                             </select>
                                             <InputError
@@ -291,7 +310,9 @@ export default function SuperAdminClinicPatientEdit({
                                 </div>
 
                                 <div className="grid gap-2">
-                                    <Label htmlFor="address">Address</Label>
+                                    <Label htmlFor="address">
+                                        {t.cl_patient_address}
+                                    </Label>
                                     <Input
                                         id="address"
                                         name="address"
@@ -301,7 +322,9 @@ export default function SuperAdminClinicPatientEdit({
                                 </div>
 
                                 <div className="grid gap-2">
-                                    <Label htmlFor="notes">Notes</Label>
+                                    <Label htmlFor="notes">
+                                        {t.cl_patient_notes}
+                                    </Label>
                                     <textarea
                                         id="notes"
                                         name="notes"
@@ -318,7 +341,9 @@ export default function SuperAdminClinicPatientEdit({
                                     className="bg-navy-900 text-white hover:bg-navy-800"
                                 >
                                     {processing && <Spinner />}
-                                    {isEdit ? 'Save changes' : 'Create patient'}
+                                    {isEdit
+                                        ? t.cl_invoice_submit_save
+                                        : t.cl_patient_submit_create}
                                 </Button>
                             </>
                         )}

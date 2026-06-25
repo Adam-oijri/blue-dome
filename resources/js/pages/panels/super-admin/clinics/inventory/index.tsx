@@ -13,6 +13,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import { useSuperAdminLang } from '@/lib/i18n/super-admin-context';
 import { useLocale } from '@/lib/i18n/use-locale';
 import { Pagination } from '@/pages/panels/super-admin/users';
 import superAdmin from '@/routes/super-admin';
@@ -43,11 +44,12 @@ export default function SuperAdminClinicInventory({
     clinic: { id: string; name: string };
     inventory: Paginated<Item>;
 }) {
+    const { t } = useSuperAdminLang();
     const { slug: locale } = useLocale();
 
     return (
         <>
-            <Head title={`Inventory — ${clinic.name}`} />
+            <Head title={t.cl_inv_head.replace('{clinic}', clinic.name)} />
 
             <div className="px-6 py-5 lg:px-8">
                 <div className="mb-4 flex items-center gap-2 text-sm">
@@ -68,12 +70,16 @@ export default function SuperAdminClinicInventory({
                         </Link>
                     </Button>
                     <span className="text-muted-foreground">/</span>
-                    <span className="text-[13px] font-semibold">Inventory</span>
+                    <span className="text-[13px] font-semibold">
+                        {t.cl_inv_crumb}
+                    </span>
                 </div>
 
                 <PageHeader
-                    title="Inventory"
-                    description={`${inventory.total} items at ${clinic.name}`}
+                    title={t.cl_inv_title}
+                    description={t.cl_inv_desc
+                        .replace('{total}', String(inventory.total))
+                        .replace('{clinic}', clinic.name)}
                     actions={
                         <Button
                             asChild
@@ -87,7 +93,7 @@ export default function SuperAdminClinicInventory({
                                 })}
                             >
                                 <Plus className="size-3.5" />
-                                New item
+                                {t.cl_inv_new}
                             </Link>
                         </Button>
                     }
@@ -98,16 +104,16 @@ export default function SuperAdminClinicInventory({
                         <TableHeader>
                             <TableRow className="bg-muted/50">
                                 <TableHead className="px-5 py-2.5 text-[11px] tracking-wider uppercase">
-                                    Item
+                                    {t.cl_inv_th_item}
                                 </TableHead>
                                 <TableHead className="text-[11px] tracking-wider uppercase">
-                                    Category
+                                    {t.cl_inv_th_category}
                                 </TableHead>
                                 <TableHead className="text-end text-[11px] tracking-wider uppercase">
-                                    In stock
+                                    {t.cl_inv_th_in_stock}
                                 </TableHead>
                                 <TableHead className="text-[11px] tracking-wider uppercase">
-                                    Status
+                                    {t.th_status}
                                 </TableHead>
                                 <TableHead className="w-20" />
                             </TableRow>
@@ -119,7 +125,7 @@ export default function SuperAdminClinicInventory({
                                         colSpan={5}
                                         className="py-12 text-center text-sm text-muted-foreground"
                                     >
-                                        No inventory items.
+                                        {t.cl_inv_empty}
                                     </TableCell>
                                 </TableRow>
                             )}
@@ -155,8 +161,8 @@ export default function SuperAdminClinicInventory({
                                             withDot
                                         >
                                             {item.is_active
-                                                ? 'active'
-                                                : 'inactive'}
+                                                ? t.status_active
+                                                : t.status_inactive}
                                         </StatusPill>
                                     </TableCell>
                                     <TableCell>
@@ -166,7 +172,7 @@ export default function SuperAdminClinicInventory({
                                                 size="sm"
                                                 asChild
                                                 className="size-7 p-0"
-                                                title="Edit"
+                                                title={t.action_edit}
                                             >
                                                 <Link
                                                     href={superAdmin.clinics.inventory.edit.url(
@@ -185,7 +191,7 @@ export default function SuperAdminClinicInventory({
                                                 size="sm"
                                                 asChild
                                                 className="size-7 p-0 text-danger"
-                                                title="Delete"
+                                                title={t.action_remove}
                                             >
                                                 <Link
                                                     href={superAdmin.clinics.inventory.destroy.url(
@@ -199,7 +205,7 @@ export default function SuperAdminClinicInventory({
                                                     as="button"
                                                     onBefore={() =>
                                                         confirm(
-                                                            'Delete this item?',
+                                                            t.cl_inv_confirm_delete,
                                                         )
                                                     }
                                                 >
@@ -213,7 +219,7 @@ export default function SuperAdminClinicInventory({
                         </TableBody>
                     </Table>
 
-                    <Pagination paginated={inventory} t={{}} />
+                    <Pagination paginated={inventory} t={t} />
                 </SectionCard>
             </div>
         </>

@@ -14,6 +14,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import { useSuperAdminLang } from '@/lib/i18n/super-admin-context';
 import { useLocale } from '@/lib/i18n/use-locale';
 import { Pagination } from '@/pages/panels/super-admin/users';
 import superAdmin from '@/routes/super-admin';
@@ -59,10 +60,11 @@ export default function SuperAdminClinicAppointments({
     clinic: { id: string; name: string };
     appointments: Paginated<Appointment>;
 }) {
+    const { t } = useSuperAdminLang();
     const { slug: locale } = useLocale();
 
     const cancel = (id: string): void => {
-        const reason = window.prompt('Cancellation reason?');
+        const reason = window.prompt(t.cl_appt_prompt_cancel);
 
         if (!reason) {
             return;
@@ -81,7 +83,7 @@ export default function SuperAdminClinicAppointments({
 
     return (
         <>
-            <Head title={`Appointments — ${clinic.name}`} />
+            <Head title={t.cl_appts_head.replace('{clinic}', clinic.name)} />
 
             <div className="px-6 py-5 lg:px-8">
                 <div className="mb-4 flex items-center gap-2 text-sm">
@@ -103,13 +105,15 @@ export default function SuperAdminClinicAppointments({
                     </Button>
                     <span className="text-muted-foreground">/</span>
                     <span className="text-[13px] font-semibold">
-                        Appointments
+                        {t.cl_appts_crumb}
                     </span>
                 </div>
 
                 <PageHeader
-                    title="Appointments"
-                    description={`${appointments.total} appointments at ${clinic.name}`}
+                    title={t.cl_appts_title}
+                    description={t.cl_appts_desc
+                        .replace('{total}', String(appointments.total))
+                        .replace('{clinic}', clinic.name)}
                     actions={
                         <Button
                             asChild
@@ -122,7 +126,7 @@ export default function SuperAdminClinicAppointments({
                                 )}
                             >
                                 <Plus className="size-3.5" />
-                                New appointment
+                                {t.cl_appts_new}
                             </Link>
                         </Button>
                     }
@@ -133,16 +137,16 @@ export default function SuperAdminClinicAppointments({
                         <TableHeader>
                             <TableRow className="bg-muted/50">
                                 <TableHead className="px-5 py-2.5 text-[11px] tracking-wider uppercase">
-                                    When
+                                    {t.cl_appt_th_when}
                                 </TableHead>
                                 <TableHead className="text-[11px] tracking-wider uppercase">
-                                    Patient
+                                    {t.cl_appt_th_patient}
                                 </TableHead>
                                 <TableHead className="text-[11px] tracking-wider uppercase">
-                                    Doctor
+                                    {t.cl_appt_th_doctor}
                                 </TableHead>
                                 <TableHead className="text-[11px] tracking-wider uppercase">
-                                    Status
+                                    {t.th_status}
                                 </TableHead>
                                 <TableHead className="w-24" />
                             </TableRow>
@@ -154,7 +158,7 @@ export default function SuperAdminClinicAppointments({
                                         colSpan={5}
                                         className="py-12 text-center text-sm text-muted-foreground"
                                     >
-                                        No appointments.
+                                        {t.cl_appts_empty}
                                     </TableCell>
                                 </TableRow>
                             )}
@@ -192,7 +196,7 @@ export default function SuperAdminClinicAppointments({
                                                 size="sm"
                                                 asChild
                                                 className="size-7 p-0"
-                                                title="Edit"
+                                                title={t.action_edit}
                                             >
                                                 <Link
                                                     href={superAdmin.clinics.appointments.edit.url(
@@ -211,7 +215,9 @@ export default function SuperAdminClinicAppointments({
                                                     variant="ghost"
                                                     size="sm"
                                                     className="size-7 p-0 text-warning"
-                                                    title="Cancel"
+                                                    title={
+                                                        t.cl_appt_title_new_attr
+                                                    }
                                                     onClick={() => cancel(a.id)}
                                                 >
                                                     <Ban className="size-3.5" />
@@ -222,7 +228,7 @@ export default function SuperAdminClinicAppointments({
                                                 size="sm"
                                                 asChild
                                                 className="size-7 p-0 text-danger"
-                                                title="Delete"
+                                                title={t.action_remove}
                                             >
                                                 <Link
                                                     href={superAdmin.clinics.appointments.destroy.url(
@@ -236,7 +242,7 @@ export default function SuperAdminClinicAppointments({
                                                     as="button"
                                                     onBefore={() =>
                                                         confirm(
-                                                            'Delete this appointment?',
+                                                            t.cl_appt_confirm_delete,
                                                         )
                                                     }
                                                 >
@@ -250,7 +256,7 @@ export default function SuperAdminClinicAppointments({
                         </TableBody>
                     </Table>
 
-                    <Pagination paginated={appointments} t={{}} />
+                    <Pagination paginated={appointments} t={t} />
                 </SectionCard>
             </div>
         </>

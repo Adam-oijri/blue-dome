@@ -1,17 +1,184 @@
 <?php
 
 /**
- * Phase 2 ships only the attribute-name overrides in Arabic. Validation
- * messages themselves fall back to `lang/en/validation.php`. Full
- * message translation is Phase 9 (Localization parity + hardening).
+ * Arabic validation messages. Mirrors the key structure of
+ * lang/en/validation.php exactly (enforced by StringCoverageTest).
  */
 return [
+
+    'accepted' => 'يجب قبول الحقل :attribute.',
+    'accepted_if' => 'يجب قبول الحقل :attribute عندما يكون :other هو :value.',
+    'active_url' => 'الحقل :attribute يجب أن يكون رابطًا صحيحًا.',
+    'after' => 'الحقل :attribute يجب أن يكون تاريخًا لاحقًا للتاريخ :date.',
+    'after_or_equal' => 'الحقل :attribute يجب أن يكون تاريخًا لاحقًا أو مساويًا للتاريخ :date.',
+    'alpha' => 'الحقل :attribute يجب أن يحتوي على حروف فقط.',
+    'alpha_dash' => 'الحقل :attribute يجب أن يحتوي على حروف وأرقام وشرطات وشرطات سفلية فقط.',
+    'alpha_num' => 'الحقل :attribute يجب أن يحتوي على حروف وأرقام فقط.',
+    'any_of' => 'الحقل :attribute غير صحيح.',
+    'array' => 'الحقل :attribute يجب أن يكون مصفوفة.',
+    'ascii' => 'الحقل :attribute يجب أن يحتوي على أحرف ورموز أحادية البايت فقط.',
+    'before' => 'الحقل :attribute يجب أن يكون تاريخًا سابقًا للتاريخ :date.',
+    'before_or_equal' => 'الحقل :attribute يجب أن يكون تاريخًا سابقًا أو مساويًا للتاريخ :date.',
+    'between' => [
+        'array' => 'الحقل :attribute يجب أن يحتوي على عدد عناصر بين :min و :max.',
+        'file' => 'الحقل :attribute يجب أن يكون حجمه بين :min و :max كيلوبايت.',
+        'numeric' => 'الحقل :attribute يجب أن تكون قيمته بين :min و :max.',
+        'string' => 'الحقل :attribute يجب أن يحتوي على عدد أحرف بين :min و :max.',
+    ],
+    'boolean' => 'الحقل :attribute يجب أن يكون صحيحًا أو خطأً.',
+    'can' => 'الحقل :attribute يحتوي على قيمة غير مصرح بها.',
+    'confirmed' => 'حقل تأكيد :attribute غير متطابق.',
+    'contains' => 'الحقل :attribute يفتقد إلى قيمة مطلوبة.',
+    'current_password' => 'كلمة المرور غير صحيحة.',
+    'date' => 'الحقل :attribute يجب أن يكون تاريخًا صحيحًا.',
+    'date_equals' => 'الحقل :attribute يجب أن يكون تاريخًا مساويًا للتاريخ :date.',
+    'date_format' => 'الحقل :attribute لا يتوافق مع الصيغة :format.',
+    'decimal' => 'الحقل :attribute يجب أن يحتوي على :decimal منازل عشرية.',
+    'declined' => 'الحقل :attribute يجب أن يُرفض.',
+    'declined_if' => 'الحقل :attribute يجب أن يُرفض عندما يكون :other هو :value.',
+    'different' => 'الحقلان :attribute و :other يجب أن يكونا مختلفين.',
+    'digits' => 'الحقل :attribute يجب أن يحتوي على :digits أرقام.',
+    'digits_between' => 'الحقل :attribute يجب أن يحتوي على عدد أرقام بين :min و :max.',
+    'dimensions' => 'الحقل :attribute يحتوي على أبعاد صورة غير صحيحة.',
+    'distinct' => 'الحقل :attribute يحتوي على قيمة مكررة.',
+    'doesnt_contain' => 'الحقل :attribute يجب ألا يحتوي على أي مما يلي: :values.',
+    'doesnt_end_with' => 'الحقل :attribute يجب ألا ينتهي بأحد القيم التالية: :values.',
+    'doesnt_start_with' => 'الحقل :attribute يجب ألا يبدأ بأحد القيم التالية: :values.',
+    'email' => 'الحقل :attribute يجب أن يكون عنوان بريد إلكتروني صحيحًا.',
+    'encoding' => 'الحقل :attribute يجب أن يكون مُرمَّزًا بـ :encoding.',
+    'ends_with' => 'الحقل :attribute يجب أن ينتهي بأحد القيم التالية: :values.',
+    'enum' => 'القيمة المختارة للحقل :attribute غير صحيحة.',
+    'exists' => 'القيمة المختارة للحقل :attribute غير صحيحة.',
+    'extensions' => 'الحقل :attribute يجب أن يكون بأحد الامتدادات التالية: :values.',
+    'file' => 'الحقل :attribute يجب أن يكون ملفًا.',
+    'filled' => 'الحقل :attribute يجب أن تكون له قيمة.',
+    'gt' => [
+        'array' => 'الحقل :attribute يجب أن يحتوي على أكثر من :value عناصر.',
+        'file' => 'الحقل :attribute يجب أن يكون حجمه أكبر من :value كيلوبايت.',
+        'numeric' => 'الحقل :attribute يجب أن تكون قيمته أكبر من :value.',
+        'string' => 'الحقل :attribute يجب أن يحتوي على أكثر من :value حرفًا.',
+    ],
+    'gte' => [
+        'array' => 'الحقل :attribute يجب أن يحتوي على :value عناصر أو أكثر.',
+        'file' => 'الحقل :attribute يجب أن يكون حجمه أكبر من أو يساوي :value كيلوبايت.',
+        'numeric' => 'الحقل :attribute يجب أن تكون قيمته أكبر من أو تساوي :value.',
+        'string' => 'الحقل :attribute يجب أن يحتوي على :value حرفًا أو أكثر.',
+    ],
+    'hex_color' => 'الحقل :attribute يجب أن يكون لونًا سداسيًا عشريًا صحيحًا.',
+    'image' => 'الحقل :attribute يجب أن يكون صورة.',
+    'in' => 'القيمة المختارة للحقل :attribute غير صحيحة.',
+    'in_array' => 'الحقل :attribute يجب أن يكون موجودًا في :other.',
+    'in_array_keys' => 'الحقل :attribute يجب أن يحتوي على واحدة على الأقل من المفاتيح التالية: :values.',
+    'integer' => 'الحقل :attribute يجب أن يكون عددًا صحيحًا.',
+    'ip' => 'الحقل :attribute يجب أن يكون عنوان IP صحيحًا.',
+    'ipv4' => 'الحقل :attribute يجب أن يكون عنوان IPv4 صحيحًا.',
+    'ipv6' => 'الحقل :attribute يجب أن يكون عنوان IPv6 صحيحًا.',
+    'json' => 'الحقل :attribute يجب أن يكون نص JSON صحيحًا.',
+    'list' => 'الحقل :attribute يجب أن يكون قائمة.',
+    'lowercase' => 'الحقل :attribute يجب أن يكون بأحرف صغيرة.',
+    'lt' => [
+        'array' => 'الحقل :attribute يجب أن يحتوي على أقل من :value عناصر.',
+        'file' => 'الحقل :attribute يجب أن يكون حجمه أقل من :value كيلوبايت.',
+        'numeric' => 'الحقل :attribute يجب أن تكون قيمته أقل من :value.',
+        'string' => 'الحقل :attribute يجب أن يحتوي على أقل من :value حرفًا.',
+    ],
+    'lte' => [
+        'array' => 'الحقل :attribute يجب ألا يحتوي على أكثر من :value عناصر.',
+        'file' => 'الحقل :attribute يجب أن يكون حجمه أقل من أو يساوي :value كيلوبايت.',
+        'numeric' => 'الحقل :attribute يجب أن تكون قيمته أقل من أو تساوي :value.',
+        'string' => 'الحقل :attribute يجب أن يحتوي على :value حرفًا أو أقل.',
+    ],
+    'mac_address' => 'الحقل :attribute يجب أن يكون عنوان MAC صحيحًا.',
+    'max' => [
+        'array' => 'الحقل :attribute يجب ألا يحتوي على أكثر من :max عناصر.',
+        'file' => 'الحقل :attribute يجب ألا يكون حجمه أكبر من :max كيلوبايت.',
+        'numeric' => 'الحقل :attribute يجب ألا تكون قيمته أكبر من :max.',
+        'string' => 'الحقل :attribute يجب ألا يحتوي على أكثر من :max حرفًا.',
+    ],
+    'max_digits' => 'الحقل :attribute يجب ألا يحتوي على أكثر من :max أرقام.',
+    'mimes' => 'الحقل :attribute يجب أن يكون ملفًا من نوع: :values.',
+    'mimetypes' => 'الحقل :attribute يجب أن يكون ملفًا من نوع: :values.',
+    'min' => [
+        'array' => 'الحقل :attribute يجب أن يحتوي على :min عناصر على الأقل.',
+        'file' => 'الحقل :attribute يجب أن يكون حجمه :min كيلوبايت على الأقل.',
+        'numeric' => 'الحقل :attribute يجب أن تكون قيمته :min على الأقل.',
+        'string' => 'الحقل :attribute يجب أن يحتوي على :min أحرف على الأقل.',
+    ],
+    'min_digits' => 'الحقل :attribute يجب أن يحتوي على :min أرقام على الأقل.',
+    'missing' => 'الحقل :attribute يجب أن يكون غير موجود.',
+    'missing_if' => 'الحقل :attribute يجب أن يكون غير موجود عندما يكون :other هو :value.',
+    'missing_unless' => 'الحقل :attribute يجب أن يكون غير موجود ما لم يكن :other هو :value.',
+    'missing_with' => 'الحقل :attribute يجب أن يكون غير موجود عند وجود :values.',
+    'missing_with_all' => 'الحقل :attribute يجب أن يكون غير موجود عند وجود :values.',
+    'multiple_of' => 'الحقل :attribute يجب أن يكون من مضاعفات :value.',
+    'not_in' => 'القيمة المختارة للحقل :attribute غير صحيحة.',
+    'not_regex' => 'صيغة الحقل :attribute غير صحيحة.',
+    'numeric' => 'الحقل :attribute يجب أن يكون رقمًا.',
+    'password' => [
+        'letters' => 'الحقل :attribute يجب أن يحتوي على حرف واحد على الأقل.',
+        'mixed' => 'الحقل :attribute يجب أن يحتوي على حرف كبير وحرف صغير على الأقل.',
+        'numbers' => 'الحقل :attribute يجب أن يحتوي على رقم واحد على الأقل.',
+        'symbols' => 'الحقل :attribute يجب أن يحتوي على رمز واحد على الأقل.',
+        'uncompromised' => 'القيمة المدخلة للحقل :attribute ظهرت في تسريب للبيانات. الرجاء اختيار قيمة مختلفة.',
+    ],
+    'present' => 'الحقل :attribute يجب أن يكون موجودًا.',
+    'present_if' => 'الحقل :attribute يجب أن يكون موجودًا عندما يكون :other هو :value.',
+    'present_unless' => 'الحقل :attribute يجب أن يكون موجودًا ما لم يكن :other هو :value.',
+    'present_with' => 'الحقل :attribute يجب أن يكون موجودًا عند وجود :values.',
+    'present_with_all' => 'الحقل :attribute يجب أن يكون موجودًا عند وجود :values.',
+    'prohibited' => 'الحقل :attribute محظور.',
+    'prohibited_if' => 'الحقل :attribute محظور عندما يكون :other هو :value.',
+    'prohibited_if_accepted' => 'الحقل :attribute محظور عند قبول :other.',
+    'prohibited_if_declined' => 'الحقل :attribute محظور عند رفض :other.',
+    'prohibited_unless' => 'الحقل :attribute محظور ما لم يكن :other ضمن :values.',
+    'prohibits' => 'الحقل :attribute يمنع وجود :other.',
+    'regex' => 'صيغة الحقل :attribute غير صحيحة.',
+    'required' => 'الحقل :attribute مطلوب.',
+    'required_array_keys' => 'الحقل :attribute يجب أن يحتوي على إدخالات لـ: :values.',
+    'required_if' => 'الحقل :attribute مطلوب عندما يكون :other هو :value.',
+    'required_if_accepted' => 'الحقل :attribute مطلوب عند قبول :other.',
+    'required_if_declined' => 'الحقل :attribute مطلوب عند رفض :other.',
+    'required_unless' => 'الحقل :attribute مطلوب ما لم يكن :other ضمن :values.',
+    'required_with' => 'الحقل :attribute مطلوب عند وجود :values.',
+    'required_with_all' => 'الحقل :attribute مطلوب عند وجود :values.',
+    'required_without' => 'الحقل :attribute مطلوب عند عدم وجود :values.',
+    'required_without_all' => 'الحقل :attribute مطلوب عند عدم وجود أي من :values.',
+    'same' => 'الحقل :attribute يجب أن يتطابق مع :other.',
+    'size' => [
+        'array' => 'الحقل :attribute يجب أن يحتوي على :size عناصر.',
+        'file' => 'الحقل :attribute يجب أن يكون حجمه :size كيلوبايت.',
+        'numeric' => 'الحقل :attribute يجب أن تكون قيمته :size.',
+        'string' => 'الحقل :attribute يجب أن يحتوي على :size أحرف.',
+    ],
+    'starts_with' => 'الحقل :attribute يجب أن يبدأ بأحد القيم التالية: :values.',
+    'string' => 'الحقل :attribute يجب أن يكون نصًا.',
+    'timezone' => 'الحقل :attribute يجب أن يكون منطقة زمنية صحيحة.',
+    'unique' => 'قيمة الحقل :attribute مستخدمة من قبل.',
+    'uploaded' => 'فشل رفع الحقل :attribute.',
+    'uppercase' => 'الحقل :attribute يجب أن يكون بأحرف كبيرة.',
+    'url' => 'الحقل :attribute يجب أن يكون رابطًا صحيحًا.',
+    'ulid' => 'الحقل :attribute يجب أن يكون ULID صحيحًا.',
+    'uuid' => 'الحقل :attribute يجب أن يكون UUID صحيحًا.',
+
+    /*
+    |--------------------------------------------------------------------------
+    | Custom Validation Language Lines
+    |--------------------------------------------------------------------------
+    */
+
     'custom' => [
         // Parity placeholder; see lang/en/validation.php.
         'attribute-name' => [
             'rule-name' => 'رسالة-مخصصة',
         ],
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Custom Validation Attributes
+    |--------------------------------------------------------------------------
+    */
+
     'attributes' => [
         'first_name' => 'الاسم الأول',
         'last_name' => 'اسم العائلة',

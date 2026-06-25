@@ -12,7 +12,7 @@ beforeEach(function () {
     $this->medication = Medication::factory()->create(['clinic_id' => $this->clinic->id]);
 });
 
-it('lets all clinic staff list prescriptions', function (string $role) {
+it('lets doctors and super admins list prescriptions', function (string $role) {
     $actor = User::factory()->state(['role' => $role])->create(['clinic_id' => $this->clinic->id]);
     Prescription::factory()->create([
         'clinic_id' => $this->clinic->id,
@@ -22,7 +22,18 @@ it('lets all clinic staff list prescriptions', function (string $role) {
     $this->actingAs($actor)
         ->get(route('prescriptions.index'))
         ->assertSuccessful();
-})->with(['super_admin', 'doctor', 'secretary']);
+})->with(['super_admin', 'doctor']);
+
+it('blocks the secretary from prescriptions (clinical separation)', function () {
+    $secretary = User::factory()->secretary()->create(['clinic_id' => $this->clinic->id]);
+    $prescription = Prescription::factory()->create([
+        'clinic_id' => $this->clinic->id,
+        'patient_id' => $this->patient->id,
+    ]);
+
+    $this->actingAs($secretary)->get(route('prescriptions.index'))->assertForbidden();
+    $this->actingAs($secretary)->get(route('prescriptions.show', $prescription))->assertForbidden();
+});
 
 it('only lets doctors create prescriptions', function (string $role, bool $allowed) {
     $actor = User::factory()->state(['role' => $role])->create(['clinic_id' => $this->clinic->id]);

@@ -21,21 +21,24 @@ const TINT_BG: Record<IntegrationTint, string> = {
 
 const STATUS_LABEL: Record<
     IntegrationStatus,
-    { en: string; fr: string; tone: string }
+    { en: string; fr: string; ar: string; tone: string }
 > = {
     live: {
         en: 'Live',
         fr: 'En production',
+        ar: 'متاح',
         tone: 'bg-emerald-100 text-emerald-700',
     },
     beta: {
         en: 'Beta',
         fr: 'Bêta',
+        ar: 'تجريبي',
         tone: 'bg-amber-100 text-amber-700',
     },
     planned: {
         en: 'Soon',
         fr: 'Bientôt',
+        ar: 'قريبًا',
         tone: 'bg-muted text-muted-foreground',
     },
 };
@@ -55,23 +58,37 @@ export function IntegrationsSection({ lang }: SectionProps) {
                         variants={FADE_UP}
                         className="mb-3 text-[12px] font-semibold tracking-wider text-olive-700 uppercase"
                     >
-                        {lang === 'fr' ? 'Intégrations' : 'Integrations'}
+                        {
+                            {
+                                en: 'Integrations',
+                                fr: 'Intégrations',
+                                ar: 'التكاملات',
+                            }[lang]
+                        }
                     </motion.p>
                     <motion.h2
                         variants={FADE_UP}
                         className="text-[34px] font-semibold tracking-tight text-navy-950 sm:text-[44px]"
                     >
-                        {lang === 'fr'
-                            ? 'Branché à votre écosystème existant.'
-                            : 'Plugged into your existing ecosystem.'}
+                        {
+                            {
+                                en: 'Plugged into your existing ecosystem.',
+                                fr: 'Branché à votre écosystème existant.',
+                                ar: 'متّصل بمنظومتك الحالية.',
+                            }[lang]
+                        }
                     </motion.h2>
                     <motion.p
                         variants={FADE_UP}
                         className="mt-3 text-[15px] text-muted-foreground"
                     >
-                        {lang === 'fr'
-                            ? 'Aucune migration explosive. Vos outils continuent de fonctionner — Blue Dome les orchestre.'
-                            : 'No big-bang migration. Your existing tools keep working — Blue Dome orchestrates them.'}
+                        {
+                            {
+                                en: 'No big-bang migration. Your existing tools keep working — Blue Dome orchestrates them.',
+                                fr: 'Aucune migration explosive. Vos outils continuent de fonctionner — Blue Dome les orchestre.',
+                                ar: 'لا ترحيل مفاجئ. تستمرّ أدواتك الحالية في العمل — وينظّمها Blue Dome.',
+                            }[lang]
+                        }
                     </motion.p>
                 </motion.div>
 

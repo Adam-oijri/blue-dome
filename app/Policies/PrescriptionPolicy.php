@@ -9,14 +9,17 @@ class PrescriptionPolicy
 {
     public function viewAny(User $actor): bool
     {
-        return in_array($actor->role, ['super_admin', 'doctor', 'secretary'], true);
+        // Clinical separation: prescriptions are the treating doctor's domain;
+        // the secretary/clinic manager has no access. Super admin retained for
+        // cross-clinic oversight.
+        return in_array($actor->role, ['super_admin', 'doctor'], true);
     }
 
     public function view(User $actor, Prescription $prescription): bool
     {
-        // Phase 8: open to every staff role at any clinic. The previous
-        // clinic-membership branch is removed.
-        return in_array($actor->role, ['super_admin', 'doctor', 'secretary'], true);
+        // Phase 8: any doctor (or super admin) reads any prescription
+        // regardless of origin clinic. The secretary is excluded.
+        return in_array($actor->role, ['super_admin', 'doctor'], true);
     }
 
     public function create(User $actor): bool

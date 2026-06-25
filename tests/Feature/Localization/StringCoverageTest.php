@@ -10,17 +10,10 @@
  * looks "fine" until an Arabic patient sees a stray French toast message
  * during a clinical workflow.
  *
- * Validation messages (lang/{locale}/validation.php) are exempted from
- * per-key parity because Laravel's English `validation.php` ships ~200
- * keys covering rules we haven't yet customized; per the Phase 2 roadmap
- * entry, the project deliberately falls through to English for any
- * non-attribute validation key until Phase 9 final localization audit
- * (this one). The `validation.attributes` and `validation.custom`
- * sub-arrays ARE checked for parity — that's where clinic-domain
- * translations live.
+ * As of the Phase 9 localization audit, validation.php is fully translated
+ * in fr/ar (standard rule messages + the clinic-domain `attributes`), so it
+ * is parity-checked in full like every other namespace — no exemption.
  */
-
-use Illuminate\Support\Arr;
 
 /**
  * Flatten a translation array into a dot-notated keyset.
@@ -47,8 +40,6 @@ function flattenLangKeys(array $data, string $prefix = ''): array
 
 /**
  * Return [filename => keyset] for every PHP file in lang/{locale}.
- * For validation.php only the `attributes` and `custom` sub-trees are
- * compared.
  *
  * @return array<string, array<int, string>>
  */
@@ -65,18 +56,6 @@ function localeKeyMap(string $locale): array
         $name = basename($file, '.php');
         $data = require $file;
         if (! is_array($data)) {
-            continue;
-        }
-
-        if ($name === 'validation') {
-            $sub = [];
-            foreach (['attributes', 'custom'] as $branch) {
-                if (Arr::has($data, $branch) && is_array($data[$branch])) {
-                    $sub[$branch] = $data[$branch];
-                }
-            }
-            $map[$name] = flattenLangKeys($sub);
-
             continue;
         }
 

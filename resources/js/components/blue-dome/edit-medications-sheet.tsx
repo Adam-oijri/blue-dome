@@ -99,9 +99,7 @@ export function EditMedicationsSheet({
             <SheetContent className="flex w-full flex-col sm:max-w-md">
                 <SheetHeader>
                     <SheetTitle>{t.edit_medication}</SheetTitle>
-                    <SheetDescription>
-                        Update the formulary entry for your clinic.
-                    </SheetDescription>
+                    <SheetDescription>{t.formulary}</SheetDescription>
                 </SheetHeader>
 
                 <form onSubmit={submit} className="flex min-h-0 flex-1 flex-col">
@@ -184,7 +182,7 @@ export function EditMedicationsSheet({
                         </div>
 
                         <div className="grid gap-2">
-                            <Label htmlFor="edit_atc_code">ATC code</Label>
+                            <Label htmlFor="edit_atc_code">{t.atc_code}</Label>
                             <input
                                 id="edit_atc_code"
                                 value={form.data.atc_code}
@@ -261,7 +259,7 @@ export function EditMedicationsSheet({
 
                         <div className="grid gap-2">
                             <Label htmlFor="edit_side_effects">
-                                Side effects
+                                {t.side_effects}
                             </Label>
                             <textarea
                                 id="edit_side_effects"
@@ -277,7 +275,7 @@ export function EditMedicationsSheet({
 
                         <div className="grid gap-2">
                             <Label htmlFor="edit_contraindications">
-                                Contraindications
+                                {t.contraindications}
                             </Label>
                             <textarea
                                 id="edit_contraindications"
@@ -298,7 +296,7 @@ export function EditMedicationsSheet({
 
                         <div className="grid gap-2">
                             <Label htmlFor="edit_storage_instructions">
-                                Storage instructions
+                                {t.storage_instructions}
                             </Label>
                             <textarea
                                 id="edit_storage_instructions"

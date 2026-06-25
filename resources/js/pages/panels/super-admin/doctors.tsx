@@ -131,7 +131,7 @@ export default function SuperAdminDoctorsPage({
                                 )}
                             >
                                 <Download className="size-3.5" />
-                                Export
+                                {t.action_export}
                             </a>
                         </Button>
                     }
@@ -338,7 +338,9 @@ export default function SuperAdminDoctorsPage({
                                                 variant="ghost"
                                                 size="sm"
                                                 className="size-7 p-0"
-                                                title="Edit profile"
+                                                title={
+                                                    t.doctors_action_edit_profile
+                                                }
                                             >
                                                 <Link
                                                     href={superAdmin.doctors.profile.edit.url(

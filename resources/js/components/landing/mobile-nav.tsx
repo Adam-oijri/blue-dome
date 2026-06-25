@@ -40,7 +40,13 @@ export function MobileNav({ lang, authed, canRegister }: MobileNavProps) {
             <button
                 type="button"
                 onClick={() => setOpen(true)}
-                aria-label="Open menu"
+                aria-label={
+                    {
+                        en: 'Open menu',
+                        fr: 'Ouvrir le menu',
+                        ar: 'فتح القائمة',
+                    }[lang]
+                }
                 className="grid size-9 place-items-center rounded-md text-muted-foreground transition-colors hover:text-foreground"
             >
                 <Menu className="size-5" />
@@ -76,7 +82,13 @@ export function MobileNav({ lang, authed, canRegister }: MobileNavProps) {
                                 <button
                                     type="button"
                                     onClick={() => setOpen(false)}
-                                    aria-label="Close menu"
+                                    aria-label={
+                                        {
+                                            en: 'Close menu',
+                                            fr: 'Fermer le menu',
+                                            ar: 'إغلاق القائمة',
+                                        }[lang]
+                                    }
                                     className="grid size-9 place-items-center rounded-md text-muted-foreground transition-colors hover:text-foreground"
                                 >
                                     <X className="size-5" />
@@ -111,7 +123,13 @@ export function MobileNav({ lang, authed, canRegister }: MobileNavProps) {
                                         className="w-full bg-navy-900 text-white hover:bg-navy-800"
                                     >
                                         <Link href={roleHomeUrl(role, locale)}>
-                                            Dashboard
+                                            {
+                                                {
+                                                    en: 'Dashboard',
+                                                    fr: 'Tableau de bord',
+                                                    ar: 'لوحة التحكم',
+                                                }[lang]
+                                            }
                                         </Link>
                                     </Button>
                                 ) : (
@@ -122,9 +140,13 @@ export function MobileNav({ lang, authed, canRegister }: MobileNavProps) {
                                             className="w-full"
                                         >
                                             <Link href={login({ locale })}>
-                                                {lang === 'fr'
-                                                    ? 'Connexion'
-                                                    : 'Sign in'}
+                                                {
+                                                    {
+                                                        en: 'Sign in',
+                                                        fr: 'Connexion',
+                                                        ar: 'تسجيل الدخول',
+                                                    }[lang]
+                                                }
                                             </Link>
                                         </Button>
                                         {canRegister && (
@@ -132,10 +154,16 @@ export function MobileNav({ lang, authed, canRegister }: MobileNavProps) {
                                                 asChild
                                                 className="w-full bg-navy-900 text-white hover:bg-navy-800"
                                             >
-                                                <Link href={register({ locale })}>
-                                                    {lang === 'fr'
-                                                        ? 'Démarrer'
-                                                        : 'Get started'}
+                                                <Link
+                                                    href={register({ locale })}
+                                                >
+                                                    {
+                                                        {
+                                                            en: 'Get started',
+                                                            fr: 'Démarrer',
+                                                            ar: 'ابدأ الآن',
+                                                        }[lang]
+                                                    }
                                                 </Link>
                                             </Button>
                                         )}

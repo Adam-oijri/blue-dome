@@ -168,7 +168,7 @@ export default function ExpensesIndex({
                         </TableBody>
                     </Table>
 
-                    <Pagination paginated={expenses} t={{}} />
+                    <Pagination paginated={expenses} t={t} />
                 </SectionCard>
             </div>
         </>

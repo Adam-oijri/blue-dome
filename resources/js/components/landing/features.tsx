@@ -20,17 +20,25 @@ export function Features({ lang }: SectionProps) {
                         variants={FADE_UP}
                         className="mb-3 text-[12px] font-semibold tracking-wider text-olive-700 uppercase"
                     >
-                        {lang === 'fr'
-                            ? 'Une plateforme · pas un patchwork'
-                            : 'One platform · not a patchwork'}
+                        {
+                            {
+                                en: 'One platform · not a patchwork',
+                                fr: 'Une plateforme · pas un patchwork',
+                                ar: 'منصّة واحدة · لا مجموعة أدوات مبعثرة',
+                            }[lang]
+                        }
                     </motion.p>
                     <motion.h2
                         variants={FADE_UP}
                         className="text-[34px] font-semibold tracking-tight text-navy-950 sm:text-[44px]"
                     >
-                        {lang === 'fr'
-                            ? 'Tout ce dont votre cabinet a besoin — déjà connecté.'
-                            : 'Everything your clinic needs — already wired together.'}
+                        {
+                            {
+                                en: 'Everything your clinic needs — already wired together.',
+                                fr: 'Tout ce dont votre cabinet a besoin — déjà connecté.',
+                                ar: 'كل ما تحتاجه عيادتك — مترابط مسبقًا.',
+                            }[lang]
+                        }
                     </motion.h2>
                 </motion.div>
 

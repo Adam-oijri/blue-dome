@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Secretary;
 
 use App\Http\Controllers\Controller;
 use App\Models\Appointment;
+use App\Services\Appointments\AppointmentConfirmationSender;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -44,6 +46,8 @@ class AppointmentsController extends Controller
                 'status',
                 'type',
                 'duration_minutes',
+                'confirmation_status',
+                'confirmation_method',
             ]);
 
         $today = now()->toDateString();
@@ -79,6 +83,28 @@ class AppointmentsController extends Controller
             'kpis' => $kpis,
             'filters' => ['range' => $range],
         ]);
+    }
+
+    /**
+     * Manually (re-)send the WhatsApp appointment confirmation to the patient.
+     * Runs synchronously so the front desk gets immediate feedback and the row
+     * status flips to "sent (manual)" on the next reload.
+     */
+    public function sendConfirmation(
+        Request $request,
+        string $locale,
+        Appointment $appointment,
+        AppointmentConfirmationSender $sender,
+    ): RedirectResponse {
+        unset($locale);
+
+        $this->authorize('sendConfirmation', $appointment);
+
+        $sent = $sender->send($appointment, 'manual');
+
+        return back()->with('toast', $sent
+            ? ['type' => 'success', 'message' => __('appointments.confirmation_sent')]
+            : ['type' => 'error', 'message' => __('appointments.confirmation_no_phone')]);
     }
 
     /**

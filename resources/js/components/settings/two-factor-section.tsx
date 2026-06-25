@@ -5,6 +5,7 @@ import TwoFactorRecoveryCodes from '@/components/two-factor-recovery-codes';
 import TwoFactorSetupModal from '@/components/two-factor-setup-modal';
 import { Button } from '@/components/ui/button';
 import { useTwoFactorAuth } from '@/hooks/use-two-factor-auth';
+import { useSettingsLang } from '@/lib/i18n/settings';
 import { useLocale } from '@/lib/i18n/use-locale';
 import { disable, enable } from '@/routes/two-factor';
 
@@ -16,6 +17,7 @@ export default function TwoFactorSection({
     twoFactorEnabled?: boolean;
 }) {
     const { slug: locale } = useLocale();
+    const { t } = useSettingsLang();
 
     const {
         qrCodeSvg,
@@ -44,9 +46,7 @@ export default function TwoFactorSection({
             {twoFactorEnabled ? (
                 <div className="flex flex-col items-start justify-start space-y-4">
                     <p className="text-sm text-muted-foreground">
-                        You will be prompted for a secure, random pin during
-                        login, which you can retrieve from the TOTP-supported
-                        application on your phone.
+                        {t.twofa_enabled_help}
                     </p>
 
                     <div className="relative inline">
@@ -57,7 +57,7 @@ export default function TwoFactorSection({
                                     type="submit"
                                     disabled={processing}
                                 >
-                                    Disable 2FA
+                                    {t.twofa_disable_btn}
                                 </Button>
                             )}
                         </Form>
@@ -72,17 +72,14 @@ export default function TwoFactorSection({
             ) : (
                 <div className="flex flex-col items-start justify-start space-y-4">
                     <p className="text-sm text-muted-foreground">
-                        When you enable two-factor authentication, you will be
-                        prompted for a secure pin during login. This pin can be
-                        retrieved from a TOTP-supported application on your
-                        phone.
+                        {t.twofa_disabled_help}
                     </p>
 
                     <div>
                         {hasSetupData ? (
                             <Button onClick={() => setShowSetupModal(true)}>
                                 <ShieldCheck />
-                                Continue setup
+                                {t.twofa_continue_setup_btn}
                             </Button>
                         ) : (
                             <Form
@@ -91,7 +88,7 @@ export default function TwoFactorSection({
                             >
                                 {({ processing }) => (
                                     <Button type="submit" disabled={processing}>
-                                        Enable 2FA
+                                        {t.twofa_enable_btn}
                                     </Button>
                                 )}
                             </Form>

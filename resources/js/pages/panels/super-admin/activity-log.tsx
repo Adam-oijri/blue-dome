@@ -51,7 +51,10 @@ export default function SuperAdminActivityLog({ activity }: ActivityLogProps) {
             <div className="px-6 py-5 lg:px-8">
                 <PageHeader
                     title={t.nav_audit}
-                    description={`${activity.total} entries · cross-clinic visibility`}
+                    description={t.audit_entries_desc.replace(
+                        '{total}',
+                        String(activity.total),
+                    )}
                 />
 
                 <SectionCard
@@ -72,10 +75,10 @@ export default function SuperAdminActivityLog({ activity }: ActivityLogProps) {
                                     {t.th_clinic}
                                 </TableHead>
                                 <TableHead className="text-[11px] tracking-wider uppercase">
-                                    Description
+                                    {t.th_description}
                                 </TableHead>
                                 <TableHead className="text-[11px] tracking-wider uppercase">
-                                    When
+                                    {t.th_when}
                                 </TableHead>
                             </TableRow>
                         </TableHeader>
@@ -105,7 +108,7 @@ export default function SuperAdminActivityLog({ activity }: ActivityLogProps) {
                                         {row.user
                                             ? `${row.user.first_name ?? ''} ${row.user.last_name ?? ''}`.trim() ||
                                               row.user.email
-                                            : 'System'}
+                                            : t.system_actor}
                                     </TableCell>
                                     <TableCell className="text-[13px]">
                                         {row.clinic?.name ?? '—'}

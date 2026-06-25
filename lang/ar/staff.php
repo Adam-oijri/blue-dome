@@ -7,4 +7,5 @@ return [
     'secretary_invited' => 'تم إنشاء السكرتيرة :name وإرسال رابط التفعيل.',
     'removed' => 'تمت إزالة :name من فريق العمل.',
     'restored' => 'تمت إعادة :name إلى فريق العمل.',
+    'invitation_revoked' => 'تم إلغاء الدعوة.',
 ];

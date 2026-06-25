@@ -4,6 +4,7 @@ import { useLocale, useSwapLang } from '@/lib/i18n/use-locale';
 import type { AppLang } from '@/lib/i18n/use-locale';
 import { cn } from '@/lib/utils';
 
+// Marketing-route language switcher. Fully trilingual, matching the app.
 const LANGS: AppLang[] = ['en', 'fr', 'ar'];
 
 interface LangPillProps {

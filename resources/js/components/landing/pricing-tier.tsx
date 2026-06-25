@@ -57,7 +57,13 @@ export function PricingTier({
                         }}
                         className="inline-block"
                     >
-                        {lang === 'fr' ? 'Le plus populaire' : 'Most popular'}
+                        {
+                            {
+                                en: 'Most popular',
+                                fr: 'Le plus populaire',
+                                ar: 'الأكثر رواجًا',
+                            }[lang]
+                        }
                     </motion.span>
                 </motion.span>
             )}
@@ -122,7 +128,11 @@ export function PricingTier({
                         : 'bg-navy-900 text-white hover:bg-navy-800',
                 )}
             >
-                <Link href={canRegister ? register({ locale }) : login({ locale })}>
+                <Link
+                    href={
+                        canRegister ? register({ locale }) : login({ locale })
+                    }
+                >
                     {tier.cta[lang]}
                     <ArrowRight className="size-3.5 transition-transform group-hover/cta:translate-x-0.5" />
                 </Link>

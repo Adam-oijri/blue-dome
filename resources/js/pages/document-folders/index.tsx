@@ -261,7 +261,7 @@ export default function DocumentFoldersIndex({
                         </TableBody>
                     </Table>
 
-                    <Pagination paginated={folders} t={{}} />
+                    <Pagination paginated={folders} t={t} />
                 </SectionCard>
             </div>
         </>

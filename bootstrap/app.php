@@ -68,6 +68,14 @@ return Application::configure(basePath: dirname(__DIR__))
             ->dailyAt('02:00')
             ->withoutOverlapping()
             ->runInBackground();
+
+        // Queue the automatic 24h-before WhatsApp confirmation reminders.
+        // Hourly cadence; `reminder_24h_sent_at` keeps each appointment to a
+        // single reminder regardless of how often the sweep runs.
+        $schedule->command('app:send-appointment-reminders')
+            ->hourly()
+            ->withoutOverlapping()
+            ->runInBackground();
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         // Phase 9 §devops: optional Sentry integration. We do NOT require()

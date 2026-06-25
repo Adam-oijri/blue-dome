@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
+import { useSuperAdminLang } from '@/lib/i18n/super-admin-context';
 import { useLocale } from '@/lib/i18n/use-locale';
 import superAdmin from '@/routes/super-admin';
 
@@ -76,6 +77,7 @@ export default function SuperAdminClinicAppointmentEdit({
     doctors: DoctorOpt[];
     patients: PatientOpt[];
 }) {
+    const { t } = useSuperAdminLang();
     const { slug: locale } = useLocale();
     const isEdit = appointment !== null;
 
@@ -90,7 +92,10 @@ export default function SuperAdminClinicAppointmentEdit({
     return (
         <>
             <Head
-                title={`${isEdit ? 'Edit' : 'New'} appointment — ${clinic.name}`}
+                title={(isEdit
+                    ? t.cl_appt_head_edit
+                    : t.cl_appt_head_new
+                ).replace('{clinic}', clinic.name)}
             />
 
             <div className="px-6 py-5 lg:px-8">
@@ -108,17 +113,17 @@ export default function SuperAdminClinicAppointmentEdit({
                             })}
                         >
                             <ChevronLeft className="size-3.5" />
-                            Appointments
+                            {t.cl_appts_crumb}
                         </Link>
                     </Button>
                     <span className="text-muted-foreground">/</span>
                     <span className="text-[13px] font-semibold">
-                        {isEdit ? 'Edit' : 'New appointment'}
+                        {isEdit ? t.cl_invoice_crumb_edit : t.cl_appt_crumb_new}
                     </span>
                 </div>
 
                 <PageHeader
-                    title={isEdit ? 'Edit appointment' : 'New appointment'}
+                    title={isEdit ? t.cl_appt_title_edit : t.cl_appt_title_new}
                     description={clinic.name}
                 />
 
@@ -133,7 +138,7 @@ export default function SuperAdminClinicAppointmentEdit({
                                 <div className="grid gap-5 sm:grid-cols-2">
                                     <div className="grid gap-2">
                                         <Label htmlFor="patient_id">
-                                            Patient
+                                            {t.cl_appt_patient}
                                         </Label>
                                         <select
                                             id="patient_id"
@@ -145,7 +150,7 @@ export default function SuperAdminClinicAppointmentEdit({
                                             required
                                         >
                                             <option value="">
-                                                Select a patient…
+                                                {t.cl_appt_patient_ph}
                                             </option>
                                             {patients.map((p) => (
                                                 <option key={p.id} value={p.id}>
@@ -162,7 +167,7 @@ export default function SuperAdminClinicAppointmentEdit({
                                     </div>
                                     <div className="grid gap-2">
                                         <Label htmlFor="doctor_id">
-                                            Doctor
+                                            {t.cl_appt_doctor}
                                         </Label>
                                         <select
                                             id="doctor_id"
@@ -174,7 +179,7 @@ export default function SuperAdminClinicAppointmentEdit({
                                             required
                                         >
                                             <option value="">
-                                                Select a doctor…
+                                                {t.cl_appt_doctor_ph}
                                             </option>
                                             {doctors.map((d) => (
                                                 <option key={d.id} value={d.id}>
@@ -188,7 +193,7 @@ export default function SuperAdminClinicAppointmentEdit({
                                     </div>
                                     <div className="grid gap-2">
                                         <Label htmlFor="scheduled_start">
-                                            Start
+                                            {t.cl_appt_start}
                                         </Label>
                                         <Input
                                             id="scheduled_start"
@@ -206,7 +211,7 @@ export default function SuperAdminClinicAppointmentEdit({
                                     </div>
                                     <div className="grid gap-2">
                                         <Label htmlFor="scheduled_end">
-                                            End
+                                            {t.cl_appt_end}
                                         </Label>
                                         <Input
                                             id="scheduled_end"
@@ -223,7 +228,9 @@ export default function SuperAdminClinicAppointmentEdit({
                                         />
                                     </div>
                                     <div className="grid gap-2">
-                                        <Label htmlFor="type">Type</Label>
+                                        <Label htmlFor="type">
+                                            {t.cl_appt_type}
+                                        </Label>
                                         <select
                                             id="type"
                                             name="type"
@@ -233,9 +240,12 @@ export default function SuperAdminClinicAppointmentEdit({
                                             }
                                             className={selectClass}
                                         >
-                                            {TYPES.map((t) => (
-                                                <option key={t} value={t}>
-                                                    {t.replace('_', ' ')}
+                                            {TYPES.map((value) => (
+                                                <option
+                                                    key={value}
+                                                    value={value}
+                                                >
+                                                    {value.replace('_', ' ')}
                                                 </option>
                                             ))}
                                         </select>
@@ -243,7 +253,7 @@ export default function SuperAdminClinicAppointmentEdit({
                                     </div>
                                     <div className="grid gap-2">
                                         <Label htmlFor="priority">
-                                            Priority
+                                            {t.cl_appt_priority}
                                         </Label>
                                         <select
                                             id="priority"
@@ -265,7 +275,7 @@ export default function SuperAdminClinicAppointmentEdit({
                                     {isEdit && (
                                         <div className="grid gap-2">
                                             <Label htmlFor="status">
-                                                Status
+                                                {t.cl_appt_status}
                                             </Label>
                                             <select
                                                 id="status"
@@ -289,7 +299,9 @@ export default function SuperAdminClinicAppointmentEdit({
                                 </div>
 
                                 <div className="grid gap-2">
-                                    <Label htmlFor="reason">Reason</Label>
+                                    <Label htmlFor="reason">
+                                        {t.cl_appt_reason}
+                                    </Label>
                                     <textarea
                                         id="reason"
                                         name="reason"
@@ -307,8 +319,8 @@ export default function SuperAdminClinicAppointmentEdit({
                                 >
                                     {processing && <Spinner />}
                                     {isEdit
-                                        ? 'Save changes'
-                                        : 'Schedule appointment'}
+                                        ? t.cl_appt_submit_save
+                                        : t.cl_appt_submit_schedule}
                                 </Button>
                             </>
                         )}

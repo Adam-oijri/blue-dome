@@ -319,7 +319,10 @@ export default function SuperAdminClinicShow({
                         titleIcon={<Building2 className="size-4" />}
                         bodyClassName="grid grid-cols-1 gap-x-6 gap-y-4 p-5 sm:grid-cols-2"
                     >
-                        <Field label={t.clinics_field_name} value={clinic.name} />
+                        <Field
+                            label={t.clinics_field_name}
+                            value={clinic.name}
+                        />
                         <Field
                             label={t.clinics_field_slug}
                             value={clinic.slug ?? '—'}

@@ -40,14 +40,24 @@ export function SiteFooter({ lang }: SectionProps) {
                                 BLUE DOME
                             </div>
                             <div className="text-[10px] text-muted-foreground">
-                                Clinic Suite
+                                {
+                                    {
+                                        en: 'Clinic Suite',
+                                        fr: 'Suite Clinique',
+                                        ar: 'مجموعة العيادة',
+                                    }[lang]
+                                }
                             </div>
                         </div>
                     </Link>
                     <p className="mt-4 max-w-xs text-[13px] leading-relaxed text-muted-foreground">
-                        {lang === 'fr'
-                            ? 'Plateforme cabinet médical conçue à Casablanca pour les cliniques modernes au Maroc et au-delà.'
-                            : 'Clinic management platform built in Casablanca for modern medical practices in Morocco and beyond.'}
+                        {
+                            {
+                                en: 'Clinic management platform built in Casablanca for modern medical practices in Morocco and beyond.',
+                                fr: 'Plateforme cabinet médical conçue à Casablanca pour les cliniques modernes au Maroc et au-delà.',
+                                ar: 'منصّة لإدارة العيادات صُنعت في الدار البيضاء للعيادات الطبية الحديثة في المغرب وخارجه.',
+                            }[lang]
+                        }
                     </p>
                     <div className="mt-5 flex items-center gap-2">
                         {SOCIAL.map(({ Icon, href, label }) => (
@@ -71,44 +81,90 @@ export function SiteFooter({ lang }: SectionProps) {
 
                 <motion.div variants={FADE_UP}>
                     <FooterColumn
-                        heading={lang === 'fr' ? 'Produit' : 'Product'}
+                        heading={
+                            {
+                                en: 'Product',
+                                fr: 'Produit',
+                                ar: 'المنتج',
+                            }[lang]
+                        }
                         items={[
                             {
-                                label:
-                                    lang === 'fr'
-                                        ? 'Fonctionnalités'
-                                        : 'Features',
+                                label: {
+                                    en: 'Features',
+                                    fr: 'Fonctionnalités',
+                                    ar: 'الميزات',
+                                }[lang],
                                 href: '#features',
                             },
                             {
-                                label: lang === 'fr' ? 'Tarifs' : 'Pricing',
+                                label: {
+                                    en: 'Pricing',
+                                    fr: 'Tarifs',
+                                    ar: 'الأسعار',
+                                }[lang],
                                 href: '#pricing',
                             },
                             {
-                                label:
-                                    lang === 'fr' ? 'Témoignages' : 'Customers',
+                                label: {
+                                    en: 'Customers',
+                                    fr: 'Témoignages',
+                                    ar: 'العملاء',
+                                }[lang],
                                 href: '#stories',
                             },
-                            { label: 'Changelog', href: '#' },
+                            {
+                                label: {
+                                    en: 'Changelog',
+                                    fr: 'Journal des versions',
+                                    ar: 'سجل التغييرات',
+                                }[lang],
+                                href: '#',
+                            },
                         ]}
                     />
                 </motion.div>
 
                 <motion.div variants={FADE_UP}>
                     <FooterColumn
-                        heading={lang === 'fr' ? 'Entreprise' : 'Company'}
+                        heading={
+                            {
+                                en: 'Company',
+                                fr: 'Entreprise',
+                                ar: 'الشركة',
+                            }[lang]
+                        }
                         items={[
                             {
-                                label: lang === 'fr' ? 'À propos' : 'About',
+                                label: {
+                                    en: 'About',
+                                    fr: 'À propos',
+                                    ar: 'من نحن',
+                                }[lang],
                                 href: '#',
                             },
-                            { label: 'Blog', href: '#' },
                             {
-                                label: lang === 'fr' ? 'Contact' : 'Contact',
+                                label: {
+                                    en: 'Blog',
+                                    fr: 'Blog',
+                                    ar: 'المدوّنة',
+                                }[lang],
+                                href: '#',
+                            },
+                            {
+                                label: {
+                                    en: 'Contact',
+                                    fr: 'Contact',
+                                    ar: 'تواصل معنا',
+                                }[lang],
                                 href: 'mailto:hello@bluedome.app',
                             },
                             {
-                                label: lang === 'fr' ? 'Carrières' : 'Careers',
+                                label: {
+                                    en: 'Careers',
+                                    fr: 'Carrières',
+                                    ar: 'الوظائف',
+                                }[lang],
                                 href: '#',
                             },
                         ]}
@@ -127,15 +183,23 @@ export function SiteFooter({ lang }: SectionProps) {
                 <div className="flex items-center gap-4 text-[11px] text-muted-foreground">
                     <span className="flex items-center gap-2">
                         <ShieldCheck className="size-3.5 text-olive-600" />
-                        {lang === 'fr'
-                            ? 'GDPR · Loi 09-08 conforme'
-                            : 'GDPR · Law 09-08 compliant'}
+                        {
+                            {
+                                en: 'GDPR · Law 09-08 compliant',
+                                fr: 'GDPR · Loi 09-08 conforme',
+                                ar: 'متوافق مع النظام الأوروبي · القانون 09-08',
+                            }[lang]
+                        }
                     </span>
                     <span className="flex items-center gap-1.5">
                         <span className="size-1.5 animate-pulse rounded-full bg-emerald-500" />
-                        {lang === 'fr'
-                            ? 'Tous services opérationnels'
-                            : 'All systems operational'}
+                        {
+                            {
+                                en: 'All systems operational',
+                                fr: 'Tous services opérationnels',
+                                ar: 'جميع الأنظمة تعمل',
+                            }[lang]
+                        }
                     </span>
                 </div>
             </div>

@@ -21,9 +21,7 @@ export default function SuperAdminClinicEdit({
 
     return (
         <>
-            <Head
-                title={t.clinics_edit_title.replace('{name}', clinic.name)}
-            />
+            <Head title={t.clinics_edit_title.replace('{name}', clinic.name)} />
 
             <div className="px-6 py-5 lg:px-8">
                 <div className="mb-4 flex items-center gap-2 text-sm">

@@ -86,7 +86,7 @@ export default function VendorShow({ vendor }: Props) {
     const handleDelete = (): void => {
         if (
             !window.confirm(
-                `Delete "${vendor.vendor_name}"? It can be restored from the recycle bin.`,
+                t.delete_vendor_confirm.replace('{name}', vendor.vendor_name),
             )
         ) {
             return;

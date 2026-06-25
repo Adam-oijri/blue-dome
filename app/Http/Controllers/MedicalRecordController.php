@@ -7,6 +7,7 @@ use App\Http\Requests\MedicalRecord\UpdateMedicalRecordRequest;
 use App\Models\FieldChange;
 use App\Models\MedicalRecord;
 use App\Models\Patient;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -92,6 +93,39 @@ class MedicalRecordController extends Controller
                     ->get()
             ),
         ]);
+    }
+
+    /**
+     * Render the consultation record (SOAP) as a printable / PDF document.
+     * Doctor-only; the encrypted clinical fields decrypt on attribute access
+     * and are passed explicitly into the view (never via a JSON prop).
+     */
+    public function pdf(string $locale, MedicalRecord $medicalRecord): \Illuminate\Http\Response
+    {
+        unset($locale);
+        $this->authorize('view', $medicalRecord);
+
+        $medicalRecord->load([
+            // Full clinic relation so the letterhead has address/phone/email.
+            'clinic',
+            'patient:id,first_name,last_name,patient_code,date_of_birth',
+            'author:id,first_name,last_name',
+            'signer:id,first_name,last_name',
+            'appointment:id,scheduled_start,status',
+        ]);
+
+        return Pdf::loadView('pdf.medical-record', [
+            'record' => $medicalRecord,
+            'clinical' => [
+                'content' => $medicalRecord->content,
+                'subjective' => $medicalRecord->subjective,
+                'objective' => $medicalRecord->objective,
+                'assessment' => $medicalRecord->assessment,
+                'plan' => $medicalRecord->plan,
+            ],
+            'clinic' => $medicalRecord->clinic,
+            'generatedAt' => now()->toDayDateTimeString(),
+        ])->download('consultation-'.$medicalRecord->id.'.pdf');
     }
 
     public function update(UpdateMedicalRecordRequest $request, string $locale, MedicalRecord $medicalRecord): RedirectResponse

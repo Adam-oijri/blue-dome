@@ -41,12 +41,22 @@ export function NewsletterForm({ lang }: { lang: Lang }) {
     return (
         <div>
             <div className="text-[12px] font-semibold tracking-wider text-navy-900 uppercase">
-                {lang === 'fr' ? 'Restez informé' : 'Stay in the loop'}
+                {
+                    {
+                        en: 'Stay in the loop',
+                        fr: 'Restez informé',
+                        ar: 'ابقَ على اطّلاع',
+                    }[lang]
+                }
             </div>
             <p className="mt-2 text-[13px] leading-relaxed text-muted-foreground">
-                {lang === 'fr'
-                    ? 'Nouveautés produit, études cliniques, et nos meilleures pratiques médicales — un email par mois.'
-                    : 'Product updates, clinical case studies and best practices — one email a month.'}
+                {
+                    {
+                        en: 'Product updates, clinical case studies and best practices — one email a month.',
+                        fr: 'Nouveautés produit, études cliniques, et nos meilleures pratiques médicales — un email par mois.',
+                        ar: 'مستجدّات المنتج، ودراسات حالات سريرية، وأفضل الممارسات الطبية — بريد واحد شهريًا.',
+                    }[lang]
+                }
             </p>
             <form
                 onSubmit={handleSubmit}
@@ -59,7 +69,11 @@ export function NewsletterForm({ lang }: { lang: Lang }) {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder={
-                        lang === 'fr' ? 'votre@email.com' : 'you@example.com'
+                        {
+                            en: 'you@example.com',
+                            fr: 'votre@email.com',
+                            ar: 'you@example.com',
+                        }[lang]
                     }
                     className="flex-1 bg-transparent text-[13px] outline-none placeholder:text-muted-foreground/60"
                 />
@@ -81,7 +95,13 @@ export function NewsletterForm({ lang }: { lang: Lang }) {
                                 className="inline-flex items-center gap-1.5"
                             >
                                 <Check className="size-3.5" />
-                                {lang === 'fr' ? 'Inscrit' : 'Subscribed'}
+                                {
+                                    {
+                                        en: 'Subscribed',
+                                        fr: 'Inscrit',
+                                        ar: 'تم الاشتراك',
+                                    }[lang]
+                                }
                             </motion.span>
                         ) : (
                             <motion.span
@@ -92,7 +112,13 @@ export function NewsletterForm({ lang }: { lang: Lang }) {
                                 transition={{ duration: 0.2 }}
                                 className="inline-flex items-center gap-1.5"
                             >
-                                {lang === 'fr' ? 'S’inscrire' : 'Subscribe'}
+                                {
+                                    {
+                                        en: 'Subscribe',
+                                        fr: 'S’inscrire',
+                                        ar: 'اشترك',
+                                    }[lang]
+                                }
                                 <Send className="size-3" />
                             </motion.span>
                         )}

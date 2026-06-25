@@ -29,6 +29,7 @@ export type LabOrderEditable = {
     clinical_diagnosis: string | null;
     notes: string | null;
     external_lab_id: string | null;
+    external_lab?: { lab_name: string | null } | null;
 };
 
 export type LabOrderImage = {
@@ -83,6 +84,12 @@ export function EditLabOrdersSheet({
     const { slug: locale } = useLocale();
     const { t } = useDoctorLang();
     const [open, setOpen] = useState(false);
+    const initialLabType: 'internal' | 'external' = lab_order.external_lab_id
+        ? 'external'
+        : 'internal';
+    const [labType, setLabType] = useState<'internal' | 'external'>(
+        initialLabType,
+    );
 
     const form = useForm<{
         order_date: string;
@@ -91,7 +98,7 @@ export function EditLabOrdersSheet({
         fasting_required: boolean;
         clinical_diagnosis: string;
         notes: string;
-        external_lab_id: string;
+        external_lab_name: string;
         images: File[];
     }>({
         order_date: lab_order.order_date
@@ -102,7 +109,7 @@ export function EditLabOrdersSheet({
         fasting_required: lab_order.fasting_required ?? false,
         clinical_diagnosis: lab_order.clinical_diagnosis ?? '',
         notes: lab_order.notes ?? '',
-        external_lab_id: lab_order.external_lab_id ?? '',
+        external_lab_name: lab_order.external_lab?.lab_name ?? '',
         images: [],
     });
 
@@ -127,6 +134,7 @@ export function EditLabOrdersSheet({
                 if (!next) {
                     form.reset();
                     form.clearErrors();
+                    setLabType(initialLabType);
                 }
             }}
         >
@@ -158,7 +166,9 @@ export function EditLabOrdersSheet({
                             <InputError message={err.order_date} />
                         </div>
                         <div className="grid gap-2">
-                            <Label htmlFor="edit_urgency">{t.urgency_col}</Label>
+                            <Label htmlFor="edit_urgency">
+                                {t.urgency_col}
+                            </Label>
                             <select
                                 id="edit_urgency"
                                 value={form.data.urgency}
@@ -197,30 +207,60 @@ export function EditLabOrdersSheet({
                             <InputError message={err.status} />
                         </div>
                         <div className="grid gap-2">
-                            <Label htmlFor="edit_external_lab_id">
-                                {t.lab_col}
-                            </Label>
+                            <Label htmlFor="edit_lab_type">{t.lab_col}</Label>
                             <select
-                                id="edit_external_lab_id"
-                                value={form.data.external_lab_id}
+                                id="edit_lab_type"
+                                value={labType}
+                                onChange={(e) => {
+                                    const next = e.target.value as
+                                        | 'internal'
+                                        | 'external';
+                                    setLabType(next);
+
+                                    if (next === 'internal') {
+                                        form.setData('external_lab_name', '');
+                                    }
+                                }}
+                                className={FIELD_CLASS}
+                            >
+                                <option value="internal">{t.in_house}</option>
+                                <option value="external">
+                                    {t.lab_external}
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+
+                    {labType === 'external' && (
+                        <div className="grid gap-2">
+                            <Label htmlFor="edit_external_lab_name">
+                                {t.external_lab_name}
+                            </Label>
+                            <input
+                                id="edit_external_lab_name"
+                                list="edit-external-lab-options"
+                                value={form.data.external_lab_name}
                                 onChange={(e) =>
                                     form.setData(
-                                        'external_lab_id',
+                                        'external_lab_name',
                                         e.target.value,
                                     )
                                 }
                                 className={FIELD_CLASS}
-                            >
-                                <option value="">{t.in_house}</option>
-                                {external_labs.map((lab) => (
-                                    <option key={lab.id} value={lab.id}>
-                                        {lab.lab_name ?? lab.id}
-                                    </option>
-                                ))}
-                            </select>
-                            <InputError message={err.external_lab_id} />
+                            />
+                            <datalist id="edit-external-lab-options">
+                                {external_labs.map((lab) =>
+                                    lab.lab_name ? (
+                                        <option
+                                            key={lab.id}
+                                            value={lab.lab_name}
+                                        />
+                                    ) : null,
+                                )}
+                            </datalist>
+                            <InputError message={err.external_lab_name} />
                         </div>
-                    </div>
+                    )}
 
                     <label className="flex items-center gap-2 text-sm">
                         <input
@@ -340,9 +380,7 @@ export function EditLabOrdersSheet({
                                 {form.data.images.length} file(s) selected
                             </p>
                         )}
-                        <InputError
-                            message={err['images.0'] ?? err.images}
-                        />
+                        <InputError message={err['images.0'] ?? err.images} />
                     </div>
 
                     <Button

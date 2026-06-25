@@ -1,14 +1,20 @@
 import { Link, usePage } from '@inertiajs/react';
 import {
+    Banknote,
     Building2,
     Calendar,
     FilePieChart,
+    FolderOpen,
     LayoutGrid,
     MessageCircle,
+    Package,
     Phone,
+    Pill,
     Receipt,
     Settings as SettingsIcon,
     Stethoscope,
+    Truck,
+    UserCog,
     UserPlus,
     Users,
     Wallet,
@@ -34,8 +40,13 @@ import {
 import { useSecretaryLang } from '@/lib/i18n/secretary-context';
 import { useLocale } from '@/lib/i18n/use-locale';
 import { cn } from '@/lib/utils';
+import documents from '@/routes/documents';
+import expenses from '@/routes/expenses';
+import inventory from '@/routes/inventory';
+import medications from '@/routes/medications';
 import messages from '@/routes/messages';
 import secretary from '@/routes/secretary';
+import vendors from '@/routes/vendors';
 
 type NavEntry = {
     key: string;
@@ -133,10 +144,46 @@ export function SecretarySidebar() {
             icon: Wallet,
         },
         {
+            key: 'expenses',
+            label: t.nav_expenses,
+            href: expenses.index.url({ locale }),
+            icon: Banknote,
+        },
+        {
+            key: 'medications',
+            label: t.nav_medications,
+            href: medications.index.url({ locale }),
+            icon: Pill,
+        },
+        {
+            key: 'inventory',
+            label: t.nav_inventory,
+            href: inventory.index.url({ locale }),
+            icon: Package,
+        },
+        {
+            key: 'vendors',
+            label: t.nav_vendors,
+            href: vendors.index.url({ locale }),
+            icon: Truck,
+        },
+        {
+            key: 'documents',
+            label: t.nav_documents,
+            href: documents.index.url({ locale }),
+            icon: FolderOpen,
+        },
+        {
             key: 'doctors',
             label: t.nav_doctors,
             href: secretary.doctors.url({ locale }),
             icon: Stethoscope,
+        },
+        {
+            key: 'staff',
+            label: t.nav_staff,
+            href: secretary.staff.url({ locale }),
+            icon: UserCog,
         },
         {
             key: 'branches',

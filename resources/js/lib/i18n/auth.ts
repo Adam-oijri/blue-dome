@@ -202,7 +202,8 @@ const fr: AuthDictionary = {
     log_in_link: 'se connecter',
 
     login_title: 'Connectez-vous à votre compte',
-    login_desc: 'Saisissez votre e-mail et votre mot de passe pour vous connecter',
+    login_desc:
+        'Saisissez votre e-mail et votre mot de passe pour vous connecter',
     forgot_link: 'Mot de passe oublié ?',
     remember_me: 'Se souvenir de moi',
     log_in_btn: 'Se connecter',
@@ -223,7 +224,7 @@ const fr: AuthDictionary = {
     trial_expired_title: 'Votre essai gratuit est terminé',
     trial_expired_desc: 'Réactivez votre clinique pour continuer',
     trial_expired_body:
-        "Votre essai gratuit de 3 jours est terminé. Contactez-nous pour mettre à niveau votre clinique et reprendre là où vous vous êtes arrêté — vos données sont en sécurité.",
+        'Votre essai gratuit de 3 jours est terminé. Contactez-nous pour mettre à niveau votre clinique et reprendre là où vous vous êtes arrêté — vos données sont en sécurité.',
     trial_contact_btn: 'Contactez-nous pour passer à la version supérieure',
 
     forgot_title: 'Mot de passe oublié',
@@ -262,7 +263,8 @@ const fr: AuthDictionary = {
     twofa_or_you_can: 'ou vous pouvez',
 
     invite_title: 'Acceptez votre invitation',
-    invite_desc: 'Définissez votre e-mail et mot de passe pour activer votre compte',
+    invite_desc:
+        'Définissez votre e-mail et mot de passe pour activer votre compte',
     invited_as: 'Vous êtes invité en tant que',
     role_doctor: 'Médecin',
     role_secretary: 'Secrétaire',
@@ -338,7 +340,8 @@ const ar: AuthDictionary = {
     twofa_code_title: 'رمز المصادقة',
     twofa_code_desc: 'أدخل رمز المصادقة المقدم من تطبيق المصادقة الخاص بك.',
     twofa_recovery_title: 'رمز الاسترداد',
-    twofa_recovery_desc: 'أكد الوصول إلى حسابك بإدخال أحد رموز الاسترداد الطارئة.',
+    twofa_recovery_desc:
+        'أكد الوصول إلى حسابك بإدخال أحد رموز الاسترداد الطارئة.',
     twofa_recovery_ph: 'أدخل رمز الاسترداد',
     twofa_toggle_to_recovery: 'تسجيل الدخول باستخدام رمز الاسترداد',
     twofa_toggle_to_code: 'تسجيل الدخول باستخدام رمز المصادقة',

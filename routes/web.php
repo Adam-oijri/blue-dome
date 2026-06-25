@@ -33,6 +33,7 @@ use App\Http\Controllers\Secretary\PatientsController as SecretaryPatientsContro
 use App\Http\Controllers\Secretary\PaymentsController as SecretaryPaymentsController;
 use App\Http\Controllers\Secretary\ReportsController as SecretaryReportsController;
 use App\Http\Controllers\Secretary\SettingsController as SecretarySettingsController;
+use App\Http\Controllers\Secretary\StaffController as SecretaryStaffController;
 use App\Http\Controllers\Secretary\WalkInsController as SecretaryWalkInsController;
 use App\Http\Controllers\Secretary\WhatsAppController as SecretaryWhatsAppController;
 use App\Http\Controllers\SuperAdmin\ActivityLogController as SuperAdminActivityLogController;
@@ -214,6 +215,8 @@ Route::prefix('{locale}')
                 Route::delete('checklist/items/{item}', [SecretaryChecklistController::class, 'destroyItem'])->name('checklist.items.destroy');
                 Route::get('follow-up', [FollowUpController::class, 'index'])->name('follow-up');
                 Route::get('appointments', [SecretaryAppointmentsController::class, 'index'])->name('appointments');
+                Route::post('appointments/{appointment}/send-confirmation', [SecretaryAppointmentsController::class, 'sendConfirmation'])
+                    ->name('appointments.send-confirmation');
                 Route::get('patients', [SecretaryPatientsController::class, 'index'])->name('patients');
                 Route::get('patients/export', [SecretaryPatientsController::class, 'export'])->name('patients.export');
                 Route::get('walk-ins', [SecretaryWalkInsController::class, 'index'])->name('walkins');
@@ -221,6 +224,14 @@ Route::prefix('{locale}')
                 Route::get('billing', [SecretaryBillingController::class, 'index'])->name('billing');
                 Route::get('payments', [SecretaryPaymentsController::class, 'index'])->name('payments');
                 Route::get('doctors', [SecretaryDoctorsController::class, 'index'])->name('doctors');
+                Route::get('staff', [SecretaryStaffController::class, 'index'])->name('staff');
+                Route::post('staff/invitations', [SecretaryStaffController::class, 'storeInvitation'])
+                    ->middleware('throttle:staff-creation')
+                    ->name('staff.invitations.store');
+                Route::delete('staff/invitations/{invitation}', [SecretaryStaffController::class, 'revokeInvitation'])
+                    ->name('staff.invitations.revoke');
+                Route::delete('staff/{user}', [SecretaryStaffController::class, 'destroy'])
+                    ->name('staff.destroy');
                 Route::get('branches', [SecretaryBranchesController::class, 'index'])->name('branches');
                 Route::get('reports', [SecretaryReportsController::class, 'index'])->name('reports');
                 Route::get('reports/export', [SecretaryReportsController::class, 'export'])->name('reports.export');
@@ -268,20 +279,6 @@ Route::prefix('{locale}')
 
                 Route::resource('medications', MedicationController::class)
                     ->except(['create', 'edit']);
-                Route::resource('prescriptions', PrescriptionController::class)
-                    ->except(['create', 'edit']);
-                Route::get('prescriptions/{prescription}/pdf', [PrescriptionController::class, 'pdf'])
-                    ->name('prescriptions.pdf');
-                Route::resource('lab-orders', LabOrderController::class)
-                    ->except(['create', 'edit'])
-                    ->parameters(['lab-orders' => 'lab_order']);
-                Route::post('lab-orders/{lab_order}/results', [LabOrderController::class, 'recordResults'])
-                    ->name('lab-orders.results');
-                Route::resource('medical-records', MedicalRecordController::class)
-                    ->except(['destroy', 'create', 'edit'])
-                    ->parameters(['medical-records' => 'medical_record']);
-                Route::post('medical-records/{medical_record}/sign', [MedicalRecordController::class, 'sign'])
-                    ->name('medical-records.sign');
 
                 Route::resource('invoices', InvoiceController::class)
                     ->except(['create', 'edit']);
@@ -312,6 +309,34 @@ Route::prefix('{locale}')
                     ->name('documents.download');
                 Route::get('documents/{document}/preview', [DocumentController::class, 'preview'])
                     ->name('documents.preview');
+            });
+
+            /*
+             * Clinical records — the treating doctor's domain (super admin
+             * retained for cross-clinic oversight). The secretary/clinic
+             * manager is deliberately excluded from medical records,
+             * prescriptions and lab orders, enforced here at the route layer
+             * and mirrored in the matching policies.
+             */
+            Route::middleware('role:super_admin,doctor')->group(function (): void {
+                Route::resource('prescriptions', PrescriptionController::class)
+                    ->except(['create', 'edit']);
+                Route::get('prescriptions/{prescription}/pdf', [PrescriptionController::class, 'pdf'])
+                    ->name('prescriptions.pdf');
+                Route::resource('lab-orders', LabOrderController::class)
+                    ->except(['create', 'edit'])
+                    ->parameters(['lab-orders' => 'lab_order']);
+                Route::post('lab-orders/{lab_order}/results', [LabOrderController::class, 'recordResults'])
+                    ->name('lab-orders.results');
+                Route::get('lab-orders/{lab_order}/pdf', [LabOrderController::class, 'pdf'])
+                    ->name('lab-orders.pdf');
+                Route::resource('medical-records', MedicalRecordController::class)
+                    ->except(['destroy', 'create', 'edit'])
+                    ->parameters(['medical-records' => 'medical_record']);
+                Route::post('medical-records/{medical_record}/sign', [MedicalRecordController::class, 'sign'])
+                    ->name('medical-records.sign');
+                Route::get('medical-records/{medical_record}/pdf', [MedicalRecordController::class, 'pdf'])
+                    ->name('medical-records.pdf');
             });
         });
     });

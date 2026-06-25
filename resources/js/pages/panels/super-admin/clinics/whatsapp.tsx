@@ -11,6 +11,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
+import { useSuperAdminLang } from '@/lib/i18n/super-admin-context';
 import { useLocale } from '@/lib/i18n/use-locale';
 import superAdmin from '@/routes/super-admin';
 
@@ -40,11 +41,12 @@ export default function SuperAdminClinicWhatsApp({
     webhookUrl,
     integration,
 }: Props) {
+    const { t } = useSuperAdminLang();
     const { slug: locale } = useLocale();
 
     return (
         <>
-            <Head title={`${clinic.name} — WhatsApp`} />
+            <Head title={t.cl_wa_head.replace('{clinic}', clinic.name)} />
 
             <div className="px-6 py-5 lg:px-8">
                 <div className="mb-4 flex items-center gap-2 text-sm">
@@ -65,18 +67,22 @@ export default function SuperAdminClinicWhatsApp({
                         </Link>
                     </Button>
                     <span className="text-muted-foreground">/</span>
-                    <span className="text-[13px] font-semibold">WhatsApp</span>
+                    <span className="text-[13px] font-semibold">
+                        {t.cl_wa_crumb}
+                    </span>
                 </div>
 
                 <PageHeader
-                    title="WhatsApp Cloud API"
-                    description={`Editing the Meta WhatsApp Business integration for ${clinic.name}.`}
+                    title={t.cl_wa_title}
+                    description={t.cl_wa_desc.replace('{clinic}', clinic.name)}
                 />
 
                 <SectionCard className="mt-6">
                     <div className="space-y-6 p-6">
                         <div className="rounded-lg border bg-muted/40 p-4 text-sm">
-                            <div className="mb-1 font-medium">Webhook URL</div>
+                            <div className="mb-1 font-medium">
+                                {t.cl_wa_webhook_url}
+                            </div>
                             <code className="block rounded border bg-background px-2 py-1.5 text-xs">
                                 {webhookUrl}
                             </code>
@@ -94,7 +100,7 @@ export default function SuperAdminClinicWhatsApp({
                                 <>
                                     <div className="grid gap-2">
                                         <Label htmlFor="phone_number_id">
-                                            Phone number ID
+                                            {t.cl_wa_phone_number_id}
                                         </Label>
                                         <Input
                                             id="phone_number_id"
@@ -113,7 +119,7 @@ export default function SuperAdminClinicWhatsApp({
 
                                     <div className="grid gap-2">
                                         <Label htmlFor="business_account_id">
-                                            WhatsApp Business Account ID
+                                            {t.cl_wa_business_account_id}
                                         </Label>
                                         <Input
                                             id="business_account_id"
@@ -132,7 +138,7 @@ export default function SuperAdminClinicWhatsApp({
 
                                     <div className="grid gap-2">
                                         <Label htmlFor="display_phone_number">
-                                            Display phone number
+                                            {t.cl_wa_display_phone}
                                         </Label>
                                         <Input
                                             id="display_phone_number"
@@ -152,11 +158,10 @@ export default function SuperAdminClinicWhatsApp({
 
                                     <div className="grid gap-2">
                                         <Label htmlFor="access_token">
-                                            Access token
+                                            {t.cl_wa_access_token}
                                             {integration?.has_access_token && (
                                                 <span className="ml-2 text-xs font-normal text-muted-foreground">
-                                                    (saved &mdash; leave blank
-                                                    to keep current)
+                                                    {t.cl_wa_saved_hint}
                                                 </span>
                                             )}
                                         </Label>
@@ -172,11 +177,10 @@ export default function SuperAdminClinicWhatsApp({
 
                                     <div className="grid gap-2">
                                         <Label htmlFor="app_secret">
-                                            App secret
+                                            {t.cl_wa_app_secret}
                                             {integration?.has_app_secret && (
                                                 <span className="ml-2 text-xs font-normal text-muted-foreground">
-                                                    (saved &mdash; leave blank
-                                                    to keep current)
+                                                    {t.cl_wa_saved_hint}
                                                 </span>
                                             )}
                                         </Label>
@@ -192,11 +196,10 @@ export default function SuperAdminClinicWhatsApp({
 
                                     <div className="grid gap-2">
                                         <Label htmlFor="webhook_verify_token">
-                                            Webhook verify token
+                                            {t.cl_wa_webhook_verify_token}
                                             {integration?.has_webhook_verify_token && (
                                                 <span className="ml-2 text-xs font-normal text-muted-foreground">
-                                                    (saved &mdash; leave blank
-                                                    to keep current)
+                                                    {t.cl_wa_saved_hint}
                                                 </span>
                                             )}
                                         </Label>
@@ -214,7 +217,7 @@ export default function SuperAdminClinicWhatsApp({
 
                                     <div className="grid gap-2">
                                         <Label htmlFor="daily_message_limit">
-                                            Daily message limit
+                                            {t.cl_wa_daily_limit}
                                         </Label>
                                         <Input
                                             id="daily_message_limit"
@@ -245,7 +248,7 @@ export default function SuperAdminClinicWhatsApp({
                                             htmlFor="is_active"
                                             className="font-normal"
                                         >
-                                            Active
+                                            {t.cl_wa_active}
                                         </Label>
                                     </div>
 
@@ -255,7 +258,7 @@ export default function SuperAdminClinicWhatsApp({
                                         className="bg-navy-900 text-white hover:bg-navy-800"
                                     >
                                         {processing && <Spinner />}
-                                        Save WhatsApp settings
+                                        {t.cl_wa_submit}
                                     </Button>
                                 </>
                             )}

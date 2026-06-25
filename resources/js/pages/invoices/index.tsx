@@ -317,7 +317,7 @@ export default function InvoicesIndex({
                         </TableBody>
                     </Table>
 
-                    <Pagination paginated={invoiceList} t={{}} />
+                    <Pagination paginated={invoiceList} t={t} />
                 </SectionCard>
             </div>
         </>

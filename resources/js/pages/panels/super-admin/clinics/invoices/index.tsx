@@ -15,6 +15,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import { useSuperAdminLang } from '@/lib/i18n/super-admin-context';
 import { useLocale } from '@/lib/i18n/use-locale';
 import { Pagination } from '@/pages/panels/super-admin/users';
 import superAdmin from '@/routes/super-admin';
@@ -57,11 +58,12 @@ export default function SuperAdminClinicInvoices({
     invoices: Paginated<Invoice>;
     patients: Array<{ id: string; [k: string]: unknown }>;
 }) {
+    const { t } = useSuperAdminLang();
     const { slug: locale } = useLocale();
 
     return (
         <>
-            <Head title={`Invoices — ${clinic.name}`} />
+            <Head title={t.cl_invoices_head.replace('{clinic}', clinic.name)} />
 
             <div className="px-6 py-5 lg:px-8">
                 <div className="mb-4 flex items-center gap-2 text-sm">
@@ -82,12 +84,16 @@ export default function SuperAdminClinicInvoices({
                         </Link>
                     </Button>
                     <span className="text-muted-foreground">/</span>
-                    <span className="text-[13px] font-semibold">Invoices</span>
+                    <span className="text-[13px] font-semibold">
+                        {t.cl_invoices_crumb}
+                    </span>
                 </div>
 
                 <PageHeader
-                    title="Invoices"
-                    description={`${invoices.total} invoices at ${clinic.name}`}
+                    title={t.cl_invoices_title}
+                    description={t.cl_invoices_desc
+                        .replace('{total}', String(invoices.total))
+                        .replace('{clinic}', clinic.name)}
                     actions={
                         <CreateClinicInvoicesSheet
                             clinicId={clinic.id}
@@ -98,7 +104,7 @@ export default function SuperAdminClinicInvoices({
                                 className="gap-2 bg-navy-900 text-white hover:bg-navy-800"
                             >
                                 <Plus className="size-3.5" />
-                                New invoice
+                                {t.cl_invoices_new}
                             </Button>
                         </CreateClinicInvoicesSheet>
                     }
@@ -109,19 +115,19 @@ export default function SuperAdminClinicInvoices({
                         <TableHeader>
                             <TableRow className="bg-muted/50">
                                 <TableHead className="px-5 py-2.5 text-[11px] tracking-wider uppercase">
-                                    Invoice
+                                    {t.cl_invoice_th_invoice}
                                 </TableHead>
                                 <TableHead className="text-[11px] tracking-wider uppercase">
-                                    Patient
+                                    {t.th_patient}
                                 </TableHead>
                                 <TableHead className="text-end text-[11px] tracking-wider uppercase">
-                                    Total
+                                    {t.th_total}
                                 </TableHead>
                                 <TableHead className="text-end text-[11px] tracking-wider uppercase">
-                                    Paid
+                                    {t.th_paid}
                                 </TableHead>
                                 <TableHead className="text-[11px] tracking-wider uppercase">
-                                    Status
+                                    {t.th_status}
                                 </TableHead>
                                 <TableHead className="w-20" />
                             </TableRow>
@@ -133,7 +139,7 @@ export default function SuperAdminClinicInvoices({
                                         colSpan={6}
                                         className="py-12 text-center text-sm text-muted-foreground"
                                     >
-                                        No invoices.
+                                        {t.cl_invoices_empty}
                                     </TableCell>
                                 </TableRow>
                             )}
@@ -186,7 +192,7 @@ export default function SuperAdminClinicInvoices({
                                                 size="sm"
                                                 asChild
                                                 className="size-7 p-0"
-                                                title="Edit"
+                                                title={t.action_edit}
                                             >
                                                 <Link
                                                     href={superAdmin.clinics.invoices.edit.url(
@@ -205,7 +211,7 @@ export default function SuperAdminClinicInvoices({
                                                 size="sm"
                                                 asChild
                                                 className="size-7 p-0 text-danger"
-                                                title="Delete"
+                                                title={t.action_remove}
                                             >
                                                 <Link
                                                     href={superAdmin.clinics.invoices.destroy.url(
@@ -219,7 +225,7 @@ export default function SuperAdminClinicInvoices({
                                                     as="button"
                                                     onBefore={() =>
                                                         confirm(
-                                                            'Delete this invoice?',
+                                                            t.cl_invoice_confirm_delete,
                                                         )
                                                     }
                                                 >
@@ -233,7 +239,7 @@ export default function SuperAdminClinicInvoices({
                         </TableBody>
                     </Table>
 
-                    <Pagination paginated={invoices} t={{}} />
+                    <Pagination paginated={invoices} t={t} />
                 </SectionCard>
             </div>
         </>

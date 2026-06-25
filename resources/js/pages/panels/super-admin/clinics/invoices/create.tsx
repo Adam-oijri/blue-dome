@@ -8,6 +8,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
+import { enumLabel } from '@/lib/i18n/doctor';
+import { useSuperAdminLang } from '@/lib/i18n/super-admin-context';
 import { useLocale } from '@/lib/i18n/use-locale';
 import superAdmin from '@/routes/super-admin';
 
@@ -53,7 +55,18 @@ export default function SuperAdminClinicInvoiceCreate({
     clinic: { id: string; name: string };
     patients: PatientOpt[];
 }) {
+    const { t } = useSuperAdminLang();
     const { slug: locale } = useLocale();
+    const itemTypeLabels: Record<string, string> = {
+        consultation: t.item_type_consultation,
+        procedure: t.item_type_procedure,
+        lab_test: t.item_type_lab_test,
+        imaging: t.item_type_imaging,
+        medication: t.item_type_medication,
+        vaccination: t.item_type_vaccination,
+        supplies: t.item_type_supplies,
+        other: t.item_type_other,
+    };
     const { data, setData, post, processing, errors } = useForm<{
         patient_id: string;
         currency: string;
@@ -100,7 +113,9 @@ export default function SuperAdminClinicInvoiceCreate({
 
     return (
         <>
-            <Head title={`New invoice — ${clinic.name}`} />
+            <Head
+                title={t.cl_invoice_head_new.replace('{clinic}', clinic.name)}
+            />
 
             <div className="px-6 py-5 lg:px-8">
                 <div className="mb-4 flex items-center gap-2 text-sm">
@@ -117,22 +132,27 @@ export default function SuperAdminClinicInvoiceCreate({
                             })}
                         >
                             <ChevronLeft className="size-3.5" />
-                            Invoices
+                            {t.cl_invoices_crumb}
                         </Link>
                     </Button>
                     <span className="text-muted-foreground">/</span>
                     <span className="text-[13px] font-semibold">
-                        New invoice
+                        {t.cl_invoice_crumb_new}
                     </span>
                 </div>
 
-                <PageHeader title="New invoice" description={clinic.name} />
+                <PageHeader
+                    title={t.cl_invoice_title_new}
+                    description={clinic.name}
+                />
 
                 <SectionCard className="mt-6">
                     <form onSubmit={submit} className="space-y-6 p-6">
                         <div className="grid gap-5 sm:grid-cols-2">
                             <div className="grid gap-2">
-                                <Label htmlFor="patient_id">Patient</Label>
+                                <Label htmlFor="patient_id">
+                                    {t.cl_invoice_patient}
+                                </Label>
                                 <select
                                     id="patient_id"
                                     value={data.patient_id}
@@ -142,7 +162,9 @@ export default function SuperAdminClinicInvoiceCreate({
                                     className={selectClass}
                                     required
                                 >
-                                    <option value="">Select a patient…</option>
+                                    <option value="">
+                                        {t.cl_invoice_patient_ph}
+                                    </option>
                                     {patients.map((p) => (
                                         <option key={p.id} value={p.id}>
                                             {`${p.first_name ?? ''} ${p.last_name ?? ''}`.trim()}
@@ -155,7 +177,9 @@ export default function SuperAdminClinicInvoiceCreate({
                                 <InputError message={errors.patient_id} />
                             </div>
                             <div className="grid gap-2">
-                                <Label htmlFor="due_date">Due date</Label>
+                                <Label htmlFor="due_date">
+                                    {t.cl_invoice_due_date}
+                                </Label>
                                 <Input
                                     id="due_date"
                                     type="date"
@@ -170,7 +194,7 @@ export default function SuperAdminClinicInvoiceCreate({
 
                         <div className="space-y-3">
                             <div className="flex items-center justify-between">
-                                <Label>Line items</Label>
+                                <Label>{t.cl_invoice_line_items}</Label>
                                 <Button
                                     type="button"
                                     variant="outline"
@@ -184,7 +208,7 @@ export default function SuperAdminClinicInvoiceCreate({
                                     }
                                 >
                                     <Plus className="size-3.5" />
-                                    Add item
+                                    {t.cl_invoice_add_item}
                                 </Button>
                             </div>
                             {data.items.map((item, i) => (
@@ -203,14 +227,19 @@ export default function SuperAdminClinicInvoiceCreate({
                                         }
                                         className={selectClass}
                                     >
-                                        {ITEM_TYPES.map((t) => (
-                                            <option key={t} value={t}>
-                                                {t}
+                                        {ITEM_TYPES.map((value) => (
+                                            <option key={value} value={value}>
+                                                {enumLabel(
+                                                    itemTypeLabels,
+                                                    value,
+                                                )}
                                             </option>
                                         ))}
                                     </select>
                                     <Input
-                                        placeholder="Description"
+                                        placeholder={
+                                            t.cl_invoice_description_ph
+                                        }
                                         value={item.description}
                                         onChange={(e) =>
                                             setItem(
@@ -224,7 +253,7 @@ export default function SuperAdminClinicInvoiceCreate({
                                     <Input
                                         type="number"
                                         step="0.01"
-                                        placeholder="Qty"
+                                        placeholder={t.cl_invoice_qty_ph}
                                         value={item.quantity}
                                         onChange={(e) =>
                                             setItem(
@@ -238,7 +267,7 @@ export default function SuperAdminClinicInvoiceCreate({
                                     <Input
                                         type="number"
                                         step="0.01"
-                                        placeholder="Price"
+                                        placeholder={t.cl_invoice_price_ph}
                                         value={item.unit_price}
                                         onChange={(e) =>
                                             setItem(
@@ -269,12 +298,13 @@ export default function SuperAdminClinicInvoiceCreate({
                                 </div>
                             ))}
                             <div className="text-end text-[13px] font-semibold">
-                                Subtotal: {total.toFixed(2)} {data.currency}
+                                {t.cl_invoice_subtotal}: {total.toFixed(2)}{' '}
+                                {data.currency}
                             </div>
                         </div>
 
                         <div className="grid gap-2">
-                            <Label htmlFor="notes">Notes</Label>
+                            <Label htmlFor="notes">{t.cl_invoice_notes}</Label>
                             <textarea
                                 id="notes"
                                 value={data.notes}
@@ -292,7 +322,7 @@ export default function SuperAdminClinicInvoiceCreate({
                             className="bg-navy-900 text-white hover:bg-navy-800"
                         >
                             {processing && <Spinner />}
-                            Create invoice
+                            {t.cl_invoice_submit_create}
                         </Button>
                     </form>
                 </SectionCard>

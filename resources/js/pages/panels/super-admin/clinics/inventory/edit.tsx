@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
+import { useSuperAdminLang } from '@/lib/i18n/super-admin-context';
 import { useLocale } from '@/lib/i18n/use-locale';
 import superAdmin from '@/routes/super-admin';
 
@@ -34,6 +35,7 @@ export default function SuperAdminClinicInventoryEdit({
     clinic: { id: string; name: string };
     inventory: Item | null;
 }) {
+    const { t } = useSuperAdminLang();
     const { slug: locale } = useLocale();
     const isEdit = inventory !== null;
 
@@ -47,7 +49,12 @@ export default function SuperAdminClinicInventoryEdit({
 
     return (
         <>
-            <Head title={`${isEdit ? 'Edit' : 'New'} item — ${clinic.name}`} />
+            <Head
+                title={(isEdit
+                    ? t.cl_inv_head_edit
+                    : t.cl_inv_head_new
+                ).replace('{clinic}', clinic.name)}
+            />
 
             <div className="px-6 py-5 lg:px-8">
                 <div className="mb-4 flex items-center gap-2 text-sm">
@@ -64,17 +71,17 @@ export default function SuperAdminClinicInventoryEdit({
                             })}
                         >
                             <ChevronLeft className="size-3.5" />
-                            Inventory
+                            {t.cl_inv_crumb}
                         </Link>
                     </Button>
                     <span className="text-muted-foreground">/</span>
                     <span className="text-[13px] font-semibold">
-                        {isEdit ? 'Edit' : 'New item'}
+                        {isEdit ? t.cl_invoice_crumb_edit : t.cl_inv_crumb_new}
                     </span>
                 </div>
 
                 <PageHeader
-                    title={isEdit ? 'Edit item' : 'New item'}
+                    title={isEdit ? t.cl_inv_title_edit : t.cl_inv_title_new}
                     description={clinic.name}
                 />
 
@@ -89,7 +96,7 @@ export default function SuperAdminClinicInventoryEdit({
                                 <div className="grid gap-5 sm:grid-cols-2">
                                     <div className="grid gap-2">
                                         <Label htmlFor="item_name">
-                                            Item name
+                                            {t.cl_inv_item_name}
                                         </Label>
                                         <Input
                                             id="item_name"
@@ -105,7 +112,7 @@ export default function SuperAdminClinicInventoryEdit({
                                     </div>
                                     <div className="grid gap-2">
                                         <Label htmlFor="category">
-                                            Category
+                                            {t.cl_inv_category}
                                         </Label>
                                         <select
                                             id="category"
@@ -126,7 +133,7 @@ export default function SuperAdminClinicInventoryEdit({
                                     </div>
                                     <div className="grid gap-2">
                                         <Label htmlFor="item_code">
-                                            Item code
+                                            {t.cl_inv_item_code}
                                         </Label>
                                         <Input
                                             id="item_code"
@@ -140,7 +147,9 @@ export default function SuperAdminClinicInventoryEdit({
                                         />
                                     </div>
                                     <div className="grid gap-2">
-                                        <Label htmlFor="unit">Unit</Label>
+                                        <Label htmlFor="unit">
+                                            {t.cl_inv_unit}
+                                        </Label>
                                         <Input
                                             id="unit"
                                             name="unit"
@@ -151,7 +160,7 @@ export default function SuperAdminClinicInventoryEdit({
                                     {!isEdit && (
                                         <div className="grid gap-2">
                                             <Label htmlFor="quantity_in_stock">
-                                                Opening stock
+                                                {t.cl_inv_opening_stock}
                                             </Label>
                                             <Input
                                                 id="quantity_in_stock"
@@ -168,7 +177,7 @@ export default function SuperAdminClinicInventoryEdit({
                                     )}
                                     <div className="grid gap-2">
                                         <Label htmlFor="min_stock_level">
-                                            Min stock level
+                                            {t.cl_inv_min_stock}
                                         </Label>
                                         <Input
                                             id="min_stock_level"
@@ -184,7 +193,7 @@ export default function SuperAdminClinicInventoryEdit({
                                     </div>
                                     <div className="grid gap-2">
                                         <Label htmlFor="is_active">
-                                            Status
+                                            {t.cl_inv_status}
                                         </Label>
                                         <select
                                             id="is_active"
@@ -198,8 +207,12 @@ export default function SuperAdminClinicInventoryEdit({
                                             }
                                             className={selectClass}
                                         >
-                                            <option value="1">Active</option>
-                                            <option value="0">Inactive</option>
+                                            <option value="1">
+                                                {t.status_active}
+                                            </option>
+                                            <option value="0">
+                                                {t.status_inactive}
+                                            </option>
                                         </select>
                                         <InputError
                                             message={errors.is_active}
@@ -213,7 +226,9 @@ export default function SuperAdminClinicInventoryEdit({
                                     className="bg-navy-900 text-white hover:bg-navy-800"
                                 >
                                     {processing && <Spinner />}
-                                    {isEdit ? 'Save changes' : 'Create item'}
+                                    {isEdit
+                                        ? t.cl_inv_submit_save
+                                        : t.cl_inv_submit_create}
                                 </Button>
                             </>
                         )}

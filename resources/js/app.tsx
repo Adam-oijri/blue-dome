@@ -63,8 +63,14 @@ if (isBrowser) {
     });
 }
 
-const DOCTOR_PAGE_PREFIXES = [
-    'panels/doctor/',
+/**
+ * Generic resource pages that are shared across roles (they live at top-level
+ * paths, not under a `panels/<role>/` prefix). Each must render inside the
+ * VIEWER'S OWN role layout — never a hard-coded doctor shell — so a secretary
+ * never sees the doctor sidebar/topbar/nav, and vice versa. Access to each page
+ * is still gated server-side by route middleware + policies.
+ */
+const SHARED_PAGE_PREFIXES = [
     'patients/',
     'appointments/',
     'prescriptions/',
@@ -78,6 +84,26 @@ const DOCTOR_PAGE_PREFIXES = [
     'documents/',
     'document-folders/',
 ];
+
+/** Map the authenticated user's role to its panel layout. */
+function layoutForRole(role: string | undefined) {
+    switch (role) {
+        case 'super_admin':
+            return SuperAdminLayout;
+        case 'secretary':
+            return SecretaryLayout;
+        default:
+            // Doctor (and any unexpected fallback) get the doctor shell.
+            return DoctorLayout;
+    }
+}
+
+function roleFromPage(
+    page: { props?: unknown } | undefined,
+): string | undefined {
+    return (page?.props as { auth?: { user?: { role?: string } } } | undefined)
+        ?.auth?.user?.role;
+}
 
 createInertiaApp({
     title: (title) => (title ? `${title} - ${appName}` : appName),
@@ -96,29 +122,19 @@ createInertiaApp({
             case name.startsWith('panels/super-admin/'):
                 return SuperAdminLayout;
 
-            // Shared staff-chat page — render it inside the viewer's own panel
-            // (super admin, doctor, or secretary) so the role sidebar + Messages
-            // nav stay put.
-            case name === 'messages/index': {
-                const role = (
-                    page?.props as
-                        | { auth?: { user?: { role?: string } } }
-                        | undefined
-                )?.auth?.user?.role;
-
-                if (role === 'super_admin') {
-                    return SuperAdminLayout;
-                }
-
-                return role === 'secretary' ? SecretaryLayout : DoctorLayout;
-            }
-
             case name.startsWith('panels/secretary/') ||
                 name === 'secretary/follow-up':
                 return SecretaryLayout;
 
-            case DOCTOR_PAGE_PREFIXES.some((prefix) => name.startsWith(prefix)):
+            case name.startsWith('panels/doctor/'):
                 return DoctorLayout;
+
+            // Shared pages (staff chat + the generic resource modules) render
+            // inside the viewer's own role panel so the role sidebar + nav stay
+            // put — no role ever sees another role's chrome.
+            case name === 'messages/index':
+            case SHARED_PAGE_PREFIXES.some((prefix) => name.startsWith(prefix)):
+                return layoutForRole(roleFromPage(page));
 
             default:
                 return AppLayout;

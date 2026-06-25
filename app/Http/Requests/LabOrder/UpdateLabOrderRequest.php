@@ -32,6 +32,9 @@ class UpdateLabOrderRequest extends FormRequest
                     ->where('clinic_id', $clinicId)
                     ->whereNull('deleted_at'),
             ],
+            // Free-typed external lab name (Laboratory type = External). The
+            // controller resolves it to an external_labs row; empty = Internal.
+            'external_lab_name' => ['sometimes', 'nullable', 'string', 'max:255'],
             'images' => ['nullable', 'array', 'max:10'],
             'images.*' => ['file', 'mimes:jpg,jpeg,png,webp,pdf', 'max:10240'],
         ];

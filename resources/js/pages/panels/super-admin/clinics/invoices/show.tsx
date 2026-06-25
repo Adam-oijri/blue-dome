@@ -17,6 +17,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import { useSuperAdminLang } from '@/lib/i18n/super-admin-context';
 import { useLocale } from '@/lib/i18n/use-locale';
 import superAdmin from '@/routes/super-admin';
 
@@ -60,13 +61,16 @@ export default function SuperAdminClinicInvoiceShow({
     clinic: { id: string; name: string };
     invoice: Invoice;
 }) {
+    const { t } = useSuperAdminLang();
     const { slug: locale } = useLocale();
     const currency = invoice.currency ?? '';
 
     return (
         <>
             <Head
-                title={`Invoice ${invoice.invoice_number ?? ''} — ${clinic.name}`}
+                title={t.cl_invoice_head_show
+                    .replace('{number}', invoice.invoice_number ?? '')
+                    .replace('{clinic}', clinic.name)}
             />
 
             <div className="px-6 py-5 lg:px-8">
@@ -84,7 +88,7 @@ export default function SuperAdminClinicInvoiceShow({
                             })}
                         >
                             <ChevronLeft className="size-3.5" />
-                            Invoices
+                            {t.cl_invoices_crumb}
                         </Link>
                     </Button>
                     <span className="text-muted-foreground">/</span>
@@ -94,7 +98,10 @@ export default function SuperAdminClinicInvoiceShow({
                 </div>
 
                 <PageHeader
-                    title={`Invoice ${invoice.invoice_number ?? ''}`}
+                    title={t.cl_invoice_title_show.replace(
+                        '{number}',
+                        invoice.invoice_number ?? '',
+                    )}
                     description={
                         <span className="flex items-center gap-2.5">
                             <StatusPill tone="navy" withDot>
@@ -104,7 +111,18 @@ export default function SuperAdminClinicInvoiceShow({
                                 {invoice.patient
                                     ? `${invoice.patient.first_name ?? ''} ${invoice.patient.last_name ?? ''}`.trim()
                                     : ''}
-                                {` · ${invoice.total} ${currency} · paid ${invoice.paid_amount} · balance ${invoice.balance_due}`}
+                                {' · '}
+                                {t.cl_invoice_summary
+                                    .replace('{total}', String(invoice.total))
+                                    .replace('{currency}', currency)
+                                    .replace(
+                                        '{paid}',
+                                        String(invoice.paid_amount),
+                                    )
+                                    .replace(
+                                        '{balance}',
+                                        String(invoice.balance_due),
+                                    )}
                             </span>
                         </span>
                     }
@@ -112,18 +130,21 @@ export default function SuperAdminClinicInvoiceShow({
 
                 <div className="grid gap-5 lg:grid-cols-[1fr_340px]">
                     <div className="space-y-5">
-                        <SectionCard title="Line items" bodyClassName="p-0">
+                        <SectionCard
+                            title={t.cl_invoice_line_items}
+                            bodyClassName="p-0"
+                        >
                             <Table>
                                 <TableHeader>
                                     <TableRow className="bg-muted/50">
                                         <TableHead className="px-5 py-2.5 text-[11px] tracking-wider uppercase">
-                                            Description
+                                            {t.cl_invoice_th_description}
                                         </TableHead>
                                         <TableHead className="text-end text-[11px] tracking-wider uppercase">
-                                            Qty
+                                            {t.cl_invoice_th_qty}
                                         </TableHead>
                                         <TableHead className="text-end text-[11px] tracking-wider uppercase">
-                                            Unit
+                                            {t.cl_invoice_th_unit}
                                         </TableHead>
                                     </TableRow>
                                 </TableHeader>
@@ -145,21 +166,24 @@ export default function SuperAdminClinicInvoiceShow({
                             </Table>
                         </SectionCard>
 
-                        <SectionCard title="Payments" bodyClassName="p-0">
+                        <SectionCard
+                            title={t.cl_invoice_payments}
+                            bodyClassName="p-0"
+                        >
                             <Table>
                                 <TableHeader>
                                     <TableRow className="bg-muted/50">
                                         <TableHead className="px-5 py-2.5 text-[11px] tracking-wider uppercase">
-                                            Date
+                                            {t.th_date}
                                         </TableHead>
                                         <TableHead className="text-[11px] tracking-wider uppercase">
-                                            Method
+                                            {t.th_method}
                                         </TableHead>
                                         <TableHead className="text-end text-[11px] tracking-wider uppercase">
-                                            Amount
+                                            {t.th_amount}
                                         </TableHead>
                                         <TableHead className="text-[11px] tracking-wider uppercase">
-                                            Status
+                                            {t.th_status}
                                         </TableHead>
                                         <TableHead className="w-20" />
                                     </TableRow>
@@ -171,7 +195,7 @@ export default function SuperAdminClinicInvoiceShow({
                                                 colSpan={5}
                                                 className="py-8 text-center text-sm text-muted-foreground"
                                             >
-                                                No payments yet.
+                                                {t.cl_invoice_no_payments}
                                             </TableCell>
                                         </TableRow>
                                     )}
@@ -222,12 +246,14 @@ export default function SuperAdminClinicInvoiceShow({
                                                             as="button"
                                                             onBefore={() =>
                                                                 confirm(
-                                                                    'Refund this payment?',
+                                                                    t.cl_invoice_confirm_refund,
                                                                 )
                                                             }
                                                         >
                                                             <Undo2 className="size-3.5" />
-                                                            Refund
+                                                            {
+                                                                t.cl_invoice_refund
+                                                            }
                                                         </Link>
                                                     </Button>
                                                 )}
@@ -239,7 +265,10 @@ export default function SuperAdminClinicInvoiceShow({
                         </SectionCard>
                     </div>
 
-                    <SectionCard title="Record payment" bodyClassName="p-5">
+                    <SectionCard
+                        title={t.cl_invoice_record_payment}
+                        bodyClassName="p-5"
+                    >
                         <Form
                             {...PaymentController.store.form({
                                 locale,
@@ -256,7 +285,9 @@ export default function SuperAdminClinicInvoiceShow({
                                         value={invoice.id}
                                     />
                                     <div className="grid gap-2">
-                                        <Label htmlFor="amount">Amount</Label>
+                                        <Label htmlFor="amount">
+                                            {t.cl_invoice_amount}
+                                        </Label>
                                         <Input
                                             id="amount"
                                             name="amount"
@@ -275,7 +306,7 @@ export default function SuperAdminClinicInvoiceShow({
                                     </div>
                                     <div className="grid gap-2">
                                         <Label htmlFor="payment_method">
-                                            Method
+                                            {t.cl_invoice_method}
                                         </Label>
                                         <select
                                             id="payment_method"
@@ -291,7 +322,7 @@ export default function SuperAdminClinicInvoiceShow({
                                     </div>
                                     <div className="grid gap-2">
                                         <Label htmlFor="reference_number">
-                                            Reference (optional)
+                                            {t.cl_invoice_reference}
                                         </Label>
                                         <Input
                                             id="reference_number"
@@ -304,7 +335,7 @@ export default function SuperAdminClinicInvoiceShow({
                                         className="w-full bg-navy-900 text-white hover:bg-navy-800"
                                     >
                                         {processing && <Spinner />}
-                                        Record payment
+                                        {t.cl_invoice_record_btn}
                                     </Button>
                                 </>
                             )}

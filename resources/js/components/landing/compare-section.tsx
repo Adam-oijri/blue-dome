@@ -20,23 +20,37 @@ export function CompareSection({ lang }: SectionProps) {
                         variants={FADE_UP}
                         className="mb-3 text-[12px] font-semibold tracking-wider text-olive-700 uppercase"
                     >
-                        {lang === 'fr' ? 'Avant · Après' : 'Before · After'}
+                        {
+                            {
+                                en: 'Before · After',
+                                fr: 'Avant · Après',
+                                ar: 'قبل · بعد',
+                            }[lang]
+                        }
                     </motion.p>
                     <motion.h2
                         variants={FADE_UP}
                         className="text-[34px] font-semibold tracking-tight text-navy-950 sm:text-[44px]"
                     >
-                        {lang === 'fr'
-                            ? 'L’ancienne méthode ne tient plus.'
-                            : 'The old way doesn’t scale anymore.'}
+                        {
+                            {
+                                en: 'The old way doesn’t scale anymore.',
+                                fr: 'L’ancienne méthode ne tient plus.',
+                                ar: 'لم تعد الطريقة القديمة قادرة على المواكبة.',
+                            }[lang]
+                        }
                     </motion.h2>
                     <motion.p
                         variants={FADE_UP}
                         className="mt-3 text-[15px] text-muted-foreground"
                     >
-                        {lang === 'fr'
-                            ? 'Voici ce qui change concrètement dans la journée de votre secrétariat.'
-                            : 'Here’s what actually changes in your front desk’s day.'}
+                        {
+                            {
+                                en: 'Here’s what actually changes in your front desk’s day.',
+                                fr: 'Voici ce qui change concrètement dans la journée de votre secrétariat.',
+                                ar: 'إليك ما يتغيّر فعليًا في يوم مكتب الاستقبال لديك.',
+                            }[lang]
+                        }
                     </motion.p>
                 </motion.div>
 
@@ -48,11 +62,23 @@ export function CompareSection({ lang }: SectionProps) {
                     className="mt-14 overflow-hidden rounded-2xl border border-border/70 bg-card shadow-sm"
                 >
                     <div className="grid grid-cols-1 bg-muted/40 px-6 py-3 text-[11px] font-semibold tracking-wider text-muted-foreground uppercase md:grid-cols-[1fr_1fr_1fr]">
-                        <span>{lang === 'fr' ? 'La tâche' : 'The task'}</span>
+                        <span>
+                            {
+                                {
+                                    en: 'The task',
+                                    fr: 'La tâche',
+                                    ar: 'المهمة',
+                                }[lang]
+                            }
+                        </span>
                         <span className="hidden md:block">
-                            {lang === 'fr'
-                                ? 'L’ancienne méthode'
-                                : 'The old way'}
+                            {
+                                {
+                                    en: 'The old way',
+                                    fr: 'L’ancienne méthode',
+                                    ar: 'الطريقة القديمة',
+                                }[lang]
+                            }
                         </span>
                         <span className="hidden md:block">Blue Dome</span>
                     </div>

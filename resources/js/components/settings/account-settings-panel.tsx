@@ -14,6 +14,7 @@ import Heading from '@/components/heading';
 import ProfileInformationForm from '@/components/settings/profile-information-form';
 import TwoFactorSection from '@/components/settings/two-factor-section';
 import UpdatePasswordForm from '@/components/settings/update-password-form';
+import { useSettingsLang } from '@/lib/i18n/settings';
 import { useLocale, useSwapLang } from '@/lib/i18n/use-locale';
 import type { AppLang } from '@/lib/i18n/use-locale';
 import { cn } from '@/lib/utils';
@@ -60,15 +61,16 @@ export function AccountSettingsPanel({
     const [section, setSection] = useState<SectionId>('profile');
     const { lang, country, supported } = useLocale();
     const swapLang = useSwapLang();
+    const { t } = useSettingsLang();
 
     const availableLangs = (Object.keys(LANGUAGE_LABELS) as AppLang[]).filter(
         (l) => supported.includes(`${country.toLowerCase()}-${l}`),
     );
 
     const SECTIONS: { id: SectionId; label: string; icon: IconComponent }[] = [
-        { id: 'profile', label: 'Profile', icon: UserIcon },
-        { id: 'security', label: 'Security', icon: ShieldCheck },
-        { id: 'language', label: 'Language', icon: Languages },
+        { id: 'profile', label: t.section_profile, icon: UserIcon },
+        { id: 'security', label: t.section_security, icon: ShieldCheck },
+        { id: 'language', label: t.section_language, icon: Languages },
         { id: 'appearance', label: appearanceTitle, icon: Palette },
     ];
 
@@ -82,7 +84,7 @@ export function AccountSettingsPanel({
                 <div className="grid gap-5 lg:grid-cols-[240px_minmax(0,1fr)]">
                     <nav
                         className="self-start rounded-xl border border-border bg-card p-2"
-                        aria-label="Settings sections"
+                        aria-label={t.nav_aria}
                     >
                         {SECTIONS.map((s) => {
                             const active = section === s.id;
@@ -111,8 +113,8 @@ export function AccountSettingsPanel({
                             <div className="space-y-6">
                                 <Heading
                                     variant="small"
-                                    title="Profile information"
-                                    description="Update your name and email address"
+                                    title={t.profile_heading}
+                                    description={t.profile_desc}
                                 />
 
                                 <ProfileInformationForm
@@ -127,8 +129,8 @@ export function AccountSettingsPanel({
                                 <div className="space-y-6">
                                     <Heading
                                         variant="small"
-                                        title="Update password"
-                                        description="Ensure your account is using a long, random password to stay secure"
+                                        title={t.password_heading}
+                                        description={t.password_desc}
                                     />
 
                                     <UpdatePasswordForm
@@ -140,8 +142,8 @@ export function AccountSettingsPanel({
                                     <div className="space-y-6">
                                         <Heading
                                             variant="small"
-                                            title="Two-factor authentication"
-                                            description="Manage your two-factor authentication settings"
+                                            title={t.twofa_heading}
+                                            description={t.twofa_desc}
                                         />
 
                                         <TwoFactorSection
@@ -159,8 +161,8 @@ export function AccountSettingsPanel({
                             <div className="space-y-6">
                                 <Heading
                                     variant="small"
-                                    title="Language"
-                                    description="Choose the interface language. Applies across the app."
+                                    title={t.language_heading}
+                                    description={t.language_desc}
                                 />
 
                                 <div className="flex flex-wrap gap-2">

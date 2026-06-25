@@ -1,5 +1,12 @@
 import { Head, Link } from '@inertiajs/react';
-import { Check, ChevronLeft, Edit3, FileText, ShieldAlert } from 'lucide-react';
+import {
+    Check,
+    ChevronLeft,
+    Edit3,
+    FileDown,
+    FileText,
+    ShieldAlert,
+} from 'lucide-react';
 
 import { EditMedicalRecordsSheet } from '@/components/blue-dome/edit-medical-records-sheet';
 import { SectionCard } from '@/components/blue-dome/section-card';
@@ -158,6 +165,24 @@ export default function MedicalRecordShow({
                         </div>
                     </div>
                     <div className="flex items-center gap-2">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            asChild
+                            className="gap-2"
+                        >
+                            <a
+                                href={medicalRecords.pdf.url({
+                                    locale,
+                                    medical_record: record.id,
+                                })}
+                                target="_blank"
+                                rel="noreferrer"
+                            >
+                                <FileDown className="size-3.5" />
+                                {t.export_pdf}
+                            </a>
+                        </Button>
                         {!record.is_signed && (
                             <EditMedicalRecordsSheet
                                 record={record}

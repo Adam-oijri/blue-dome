@@ -6,11 +6,9 @@ import {
     FolderOpen,
     Home,
     MessageCircle,
-    Package,
     Pill,
     Settings as SettingsIcon,
     Stethoscope,
-    Tablets,
     Users,
 } from 'lucide-react';
 import type { ComponentType } from 'react';
@@ -36,10 +34,8 @@ import { useLocale } from '@/lib/i18n/use-locale';
 import { cn } from '@/lib/utils';
 import doctor from '@/routes/doctor';
 import documents from '@/routes/documents';
-import inventory from '@/routes/inventory';
 import labOrders from '@/routes/lab-orders';
 import medicalRecords from '@/routes/medical-records';
-import medications from '@/routes/medications';
 import messages from '@/routes/messages';
 import patients from '@/routes/patients';
 import prescriptions from '@/routes/prescriptions';
@@ -137,18 +133,6 @@ export function DoctorSidebar() {
     ];
 
     const admin: NavEntry[] = [
-        {
-            key: 'inventory',
-            label: t.inventory,
-            href: inventory.index.url({ locale }),
-            icon: Package,
-        },
-        {
-            key: 'medications',
-            label: t.medications,
-            href: medications.index.url({ locale }),
-            icon: Tablets,
-        },
         {
             key: 'documents',
             label: t.documents,

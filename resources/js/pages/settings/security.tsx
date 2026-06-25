@@ -2,6 +2,7 @@ import { Head } from '@inertiajs/react';
 import Heading from '@/components/heading';
 import TwoFactorSection from '@/components/settings/two-factor-section';
 import UpdatePasswordForm from '@/components/settings/update-password-form';
+import { useSettingsLang } from '@/lib/i18n/settings';
 
 type Props = {
     canManageTwoFactor?: boolean;
@@ -16,17 +17,19 @@ export default function Security({
     twoFactorEnabled = false,
     passwordRules,
 }: Props) {
+    const { t } = useSettingsLang();
+
     return (
         <>
-            <Head title="Security settings" />
+            <Head title={t.security_settings_title} />
 
-            <h1 className="sr-only">Security settings</h1>
+            <h1 className="sr-only">{t.security_settings_title}</h1>
 
             <div className="space-y-6">
                 <Heading
                     variant="small"
-                    title="Update password"
-                    description="Ensure your account is using a long, random password to stay secure"
+                    title={t.password_heading}
+                    description={t.password_desc}
                 />
 
                 <UpdatePasswordForm passwordRules={passwordRules} />
@@ -36,8 +39,8 @@ export default function Security({
                 <div className="space-y-6">
                     <Heading
                         variant="small"
-                        title="Two-factor authentication"
-                        description="Manage your two-factor authentication settings"
+                        title={t.twofa_heading}
+                        description={t.twofa_desc}
                     />
 
                     <TwoFactorSection

@@ -153,6 +153,8 @@ export type DoctorDictionary = {
     lab_col: string;
     urgency_col: string;
     in_house: string;
+    lab_external: string;
+    external_lab_name: string;
     critical_results: string;
     recent_orders: string;
     no_lab_orders: string;
@@ -458,6 +460,32 @@ export type DoctorDictionary = {
     system_label: string;
     all_folders: string;
 
+    // Pagination
+    pagination_summary: string;
+
+    // Sheet descriptions & extra field labels
+    start_label: string;
+    end_label: string;
+    select_doctor_ph: string;
+    loading_ph: string;
+    new_appt_doctor_desc: string;
+    new_appt_secretary_desc: string;
+    new_patient_desc: string;
+    new_lab_order_desc: string;
+    test_name_label: string;
+    test_code_label: string;
+    test_category_label: string;
+    specimen_type_label: string;
+    attachments_label: string;
+    files_selected: string;
+    add_test_label: string;
+    log_expense_desc: string;
+    recurring_expense_label: string;
+    recurring_end_date: string;
+    new_invoice_desc: string;
+    quantity_label: string;
+    empty_no_vital_signs: string;
+
     // Enum-label maps (raw DB value → localized label)
     invoice_status_opts: Record<string, string>;
     payment_status_opts: Record<string, string>;
@@ -627,7 +655,9 @@ const en: DoctorDictionary = {
     tests_col: 'Tests',
     lab_col: 'Lab',
     urgency_col: 'Urgency',
-    in_house: 'In-house',
+    in_house: 'Internal',
+    lab_external: 'External',
+    external_lab_name: 'External laboratory name',
     critical_results: 'Critical results',
     recent_orders: 'Recent orders',
     no_lab_orders: 'No lab orders yet.',
@@ -862,14 +892,16 @@ const en: DoctorDictionary = {
     add_vendor: 'Add vendor',
     add_vendor_desc: 'Create a new supplier record for your clinic.',
     edit_vendor: 'Edit vendor',
-    edit_vendor_desc: 'Update supplier contact details and account information.',
+    edit_vendor_desc:
+        'Update supplier contact details and account information.',
     vendor_details: 'Vendor details',
     vendor_name_label: 'Vendor name',
     billing_label: 'Billing',
     active_vendor: 'Active vendor',
     create_vendor: 'Create vendor',
     back_to_vendors: 'Back to vendors',
-    delete_vendor_confirm: 'Delete this vendor? This action cannot be undone.',
+    delete_vendor_confirm:
+        'Delete "{name}"? It can be restored from the recycle bin.',
     vendor_category_ph: 'Custom category',
     custom_category_ph: 'Custom category',
     added_label: 'Added',
@@ -1086,6 +1118,31 @@ const en: DoctorDictionary = {
     private_label: 'Private',
     system_label: 'System',
     all_folders: 'All folders',
+
+    pagination_summary: 'Page :current of :last · :total',
+
+    start_label: 'Start',
+    end_label: 'End',
+    select_doctor_ph: 'Select a doctor…',
+    loading_ph: 'Loading…',
+    new_appt_doctor_desc: 'Schedule a new appointment for a patient.',
+    new_appt_secretary_desc: 'Schedule a new appointment and assign a doctor.',
+    new_patient_desc: 'Register a new patient in your clinic.',
+    new_lab_order_desc: 'Order one or more tests for a patient.',
+    test_name_label: 'Test name',
+    test_code_label: 'Test code',
+    test_category_label: 'Test category',
+    specimen_type_label: 'Specimen type',
+    attachments_label: 'Attachments',
+    files_selected: 'file(s) selected',
+    add_test_label: 'Add test',
+    log_expense_desc: 'Record a new clinic expense.',
+    recurring_expense_label: 'Recurring expense',
+    recurring_end_date: 'Recurring end date',
+    new_invoice_desc: 'Create a new invoice for a patient.',
+    quantity_label: 'Quantity',
+    empty_no_vital_signs: 'No vital signs recorded yet.',
+
     document_type_opts: {
         patient_record: 'Patient record',
         lab_result: 'Lab result',
@@ -1246,6 +1303,8 @@ const fr: DoctorDictionary = {
     lab_col: 'Laboratoire',
     urgency_col: 'Urgence',
     in_house: 'Interne',
+    lab_external: 'Externe',
+    external_lab_name: 'Nom du laboratoire externe',
     critical_results: 'Résultats critiques',
     recent_orders: 'Commandes récentes',
     no_lab_orders: 'Aucune analyse pour le moment.',
@@ -1481,7 +1540,8 @@ const fr: DoctorDictionary = {
     vendor_col: 'Fournisseur',
     contact_col: 'Contact',
     add_vendor: 'Ajouter un fournisseur',
-    add_vendor_desc: 'Créer une nouvelle fiche fournisseur pour votre clinique.',
+    add_vendor_desc:
+        'Créer une nouvelle fiche fournisseur pour votre clinique.',
     edit_vendor: 'Modifier le fournisseur',
     edit_vendor_desc:
         'Mettre à jour les coordonnées et les informations du compte fournisseur.',
@@ -1492,7 +1552,7 @@ const fr: DoctorDictionary = {
     create_vendor: 'Créer le fournisseur',
     back_to_vendors: 'Retour aux fournisseurs',
     delete_vendor_confirm:
-        'Supprimer ce fournisseur ? Cette action est irréversible.',
+        'Supprimer « {name} » ? Il pourra être restauré depuis la corbeille.',
     vendor_category_ph: 'Catégorie personnalisée',
     custom_category_ph: 'Catégorie personnalisée',
     added_label: 'Ajouté le',
@@ -1710,6 +1770,32 @@ const fr: DoctorDictionary = {
     private_label: 'Privé',
     system_label: 'Système',
     all_folders: 'Tous les dossiers',
+
+    pagination_summary: 'Page :current sur :last · :total',
+
+    start_label: 'Début',
+    end_label: 'Fin',
+    select_doctor_ph: 'Sélectionner un médecin…',
+    loading_ph: 'Chargement…',
+    new_appt_doctor_desc: 'Planifier un nouveau rendez-vous pour un patient.',
+    new_appt_secretary_desc:
+        'Planifier un nouveau rendez-vous et attribuer un médecin.',
+    new_patient_desc: 'Enregistrer un nouveau patient dans votre clinique.',
+    new_lab_order_desc: 'Prescrire un ou plusieurs tests pour un patient.',
+    test_name_label: 'Nom du test',
+    test_code_label: 'Code du test',
+    test_category_label: 'Catégorie du test',
+    specimen_type_label: 'Type de prélèvement',
+    attachments_label: 'Pièces jointes',
+    files_selected: 'fichier(s) sélectionné(s)',
+    add_test_label: 'Ajouter un test',
+    log_expense_desc: 'Enregistrer une nouvelle dépense de la clinique.',
+    recurring_expense_label: 'Dépense récurrente',
+    recurring_end_date: 'Date de fin de récurrence',
+    new_invoice_desc: 'Créer une nouvelle facture pour un patient.',
+    quantity_label: 'Quantité',
+    empty_no_vital_signs: 'Aucun signe vital enregistré pour le moment.',
+
     document_type_opts: {
         patient_record: 'Dossier patient',
         lab_result: 'Résultat de laboratoire',
@@ -1869,6 +1955,8 @@ const ar: DoctorDictionary = {
     lab_col: 'المختبر',
     urgency_col: 'الاستعجال',
     in_house: 'داخلي',
+    lab_external: 'خارجي',
+    external_lab_name: 'اسم المختبر الخارجي',
     critical_results: 'نتائج حرجة',
     recent_orders: 'الطلبات الأخيرة',
     no_lab_orders: 'لا توجد تحاليل بعد.',
@@ -2072,7 +2160,8 @@ const ar: DoctorDictionary = {
     not_required_label: 'غير مطلوب',
     current_stock: 'المخزون الحالي',
     quantity_in_stock: 'الكمية في المخزون',
-    stock_adjust_note: 'تُعدَّل الكمية في المخزون عبر معاملات المخزون، لا من هذا النموذج.',
+    stock_adjust_note:
+        'تُعدَّل الكمية في المخزون عبر معاملات المخزون، لا من هذا النموذج.',
     item_name_label: 'اسم العنصر',
     item_code_label: 'رمز العنصر',
     expiration_date_label: 'تاريخ الانتهاء',
@@ -2106,7 +2195,7 @@ const ar: DoctorDictionary = {
     active_vendor: 'مورّد نشط',
     create_vendor: 'إنشاء المورّد',
     back_to_vendors: 'العودة إلى الموردين',
-    delete_vendor_confirm: 'حذف هذا المورّد؟ لا يمكن التراجع عن هذا الإجراء.',
+    delete_vendor_confirm: 'حذف «{name}»؟ يمكن استعادته من سلة المحذوفات.',
     vendor_category_ph: 'فئة مخصّصة',
     custom_category_ph: 'فئة مخصّصة',
     added_label: 'أُضيف في',
@@ -2323,6 +2412,31 @@ const ar: DoctorDictionary = {
     private_label: 'خاص',
     system_label: 'النظام',
     all_folders: 'جميع المجلدات',
+
+    pagination_summary: 'الصفحة :current من :last · :total',
+
+    start_label: 'البداية',
+    end_label: 'النهاية',
+    select_doctor_ph: 'اختر طبيباً…',
+    loading_ph: 'جاري التحميل…',
+    new_appt_doctor_desc: 'جدولة موعد جديد لمريض.',
+    new_appt_secretary_desc: 'جدولة موعد جديد وتعيين طبيب.',
+    new_patient_desc: 'تسجيل مريض جديد في عيادتك.',
+    new_lab_order_desc: 'طلب فحص واحد أو أكثر لمريض.',
+    test_name_label: 'اسم الفحص',
+    test_code_label: 'رمز الفحص',
+    test_category_label: 'فئة الفحص',
+    specimen_type_label: 'نوع العينة',
+    attachments_label: 'المرفقات',
+    files_selected: 'ملف/ملفات محددة',
+    add_test_label: 'إضافة فحص',
+    log_expense_desc: 'تسجيل مصروف جديد للعيادة.',
+    recurring_expense_label: 'مصروف متكرر',
+    recurring_end_date: 'تاريخ انتهاء التكرار',
+    new_invoice_desc: 'إنشاء فاتورة جديدة لمريض.',
+    quantity_label: 'الكمية',
+    empty_no_vital_signs: 'لا توجد علامات حيوية مسجلة بعد.',
+
     document_type_opts: {
         patient_record: 'سجل المريض',
         lab_result: 'نتيجة مخبرية',

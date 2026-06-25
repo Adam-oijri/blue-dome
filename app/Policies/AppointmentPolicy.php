@@ -43,4 +43,14 @@ class AppointmentPolicy
     {
         return in_array($actor->role, ['super_admin', 'secretary'], true);
     }
+
+    /**
+     * Manually (re-)send the WhatsApp confirmation. A front-desk action: the
+     * secretary may trigger it for appointments booked at their own clinic.
+     */
+    public function sendConfirmation(User $actor, Appointment $appointment): bool
+    {
+        return $actor->role === 'secretary'
+            && $actor->clinic_id === $appointment->clinic_id;
+    }
 }

@@ -13,6 +13,7 @@ import {
     SheetTitle,
     SheetTrigger,
 } from '@/components/ui/sheet';
+import { enumLabel } from '@/lib/i18n/doctor';
 import { useDoctorLang } from '@/lib/i18n/doctor-context';
 import { useLocale } from '@/lib/i18n/use-locale';
 import appointments from '@/routes/appointments';
@@ -24,22 +25,28 @@ type PatientOption = {
     phone?: string | null;
 };
 
+type DoctorOption = {
+    id: string;
+    first_name: string | null;
+    last_name: string | null;
+};
+
 const FIELD_CLASS =
     'border-input focus-visible:border-ring focus-visible:ring-ring/50 h-9 w-full rounded-md border bg-transparent px-3 text-sm outline-none focus-visible:ring-[3px]';
 
-const TYPE_OPTIONS: ReadonlyArray<readonly [string, string]> = [
-    ['consultation', 'Consultation'],
-    ['follow_up', 'Follow-up'],
-    ['emergency', 'Emergency'],
-    ['routine_checkup', 'Routine checkup'],
-    ['vaccination', 'Vaccination'],
+const TYPE_OPTIONS: ReadonlyArray<string> = [
+    'consultation',
+    'follow_up',
+    'emergency',
+    'routine_checkup',
+    'vaccination',
 ];
 
-const PRIORITY_OPTIONS: ReadonlyArray<readonly [string, string]> = [
-    ['normal', 'Normal'],
-    ['low', 'Low'],
-    ['high', 'High'],
-    ['emergency', 'Emergency'],
+const PRIORITY_OPTIONS: ReadonlyArray<string> = [
+    'normal',
+    'low',
+    'high',
+    'emergency',
 ];
 
 function patientName(patient: PatientOption): string {
@@ -47,6 +54,12 @@ function patientName(patient: PatientOption): string {
         `${patient.first_name ?? ''} ${patient.last_name ?? ''}`.trim() ||
         patient.id
     );
+}
+
+function doctorName(doctor: DoctorOption): string {
+    const name = `${doctor.first_name ?? ''} ${doctor.last_name ?? ''}`.trim();
+
+    return name ? `Dr. ${name}` : doctor.id;
 }
 
 /** datetime-local compatible string (local time, no timezone suffix). */
@@ -57,10 +70,11 @@ function toDateTimeLocal(date: Date): string {
 }
 
 /**
- * Inline "schedule appointment" Sheet for the doctor panel. The doctor is the
- * authenticated user, so only the patient is chosen. Drop it anywhere and pass
- * the trigger as `children`; on a patient's own page pass `lockedPatient` to
- * pre-select and lock that patient.
+ * Inline "schedule appointment" Sheet shared by the doctor and secretary
+ * panels. A doctor books under their own name (no doctor picker). A secretary
+ * (clinic manager) must choose which clinic doctor the visit is with. Drop it
+ * anywhere and pass the trigger as `children`; on a patient's own page pass
+ * `lockedPatient` to pre-select and lock that patient.
  */
 export function CreateAppointmentSheet({
     children,
@@ -71,14 +85,19 @@ export function CreateAppointmentSheet({
 }) {
     const { t } = useDoctorLang();
     const { slug: locale } = useLocale();
-    const userId = usePage().props.auth.user.id;
+    const user = usePage().props.auth.user;
+    const isDoctor = user.role === 'doctor';
     const [open, setOpen] = useState(false);
     const [patients, setPatients] = useState<PatientOption[]>([]);
-    const [loadingPatients, setLoadingPatients] = useState(false);
+    const [doctors, setDoctors] = useState<DoctorOption[]>([]);
+    const [loadingOptions, setLoadingOptions] = useState(false);
+    const [optionsLoaded, setOptionsLoaded] = useState(false);
 
     const form = useForm({
         patient_id: lockedPatient?.id ?? '',
-        doctor_id: userId,
+        // A doctor books under their own name; a secretary picks a clinic
+        // doctor (the backend requires a real `doctor_id`).
+        doctor_id: isDoctor ? user.id : '',
         scheduled_start: '',
         scheduled_end: '',
         type: 'consultation',
@@ -86,23 +105,36 @@ export function CreateAppointmentSheet({
         chief_complaint: '',
     });
 
-    // Load the clinic's patients the first time the Sheet opens — unless the
-    // patient is already fixed by the host page (e.g. the patient detail page).
-    const loadPatients = (): void => {
-        if (lockedPatient || patients.length > 0 || loadingPatients) {
+    // Load the clinic's patients + doctors the first time the Sheet opens. The
+    // patient list goes unused when the host page locks a patient, but a
+    // secretary still needs the doctor list to pick who the visit is with.
+    const loadOptions = (): void => {
+        if (optionsLoaded || loadingOptions) {
             return;
         }
 
-        setLoadingPatients(true);
+        setLoadingOptions(true);
         fetch(appointments.formOptions.url({ locale }), {
             headers: { Accept: 'application/json' },
         })
-            .then((res) => (res.ok ? res.json() : { patients: [] }))
-            .then((data: { patients?: PatientOption[] }) => {
-                setPatients(data.patients ?? []);
+            .then((res) =>
+                res.ok ? res.json() : { patients: [], doctors: [] },
+            )
+            .then(
+                (data: {
+                    patients?: PatientOption[];
+                    doctors?: DoctorOption[];
+                }) => {
+                    setPatients(data.patients ?? []);
+                    setDoctors(data.doctors ?? []);
+                    setOptionsLoaded(true);
+                },
+            )
+            .catch(() => {
+                setPatients([]);
+                setDoctors([]);
             })
-            .catch(() => setPatients([]))
-            .finally(() => setLoadingPatients(false));
+            .finally(() => setLoadingOptions(false));
     };
 
     const onStartChange = (value: string): void => {
@@ -136,7 +168,7 @@ export function CreateAppointmentSheet({
                 setOpen(next);
 
                 if (next) {
-                    loadPatients();
+                    loadOptions();
                 } else {
                     form.reset();
                     form.clearErrors();
@@ -148,8 +180,9 @@ export function CreateAppointmentSheet({
                 <SheetHeader>
                     <SheetTitle>{t.new_appointment}</SheetTitle>
                     <SheetDescription>
-                        Pick a patient and a time slot. The appointment is
-                        created under your name.
+                        {isDoctor
+                            ? t.new_appt_doctor_desc
+                            : t.new_appt_secretary_desc}
                     </SheetDescription>
                 </SheetHeader>
 
@@ -172,9 +205,9 @@ export function CreateAppointmentSheet({
                                 className={FIELD_CLASS}
                             >
                                 <option value="">
-                                    {loadingPatients
-                                        ? 'Loading…'
-                                        : 'Select a patient…'}
+                                    {loadingOptions
+                                        ? t.loading_ph
+                                        : t.select_patient_ph}
                                 </option>
                                 {patients.map((patient) => (
                                     <option key={patient.id} value={patient.id}>
@@ -189,8 +222,36 @@ export function CreateAppointmentSheet({
                         <InputError message={form.errors.patient_id} />
                     </div>
 
+                    {!isDoctor && (
+                        <div className="grid gap-2">
+                            <Label htmlFor="doctor_id">{t.doctor_label}</Label>
+                            <select
+                                id="doctor_id"
+                                value={form.data.doctor_id}
+                                onChange={(e) =>
+                                    form.setData('doctor_id', e.target.value)
+                                }
+                                className={FIELD_CLASS}
+                            >
+                                <option value="">
+                                    {loadingOptions
+                                        ? t.loading_ph
+                                        : t.select_doctor_ph}
+                                </option>
+                                {doctors.map((doctor) => (
+                                    <option key={doctor.id} value={doctor.id}>
+                                        {doctorName(doctor)}
+                                    </option>
+                                ))}
+                            </select>
+                            <InputError message={form.errors.doctor_id} />
+                        </div>
+                    )}
+
                     <div className="grid gap-2">
-                        <Label htmlFor="scheduled_start">Start</Label>
+                        <Label htmlFor="scheduled_start">
+                            {t.start_label}
+                        </Label>
                         <input
                             id="scheduled_start"
                             type="datetime-local"
@@ -202,7 +263,7 @@ export function CreateAppointmentSheet({
                     </div>
 
                     <div className="grid gap-2">
-                        <Label htmlFor="scheduled_end">End</Label>
+                        <Label htmlFor="scheduled_end">{t.end_label}</Label>
                         <input
                             id="scheduled_end"
                             type="datetime-local"
@@ -217,7 +278,7 @@ export function CreateAppointmentSheet({
 
                     <div className="grid grid-cols-2 gap-3">
                         <div className="grid gap-2">
-                            <Label htmlFor="type">Type</Label>
+                            <Label htmlFor="type">{t.type_label}</Label>
                             <select
                                 id="type"
                                 value={form.data.type}
@@ -226,15 +287,17 @@ export function CreateAppointmentSheet({
                                 }
                                 className={FIELD_CLASS}
                             >
-                                {TYPE_OPTIONS.map(([value, label]) => (
+                                {TYPE_OPTIONS.map((value) => (
                                     <option key={value} value={value}>
-                                        {label}
+                                        {enumLabel(t.appt_type_opts, value)}
                                     </option>
                                 ))}
                             </select>
                         </div>
                         <div className="grid gap-2">
-                            <Label htmlFor="priority">Priority</Label>
+                            <Label htmlFor="priority">
+                                {t.priority_label}
+                            </Label>
                             <select
                                 id="priority"
                                 value={form.data.priority}
@@ -243,9 +306,9 @@ export function CreateAppointmentSheet({
                                 }
                                 className={FIELD_CLASS}
                             >
-                                {PRIORITY_OPTIONS.map(([value, label]) => (
+                                {PRIORITY_OPTIONS.map((value) => (
                                     <option key={value} value={value}>
-                                        {label}
+                                        {enumLabel(t.appt_priority_opts, value)}
                                     </option>
                                 ))}
                             </select>
@@ -254,7 +317,7 @@ export function CreateAppointmentSheet({
 
                     <div className="grid gap-2">
                         <Label htmlFor="chief_complaint">
-                            Reason / chief complaint
+                            {t.chief_complaint}
                         </Label>
                         <textarea
                             id="chief_complaint"
@@ -263,7 +326,7 @@ export function CreateAppointmentSheet({
                             onChange={(e) =>
                                 form.setData('chief_complaint', e.target.value)
                             }
-                            className="border-input focus-visible:border-ring focus-visible:ring-ring/50 w-full rounded-md border bg-transparent px-3 py-2 text-sm outline-none focus-visible:ring-[3px]"
+                            className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                         />
                         <InputError message={form.errors.chief_complaint} />
                     </div>

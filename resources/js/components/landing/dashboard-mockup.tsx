@@ -79,15 +79,73 @@ export function DashboardMockup({ lang }: SectionProps) {
                                 BLUE DOME
                             </div>
                         </div>
-                        <SidebarRow active label="Dashboard" />
-                        <SidebarRow label="Appointments" badge="24" />
-                        <SidebarRow label="Patients" />
+                        <SidebarRow
+                            active
+                            label={
+                                {
+                                    en: 'Dashboard',
+                                    fr: 'Tableau de bord',
+                                    ar: 'لوحة التحكم',
+                                }[lang]
+                            }
+                        />
+                        <SidebarRow
+                            label={
+                                {
+                                    en: 'Appointments',
+                                    fr: 'Rendez-vous',
+                                    ar: 'المواعيد',
+                                }[lang]
+                            }
+                            badge="24"
+                        />
+                        <SidebarRow
+                            label={
+                                {
+                                    en: 'Patients',
+                                    fr: 'Patients',
+                                    ar: 'المرضى',
+                                }[lang]
+                            }
+                        />
                         <SidebarRow label="WhatsApp" badge="7" />
-                        <SidebarRow label="Follow-ups" />
+                        <SidebarRow
+                            label={
+                                {
+                                    en: 'Follow-ups',
+                                    fr: 'Suivis',
+                                    ar: 'المتابعات',
+                                }[lang]
+                            }
+                        />
                         <div className="mt-4 border-t border-navy-800/80 pt-3">
-                            <SidebarRow label="Billing" />
-                            <SidebarRow label="Payments" />
-                            <SidebarRow label="Reports" />
+                            <SidebarRow
+                                label={
+                                    {
+                                        en: 'Billing',
+                                        fr: 'Facturation',
+                                        ar: 'الفوترة',
+                                    }[lang]
+                                }
+                            />
+                            <SidebarRow
+                                label={
+                                    {
+                                        en: 'Payments',
+                                        fr: 'Paiements',
+                                        ar: 'المدفوعات',
+                                    }[lang]
+                                }
+                            />
+                            <SidebarRow
+                                label={
+                                    {
+                                        en: 'Reports',
+                                        fr: 'Rapports',
+                                        ar: 'التقارير',
+                                    }[lang]
+                                }
+                            />
                         </div>
                     </div>
 
@@ -95,12 +153,22 @@ export function DashboardMockup({ lang }: SectionProps) {
                         <div className="flex items-end justify-between">
                             <div>
                                 <div className="text-[18px] font-semibold text-navy-900">
-                                    {lang === 'fr'
-                                        ? 'Accueil — Mardi 5 mai'
-                                        : 'Front desk — Tuesday, May 5'}
+                                    {
+                                        {
+                                            en: 'Front desk — Tuesday, May 5',
+                                            fr: 'Accueil — Mardi 5 mai',
+                                            ar: 'مكتب الاستقبال — الثلاثاء 5 ماي',
+                                        }[lang]
+                                    }
                                 </div>
                                 <div className="text-[11px] text-muted-foreground">
-                                    Cabinet Dr. Lahlou · 3 doctors on schedule
+                                    {
+                                        {
+                                            en: 'Cabinet Dr. Lahlou · 3 doctors on schedule',
+                                            fr: 'Cabinet Dr. Lahlou · 3 médecins programmés',
+                                            ar: 'عيادة د. لحلو · 3 أطباء في الجدول',
+                                        }[lang]
+                                    }
                                 </div>
                             </div>
                             <motion.div
@@ -113,23 +181,73 @@ export function DashboardMockup({ lang }: SectionProps) {
                                 className="inline-flex h-7 items-center gap-1.5 rounded-md bg-navy-900 px-2.5 text-[11px] font-semibold text-white"
                             >
                                 <UserPlus className="size-3" />
-                                {lang === 'fr' ? 'Nouveau RDV' : 'New appt'}
+                                {
+                                    {
+                                        en: 'New appt',
+                                        fr: 'Nouveau RDV',
+                                        ar: 'موعد جديد',
+                                    }[lang]
+                                }
                             </motion.div>
                         </div>
 
                         <div className="grid grid-cols-4 gap-2">
-                            <MiniKpi label="Today" value="24" tone="navy" />
-                            <MiniKpi label="Pending" value="7" tone="warn" />
-                            <MiniKpi label="Walk-ins" value="3" tone="navy" />
-                            <MiniKpi label="Cash" value="2,480" tone="olive" />
+                            <MiniKpi
+                                label={
+                                    {
+                                        en: 'Today',
+                                        fr: "Aujourd'hui",
+                                        ar: 'اليوم',
+                                    }[lang]
+                                }
+                                value="24"
+                                tone="navy"
+                            />
+                            <MiniKpi
+                                label={
+                                    {
+                                        en: 'Pending',
+                                        fr: 'En attente',
+                                        ar: 'قيد الانتظار',
+                                    }[lang]
+                                }
+                                value="7"
+                                tone="warn"
+                            />
+                            <MiniKpi
+                                label={
+                                    {
+                                        en: 'Walk-ins',
+                                        fr: 'Sans RDV',
+                                        ar: 'بدون موعد',
+                                    }[lang]
+                                }
+                                value="3"
+                                tone="navy"
+                            />
+                            <MiniKpi
+                                label={
+                                    {
+                                        en: 'Cash',
+                                        fr: 'Caisse',
+                                        ar: 'النقد',
+                                    }[lang]
+                                }
+                                value="2,480"
+                                tone="olive"
+                            />
                         </div>
 
                         <div className="rounded-lg border border-border bg-card p-3">
                             <div className="mb-2.5 flex items-center justify-between text-[12px] font-semibold text-navy-900">
                                 <span>
-                                    {lang === 'fr'
-                                        ? "Salle d'attente"
-                                        : 'Waiting room'}
+                                    {
+                                        {
+                                            en: 'Waiting room',
+                                            fr: "Salle d'attente",
+                                            ar: 'غرفة الانتظار',
+                                        }[lang]
+                                    }
                                 </span>
                                 <motion.span
                                     animate={{ opacity: [0.5, 1, 0.5] }}
@@ -207,16 +325,33 @@ export function DashboardMockup({ lang }: SectionProps) {
                         <MessageCircle className="size-3.5 text-emerald-700" />
                     </motion.div>
                     <div className="text-[11px] font-semibold">
-                        {lang === 'fr' ? 'WhatsApp envoyé' : 'WhatsApp sent'}
+                        {
+                            {
+                                en: 'WhatsApp sent',
+                                fr: 'WhatsApp envoyé',
+                                ar: 'تم إرسال واتساب',
+                            }[lang]
+                        }
                     </div>
                 </div>
                 <div className="mt-1.5 text-[11px] text-muted-foreground">
-                    {lang === 'fr'
-                        ? 'Rendez-vous demain · 14:00'
-                        : 'Appointment tomorrow · 2:00 PM'}
+                    {
+                        {
+                            en: 'Appointment tomorrow · 2:00 PM',
+                            fr: 'Rendez-vous demain · 14:00',
+                            ar: 'موعد غدًا · 14:00',
+                        }[lang]
+                    }
                 </div>
                 <div className="mt-1.5 flex items-center gap-1 text-[10px] font-semibold text-emerald-700">
-                    <Check className="size-3" /> Seen 2 min ago
+                    <Check className="size-3" />{' '}
+                    {
+                        {
+                            en: 'Seen 2 min ago',
+                            fr: 'Vu il y a 2 min',
+                            ar: 'تمت المشاهدة قبل دقيقتين',
+                        }[lang]
+                    }
                 </div>
             </motion.div>
 
@@ -228,7 +363,13 @@ export function DashboardMockup({ lang }: SectionProps) {
                 className="absolute top-20 -left-6 hidden w-52 rounded-xl border border-border bg-card p-3 shadow-xl shadow-navy-900/10 lg:block"
             >
                 <div className="text-[10px] tracking-wider text-muted-foreground uppercase">
-                    {lang === 'fr' ? 'Revenu du jour' : "Today's revenue"}
+                    {
+                        {
+                            en: "Today's revenue",
+                            fr: 'Revenu du jour',
+                            ar: 'إيراد اليوم',
+                        }[lang]
+                    }
                 </div>
                 <div className="mt-1 text-[20px] font-semibold text-navy-900 tabular-nums">
                     4,820 MAD
@@ -238,7 +379,13 @@ export function DashboardMockup({ lang }: SectionProps) {
                         +12%
                     </span>
                     <span className="text-[10px] text-muted-foreground">
-                        {lang === 'fr' ? 'vs hier' : 'vs yesterday'}
+                        {
+                            {
+                                en: 'vs yesterday',
+                                fr: 'vs hier',
+                                ar: 'مقارنة بالأمس',
+                            }[lang]
+                        }
                     </span>
                 </div>
             </motion.div>

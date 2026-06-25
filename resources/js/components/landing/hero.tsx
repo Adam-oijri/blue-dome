@@ -48,9 +48,16 @@ export function Hero({
     const heroParallax = useTransform(scrollY, [0, 600], [0, 80]);
     const heroOpacity = useTransform(scrollY, [0, 400], [1, 0.6]);
 
-    const beforeHighlight =
-        lang === 'fr' ? 'Gérez votre cabinet avec' : 'Run your clinic with';
-    const highlighted = lang === 'fr' ? 'précision calme' : 'calm precision';
+    const beforeHighlight = {
+        en: 'Run your clinic with',
+        fr: 'Gérez votre cabinet avec',
+        ar: 'أدِر عيادتك',
+    }[lang];
+    const highlighted = {
+        en: 'calm precision',
+        fr: 'précision calme',
+        ar: 'بدقّة هادئة',
+    }[lang];
     const afterHighlight = '.';
 
     return (
@@ -86,9 +93,13 @@ export function Hero({
                             >
                                 <Sparkles className="size-3" />
                             </motion.span>
-                            {lang === 'fr'
-                                ? 'Nouveau · Confirmations WhatsApp natives'
-                                : 'New · Native WhatsApp confirmations'}
+                            {
+                                {
+                                    en: 'New · Native WhatsApp confirmations',
+                                    fr: 'Nouveau · Confirmations WhatsApp natives',
+                                    ar: 'جديد · تأكيدات واتساب أصلية',
+                                }[lang]
+                            }
                         </motion.span>
                     </motion.div>
 
@@ -117,9 +128,13 @@ export function Hero({
                         variants={FADE_UP}
                         className="mx-auto mt-6 max-w-2xl text-[17px] leading-relaxed text-balance text-muted-foreground sm:text-[19px]"
                     >
-                        {lang === 'fr'
-                            ? 'Blue Dome unifie planning, dossiers cliniques, facturation et messagerie WhatsApp pour les cabinets médicaux modernes au Maroc — en français, en arabe, en anglais.'
-                            : 'Blue Dome unifies scheduling, clinical records, billing and WhatsApp messaging for modern medical practices in Morocco — in English, French, and Arabic.'}
+                        {
+                            {
+                                en: 'Blue Dome unifies scheduling, clinical records, billing and WhatsApp messaging for modern medical practices in Morocco — in English, French, and Arabic.',
+                                fr: 'Blue Dome unifie planning, dossiers cliniques, facturation et messagerie WhatsApp pour les cabinets médicaux modernes au Maroc — en français, en arabe, en anglais.',
+                                ar: 'يوحّد Blue Dome الجدولة والسجلات السريرية والفوترة ومراسلة واتساب للعيادات الطبية الحديثة في المغرب — بالإنجليزية والفرنسية والعربية.',
+                            }[lang]
+                        }
                     </motion.p>
 
                     <motion.div
@@ -139,9 +154,13 @@ export function Hero({
                                             : login({ locale })
                                     }
                                 >
-                                    {lang === 'fr'
-                                        ? 'Commencer gratuitement'
-                                        : 'Start free trial'}
+                                    {
+                                        {
+                                            en: 'Start free trial',
+                                            fr: 'Commencer gratuitement',
+                                            ar: 'ابدأ التجربة المجانية',
+                                        }[lang]
+                                    }
                                     <ArrowRight className="size-4" />
                                 </Link>
                             </Button>
@@ -154,9 +173,13 @@ export function Hero({
                                 className="h-12 gap-2 px-6"
                             >
                                 <a href="#features">
-                                    {lang === 'fr'
-                                        ? 'Voir une démo'
-                                        : 'See a demo'}
+                                    {
+                                        {
+                                            en: 'See a demo',
+                                            fr: 'Voir une démo',
+                                            ar: 'شاهد عرضًا توضيحيًا',
+                                        }[lang]
+                                    }
                                     <ChevronRight className="size-4" />
                                 </a>
                             </Button>
@@ -168,15 +191,21 @@ export function Hero({
                         className="mt-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-[12px] text-muted-foreground"
                     >
                         {[
-                            lang === 'fr'
-                                ? '14 jours gratuits'
-                                : '14 days free',
-                            lang === 'fr'
-                                ? 'Sans carte bancaire'
-                                : 'No credit card',
-                            lang === 'fr'
-                                ? 'Migration assistée'
-                                : 'Guided migration',
+                            {
+                                en: '14 days free',
+                                fr: '14 jours gratuits',
+                                ar: '14 يومًا مجانًا',
+                            }[lang],
+                            {
+                                en: 'No credit card',
+                                fr: 'Sans carte bancaire',
+                                ar: 'دون بطاقة بنكية',
+                            }[lang],
+                            {
+                                en: 'Guided migration',
+                                fr: 'Migration assistée',
+                                ar: 'ترحيل مرافَق',
+                            }[lang],
                         ].map((text, i) => (
                             <motion.span
                                 key={text}
@@ -212,7 +241,11 @@ export function Hero({
                 <div className="hidden justify-center lg:flex">
                     <ScrollCue
                         label={
-                            lang === 'fr' ? 'Voir plus' : 'Scroll to explore'
+                            {
+                                en: 'Scroll to explore',
+                                fr: 'Voir plus',
+                                ar: 'مرّر للاستكشاف',
+                            }[lang]
                         }
                     />
                 </div>

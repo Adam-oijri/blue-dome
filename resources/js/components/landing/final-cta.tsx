@@ -52,9 +52,13 @@ export function FinalCta({
                         transition={{ delay: 0.1, duration: 0.7 }}
                         className="relative text-[34px] font-semibold tracking-tight text-balance sm:text-[44px] lg:text-[52px]"
                     >
-                        {lang === 'fr'
-                            ? 'Prêt à donner à votre cabinet l’infrastructure qu’il mérite ?'
-                            : 'Ready to give your clinic the infrastructure it deserves?'}
+                        {
+                            {
+                                en: 'Ready to give your clinic the infrastructure it deserves?',
+                                fr: 'Prêt à donner à votre cabinet l’infrastructure qu’il mérite ?',
+                                ar: 'هل أنت مستعدّ لمنح عيادتك البنية التحتية التي تستحقّها؟',
+                            }[lang]
+                        }
                     </motion.h2>
                     <motion.p
                         initial={{ opacity: 0, y: 12 }}
@@ -63,9 +67,13 @@ export function FinalCta({
                         transition={{ delay: 0.25, duration: 0.6 }}
                         className="relative mx-auto mt-5 max-w-xl text-[16px] leading-relaxed text-muted-foreground/90"
                     >
-                        {lang === 'fr'
-                            ? '14 jours gratuits. Migration accompagnée. Sans engagement.'
-                            : 'Fourteen days free. Guided migration. No commitment.'}
+                        {
+                            {
+                                en: 'Fourteen days free. Guided migration. No commitment.',
+                                fr: '14 jours gratuits. Migration accompagnée. Sans engagement.',
+                                ar: 'أربعة عشر يومًا مجانًا. ترحيل مرافَق. دون التزام.',
+                            }[lang]
+                        }
                     </motion.p>
                     <motion.div
                         initial={{ opacity: 0, y: 12 }}
@@ -87,9 +95,13 @@ export function FinalCta({
                                             : login({ locale })
                                     }
                                 >
-                                    {lang === 'fr'
-                                        ? 'Démarrer maintenant'
-                                        : 'Start now'}
+                                    {
+                                        {
+                                            en: 'Start now',
+                                            fr: 'Démarrer maintenant',
+                                            ar: 'ابدأ الآن',
+                                        }[lang]
+                                    }
                                     <ArrowRight className="size-4" />
                                 </Link>
                             </Button>
@@ -102,9 +114,13 @@ export function FinalCta({
                                 className="h-12 gap-2 border-white/20 bg-white/5 px-6 text-white hover:bg-white/15 hover:text-white"
                             >
                                 <a href="mailto:hello@bluedome.app">
-                                    {lang === 'fr'
-                                        ? 'Parler à un humain'
-                                        : 'Talk to a human'}
+                                    {
+                                        {
+                                            en: 'Talk to a human',
+                                            fr: 'Parler à un humain',
+                                            ar: 'تحدّث إلى شخص حقيقي',
+                                        }[lang]
+                                    }
                                 </a>
                             </Button>
                         </MagneticButton>

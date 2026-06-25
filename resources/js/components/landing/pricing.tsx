@@ -23,15 +23,25 @@ export function Pricing({
                         variants={FADE_UP}
                         className="mb-3 text-[12px] font-semibold tracking-wider text-olive-700 uppercase"
                     >
-                        {lang === 'fr' ? 'Tarification' : 'Pricing'}
+                        {
+                            {
+                                en: 'Pricing',
+                                fr: 'Tarification',
+                                ar: 'الأسعار',
+                            }[lang]
+                        }
                     </motion.p>
                     <motion.h2
                         variants={FADE_UP}
                         className="text-[34px] font-semibold tracking-tight text-navy-950 sm:text-[44px]"
                     >
-                        {lang === 'fr'
-                            ? 'Transparent. Modulable. Annulable.'
-                            : 'Transparent. Modular. Cancel any time.'}
+                        {
+                            {
+                                en: 'Transparent. Modular. Cancel any time.',
+                                fr: 'Transparent. Modulable. Annulable.',
+                                ar: 'شفّاف. مرن. يُلغى في أي وقت.',
+                            }[lang]
+                        }
                     </motion.h2>
                 </motion.div>
 

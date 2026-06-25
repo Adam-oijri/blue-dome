@@ -1,5 +1,5 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { ChevronRight, FileText, Plus, X } from 'lucide-react';
+import { ChevronRight, FileDown, FileText, Plus, X } from 'lucide-react';
 
 import { CreateMedicalRecordsSheet } from '@/components/blue-dome/create-medical-records-sheet';
 import { PageHeader } from '@/components/blue-dome/page-header';
@@ -14,6 +14,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import { enumLabel } from '@/lib/i18n/doctor';
 import { useDoctorLang } from '@/lib/i18n/doctor-context';
 import { useLocale } from '@/lib/i18n/use-locale';
 import { Pagination } from '@/pages/panels/super-admin/users';
@@ -62,10 +63,6 @@ function personName(p?: Person): string {
     return p ? `${p.first_name ?? ''} ${p.last_name ?? ''}`.trim() || '—' : '—';
 }
 
-function typeLabel(type: string): string {
-    return type.replace(/_/g, ' ');
-}
-
 const selectClass =
     'h-9 rounded-md border border-input bg-transparent px-3 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50';
 
@@ -106,7 +103,7 @@ export default function MedicalRecordsIndex({
             <div className="px-8 py-6 lg:px-10">
                 <PageHeader
                     title={t.consultations}
-                    description={`${records.total} records`}
+                    description={`${records.total} ${t.consultations.toLowerCase()}`}
                     actions={
                         <CreateMedicalRecordsSheet patients={patients}>
                             <Button
@@ -114,7 +111,7 @@ export default function MedicalRecordsIndex({
                                 className="gap-2 bg-olive-600 text-white hover:bg-olive-700"
                             >
                                 <Plus className="size-3.5" />
-                                New record
+                                {t.new_record}
                             </Button>
                         </CreateMedicalRecordsSheet>
                     }
@@ -123,7 +120,7 @@ export default function MedicalRecordsIndex({
                 {filters.patient_id && (
                     <div className="mb-4 flex items-center gap-2 rounded-md border border-border bg-muted px-3 py-2 text-[13px]">
                         <span className="text-muted-foreground">
-                            Filtered by patient
+                            {t.filtered_by_patient}
                         </span>
                         <Button
                             variant="ghost"
@@ -134,7 +131,7 @@ export default function MedicalRecordsIndex({
                             }
                         >
                             <X className="size-3.5" />
-                            Clear
+                            {t.clear_label}
                         </Button>
                     </div>
                 )}
@@ -148,10 +145,10 @@ export default function MedicalRecordsIndex({
                             onChange={(e) => setType(e.target.value)}
                             className={selectClass}
                         >
-                            <option value="">All types</option>
+                            <option value="">{t.all_types}</option>
                             {RECORD_TYPES.map((rt) => (
                                 <option key={rt} value={rt}>
-                                    {typeLabel(rt)}
+                                    {enumLabel(t.record_type_opts, rt)}
                                 </option>
                             ))}
                         </select>
@@ -162,24 +159,24 @@ export default function MedicalRecordsIndex({
                         <TableHeader>
                             <TableRow className="bg-muted/50">
                                 <TableHead className="px-5 py-2.5 text-[11px] tracking-wider uppercase">
-                                    Title
+                                    {t.record_title_col}
                                 </TableHead>
                                 <TableHead className="text-[11px] tracking-wider uppercase">
                                     {t.patients}
                                 </TableHead>
                                 <TableHead className="text-[11px] tracking-wider uppercase">
-                                    Type
+                                    {t.type_label}
                                 </TableHead>
                                 <TableHead className="text-[11px] tracking-wider uppercase">
-                                    Date
+                                    {t.col_date}
                                 </TableHead>
                                 <TableHead className="text-[11px] tracking-wider uppercase">
-                                    Author
+                                    {t.record_author}
                                 </TableHead>
                                 <TableHead className="text-[11px] tracking-wider uppercase">
-                                    Status
+                                    {t.col_status}
                                 </TableHead>
-                                <TableHead className="w-12" />
+                                <TableHead className="w-20" />
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -189,7 +186,7 @@ export default function MedicalRecordsIndex({
                                         colSpan={7}
                                         className="py-12 text-center text-sm text-muted-foreground"
                                     >
-                                        No records.
+                                        {t.no_records}
                                     </TableCell>
                                 </TableRow>
                             )}
@@ -207,13 +204,16 @@ export default function MedicalRecordsIndex({
                                             className="text-[13px] font-medium"
                                         >
                                             {r.title ||
-                                                typeLabel(r.record_type)}
+                                                enumLabel(
+                                                    t.record_type_opts,
+                                                    r.record_type,
+                                                )}
                                             {r.is_confidential && (
                                                 <StatusPill
                                                     tone="danger"
                                                     className="ms-2 text-[10px]"
                                                 >
-                                                    confidential
+                                                    {t.confidential_label}
                                                 </StatusPill>
                                             )}
                                         </Link>
@@ -222,7 +222,10 @@ export default function MedicalRecordsIndex({
                                         {personName(r.patient)}
                                     </TableCell>
                                     <TableCell className="text-[12px] text-muted-foreground">
-                                        {typeLabel(r.record_type)}
+                                        {enumLabel(
+                                            t.record_type_opts,
+                                            r.record_type,
+                                        )}
                                     </TableCell>
                                     <TableCell className="text-[12px] text-muted-foreground tabular-nums">
                                         {r.record_date
@@ -242,26 +245,40 @@ export default function MedicalRecordsIndex({
                                             withDot
                                         >
                                             {r.is_signed
-                                                ? 'signed'
-                                                : 'unsigned'}
+                                                ? t.signed_label
+                                                : t.unsigned_label}
                                         </StatusPill>
                                     </TableCell>
                                     <TableCell>
-                                        <Link
-                                            href={medicalRecords.show.url({
-                                                locale,
-                                                medical_record: r.id,
-                                            })}
-                                        >
-                                            <ChevronRight className="size-3.5 text-muted-foreground" />
-                                        </Link>
+                                        <div className="flex items-center justify-end gap-2">
+                                            <a
+                                                href={medicalRecords.pdf.url({
+                                                    locale,
+                                                    medical_record: r.id,
+                                                })}
+                                                target="_blank"
+                                                rel="noreferrer"
+                                                title={t.export_pdf}
+                                                aria-label={t.export_pdf}
+                                            >
+                                                <FileDown className="size-3.5 text-muted-foreground hover:text-foreground" />
+                                            </a>
+                                            <Link
+                                                href={medicalRecords.show.url({
+                                                    locale,
+                                                    medical_record: r.id,
+                                                })}
+                                            >
+                                                <ChevronRight className="size-3.5 text-muted-foreground" />
+                                            </Link>
+                                        </div>
                                     </TableCell>
                                 </TableRow>
                             ))}
                         </TableBody>
                     </Table>
 
-                    <Pagination paginated={records} t={{}} />
+                    <Pagination paginated={records} t={t} />
                 </SectionCard>
             </div>
         </>

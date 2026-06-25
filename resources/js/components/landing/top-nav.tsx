@@ -60,7 +60,13 @@ export function TopNav({ lang, authed, canRegister }: TopNavProps) {
                             BLUE DOME
                         </div>
                         <div className="text-[10px] text-muted-foreground">
-                            Clinic Suite
+                            {
+                                {
+                                    en: 'Clinic Suite',
+                                    fr: 'Suite Clinique',
+                                    ar: 'مجموعة العيادة',
+                                }[lang]
+                            }
                         </div>
                     </div>
                 </Link>
@@ -112,7 +118,13 @@ export function TopNav({ lang, authed, canRegister }: TopNavProps) {
                                 className="bg-navy-900 text-white hover:bg-navy-800"
                             >
                                 <Link href={roleHomeUrl(role, locale)}>
-                                    Dashboard
+                                    {
+                                        {
+                                            en: 'Dashboard',
+                                            fr: 'Tableau de bord',
+                                            ar: 'لوحة التحكم',
+                                        }[lang]
+                                    }
                                     <ArrowRight className="size-3.5" />
                                 </Link>
                             </Button>
@@ -120,9 +132,13 @@ export function TopNav({ lang, authed, canRegister }: TopNavProps) {
                             <>
                                 <Button variant="ghost" size="sm" asChild>
                                     <Link href={login({ locale })}>
-                                        {lang === 'fr'
-                                            ? 'Connexion'
-                                            : 'Sign in'}
+                                        {
+                                            {
+                                                en: 'Sign in',
+                                                fr: 'Connexion',
+                                                ar: 'تسجيل الدخول',
+                                            }[lang]
+                                        }
                                     </Link>
                                 </Button>
                                 {canRegister && (
@@ -132,9 +148,13 @@ export function TopNav({ lang, authed, canRegister }: TopNavProps) {
                                         className="bg-navy-900 text-white hover:bg-navy-800"
                                     >
                                         <Link href={register({ locale })}>
-                                            {lang === 'fr'
-                                                ? 'Démarrer'
-                                                : 'Get started'}
+                                            {
+                                                {
+                                                    en: 'Get started',
+                                                    fr: 'Démarrer',
+                                                    ar: 'ابدأ الآن',
+                                                }[lang]
+                                            }
                                             <ArrowRight className="size-3.5" />
                                         </Link>
                                     </Button>

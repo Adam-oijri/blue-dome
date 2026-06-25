@@ -249,7 +249,7 @@ export default function AppointmentsIndex({ appointments, filters }: Props) {
                         </TableBody>
                     </Table>
 
-                    <Pagination paginated={appointments} t={{}} />
+                    <Pagination paginated={appointments} t={t} />
                 </SectionCard>
             </div>
         </>

@@ -97,7 +97,13 @@ export function Testimonial({ lang }: SectionProps) {
                     <Button
                         variant="outline"
                         size="icon"
-                        aria-label="Previous"
+                        aria-label={
+                            {
+                                en: 'Previous',
+                                fr: 'Précédent',
+                                ar: 'السابق',
+                            }[lang]
+                        }
                         onClick={() =>
                             setIndex(
                                 (i) =>
@@ -119,7 +125,13 @@ export function Testimonial({ lang }: SectionProps) {
                                     key={i}
                                     type="button"
                                     onClick={() => setIndex(i)}
-                                    aria-label={`Testimonial ${i + 1}`}
+                                    aria-label={`${
+                                        {
+                                            en: 'Testimonial',
+                                            fr: 'Témoignage',
+                                            ar: 'شهادة',
+                                        }[lang]
+                                    } ${i + 1}`}
                                     className={cn(
                                         'h-1.5 rounded-full transition-all',
                                         active
@@ -134,7 +146,13 @@ export function Testimonial({ lang }: SectionProps) {
                     <Button
                         variant="outline"
                         size="icon"
-                        aria-label="Next"
+                        aria-label={
+                            {
+                                en: 'Next',
+                                fr: 'Suivant',
+                                ar: 'التالي',
+                            }[lang]
+                        }
                         onClick={() =>
                             setIndex((i) => (i + 1) % TESTIMONIALS.length)
                         }

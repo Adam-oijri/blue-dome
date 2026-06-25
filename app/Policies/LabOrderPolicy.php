@@ -9,13 +9,17 @@ class LabOrderPolicy
 {
     public function viewAny(User $actor): bool
     {
-        return in_array($actor->role, ['super_admin', 'doctor', 'secretary'], true);
+        // Clinical separation: lab orders are the treating doctor's domain;
+        // the secretary/clinic manager has no access. Super admin retained for
+        // cross-clinic oversight.
+        return in_array($actor->role, ['super_admin', 'doctor'], true);
     }
 
     public function view(User $actor, LabOrder $labOrder): bool
     {
-        // Phase 8: clinic-membership branch removed.
-        return in_array($actor->role, ['super_admin', 'doctor', 'secretary'], true);
+        // Phase 8: any doctor (or super admin) reads any lab order regardless
+        // of origin clinic. The secretary is excluded.
+        return in_array($actor->role, ['super_admin', 'doctor'], true);
     }
 
     public function create(User $actor): bool
@@ -36,10 +40,11 @@ class LabOrderPolicy
     }
 
     /**
-     * Per the IG permission matrix, secretary or doctor can record results.
+     * Clinical separation: only the treating doctor records results. (The
+     * secretary's earlier front-desk result-entry role was removed.)
      */
     public function recordResults(User $actor, LabOrder $labOrder): bool
     {
-        return in_array($actor->role, ['doctor', 'secretary'], true);
+        return $actor->role === 'doctor';
     }
 }

@@ -20,23 +20,37 @@ export function Faq({ lang }: SectionProps) {
                         variants={FADE_UP}
                         className="mb-3 text-[12px] font-semibold tracking-wider text-olive-700 uppercase"
                     >
-                        {lang === 'fr' ? 'FAQ' : 'FAQ'}
+                        {
+                            {
+                                en: 'FAQ',
+                                fr: 'FAQ',
+                                ar: 'الأسئلة الشائعة',
+                            }[lang]
+                        }
                     </motion.p>
                     <motion.h2
                         variants={FADE_UP}
                         className="text-[34px] font-semibold tracking-tight text-navy-950 sm:text-[44px]"
                     >
-                        {lang === 'fr'
-                            ? 'Questions fréquentes.'
-                            : 'Frequently asked questions.'}
+                        {
+                            {
+                                en: 'Frequently asked questions.',
+                                fr: 'Questions fréquentes.',
+                                ar: 'الأسئلة الشائعة.',
+                            }[lang]
+                        }
                     </motion.h2>
                     <motion.p
                         variants={FADE_UP}
                         className="mt-3 text-[15px] text-muted-foreground"
                     >
-                        {lang === 'fr'
-                            ? 'Pas trouvé votre réponse ? Écrivez-nous à hello@bluedome.app.'
-                            : "Didn't find your answer? Email us at hello@bluedome.app."}
+                        {
+                            {
+                                en: "Didn't find your answer? Email us at hello@bluedome.app.",
+                                fr: 'Pas trouvé votre réponse ? Écrivez-nous à hello@bluedome.app.',
+                                ar: 'لم تجد إجابتك؟ راسلنا على hello@bluedome.app.',
+                            }[lang]
+                        }
                     </motion.p>
                 </motion.div>
 

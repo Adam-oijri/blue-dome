@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
+import { useSuperAdminLang } from '@/lib/i18n/super-admin-context';
 
 export interface ClinicFormData {
     id?: string;
@@ -82,54 +83,55 @@ export function ClinicFormFields({
     errors: Partial<Record<string, string>>;
     submitLabel: string;
 }) {
+    const { t } = useSuperAdminLang();
     const isActive = clinic ? (clinic.is_active ? '1' : '0') : '1';
 
     return (
         <>
             <div className="space-y-4">
-                <GroupHeading>Profile</GroupHeading>
+                <GroupHeading>{t.clinic_form_profile}</GroupHeading>
                 <div className="grid gap-5 sm:grid-cols-2">
                     <Field
-                        label="Clinic name"
+                        label={t.clinic_form_name}
                         name="name"
                         required
                         defaultValue={clinic?.name ?? ''}
                         error={errors.name}
                     />
                     <Field
-                        label="Email"
+                        label={t.clinic_form_email}
                         name="email"
                         type="email"
                         defaultValue={clinic?.email ?? ''}
                         error={errors.email}
                     />
                     <Field
-                        label="Phone"
+                        label={t.clinic_form_phone}
                         name="phone"
                         defaultValue={clinic?.phone ?? ''}
                         error={errors.phone}
                     />
                     <Field
-                        label="City"
+                        label={t.clinic_form_city}
                         name="city"
                         defaultValue={clinic?.city ?? ''}
                         error={errors.city}
                     />
                     <Field
-                        label="Country (ISO-2)"
+                        label={t.clinic_form_country}
                         name="country"
                         defaultValue={clinic?.country ?? 'MA'}
                         error={errors.country}
                     />
                     <Field
-                        label="Postal code"
+                        label={t.clinic_form_postal_code}
                         name="postal_code"
                         defaultValue={clinic?.postal_code ?? ''}
                         error={errors.postal_code}
                     />
                 </div>
                 <Field
-                    label="Address"
+                    label={t.clinic_form_address}
                     name="address"
                     defaultValue={clinic?.address ?? ''}
                     error={errors.address}
@@ -137,28 +139,28 @@ export function ClinicFormFields({
             </div>
 
             <div className="space-y-4">
-                <GroupHeading>Localization</GroupHeading>
+                <GroupHeading>{t.clinic_form_localization}</GroupHeading>
                 <div className="grid gap-5 sm:grid-cols-2">
                     <Field
-                        label="Currency (ISO-3)"
+                        label={t.clinic_form_currency}
                         name="currency"
                         defaultValue={clinic?.currency ?? 'MAD'}
                         error={errors.currency}
                     />
                     <Field
-                        label="Timezone"
+                        label={t.clinic_form_timezone}
                         name="timezone"
                         defaultValue={clinic?.timezone ?? 'Africa/Casablanca'}
                         error={errors.timezone}
                     />
                     <Field
-                        label="Locale"
+                        label={t.clinic_form_locale}
                         name="locale"
                         defaultValue={clinic?.locale ?? 'ar-MA'}
                         error={errors.locale}
                     />
                     <Field
-                        label="Date format"
+                        label={t.clinic_form_date_format}
                         name="date_format"
                         defaultValue={clinic?.date_format ?? 'DD/MM/YYYY'}
                         error={errors.date_format}
@@ -167,10 +169,12 @@ export function ClinicFormFields({
             </div>
 
             <div className="space-y-4">
-                <GroupHeading>Subscription</GroupHeading>
+                <GroupHeading>{t.clinic_form_subscription}</GroupHeading>
                 <div className="grid gap-5 sm:grid-cols-2">
                     <div className="grid gap-2">
-                        <Label htmlFor="subscription_plan">Plan</Label>
+                        <Label htmlFor="subscription_plan">
+                            {t.clinic_form_plan}
+                        </Label>
                         <select
                             id="subscription_plan"
                             name="subscription_plan"
@@ -186,7 +190,9 @@ export function ClinicFormFields({
                         <InputError message={errors.subscription_plan} />
                     </div>
                     <div className="grid gap-2">
-                        <Label htmlFor="subscription_status">Status</Label>
+                        <Label htmlFor="subscription_status">
+                            {t.clinic_form_status}
+                        </Label>
                         <select
                             id="subscription_status"
                             name="subscription_status"
@@ -204,7 +210,7 @@ export function ClinicFormFields({
                         <InputError message={errors.subscription_status} />
                     </div>
                     <Field
-                        label="Renews on"
+                        label={t.clinic_form_renews_on}
                         name="subscription_expiry"
                         type="date"
                         defaultValue={
@@ -213,15 +219,17 @@ export function ClinicFormFields({
                         error={errors.subscription_expiry}
                     />
                     <div className="grid gap-2">
-                        <Label htmlFor="is_active">Active</Label>
+                        <Label htmlFor="is_active">
+                            {t.clinic_form_active}
+                        </Label>
                         <select
                             id="is_active"
                             name="is_active"
                             defaultValue={isActive}
                             className={selectClass}
                         >
-                            <option value="1">Active</option>
-                            <option value="0">Inactive</option>
+                            <option value="1">{t.clinic_form_active}</option>
+                            <option value="0">{t.clinic_form_inactive}</option>
                         </select>
                         <InputError message={errors.is_active} />
                     </div>
@@ -229,24 +237,24 @@ export function ClinicFormFields({
             </div>
 
             <div className="space-y-4">
-                <GroupHeading>Limits</GroupHeading>
+                <GroupHeading>{t.clinic_form_limits}</GroupHeading>
                 <div className="grid gap-5 sm:grid-cols-3">
                     <Field
-                        label="Max users"
+                        label={t.clinic_form_max_users}
                         name="max_users"
                         type="number"
                         defaultValue={clinic?.max_users ?? ''}
                         error={errors.max_users}
                     />
                     <Field
-                        label="Max branches"
+                        label={t.clinic_form_max_branches}
                         name="max_branches"
                         type="number"
                         defaultValue={clinic?.max_branches ?? ''}
                         error={errors.max_branches}
                     />
                     <Field
-                        label="Storage (MB)"
+                        label={t.clinic_form_storage_mb}
                         name="max_storage_mb"
                         type="number"
                         defaultValue={clinic?.max_storage_mb ?? ''}

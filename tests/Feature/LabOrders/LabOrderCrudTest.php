@@ -13,7 +13,7 @@ beforeEach(function () {
     $this->patient = Patient::factory()->create(['clinic_id' => $this->clinic->id]);
 });
 
-it('lets all clinic staff list lab orders', function (string $role) {
+it('lets doctors and super admins list lab orders', function (string $role) {
     $actor = User::factory()->state(['role' => $role])->create(['clinic_id' => $this->clinic->id]);
     LabOrder::factory()->create([
         'clinic_id' => $this->clinic->id,
@@ -23,7 +23,18 @@ it('lets all clinic staff list lab orders', function (string $role) {
     $this->actingAs($actor)
         ->get(route('lab-orders.index'))
         ->assertSuccessful();
-})->with(['super_admin', 'doctor', 'secretary']);
+})->with(['super_admin', 'doctor']);
+
+it('blocks the secretary from lab orders (clinical separation)', function () {
+    $secretary = User::factory()->secretary()->create(['clinic_id' => $this->clinic->id]);
+    $order = LabOrder::factory()->create([
+        'clinic_id' => $this->clinic->id,
+        'patient_id' => $this->patient->id,
+    ]);
+
+    $this->actingAs($secretary)->get(route('lab-orders.index'))->assertForbidden();
+    $this->actingAs($secretary)->get(route('lab-orders.show', $order))->assertForbidden();
+});
 
 it('only lets doctors create lab orders', function (string $role, bool $allowed) {
     $actor = User::factory()->state(['role' => $role])->create(['clinic_id' => $this->clinic->id]);
@@ -51,7 +62,7 @@ it('only lets doctors create lab orders', function (string $role, bool $allowed)
     ['secretary', false],
 ]);
 
-it('lets doctor or secretary record results, blocks others', function (string $role, bool $allowed) {
+it('lets only doctors record results, blocks others', function (string $role, bool $allowed) {
     $doctor = User::factory()->doctor()->create(['clinic_id' => $this->clinic->id]);
     $order = LabOrder::factory()->create([
         'clinic_id' => $this->clinic->id,
@@ -80,7 +91,7 @@ it('lets doctor or secretary record results, blocks others', function (string $r
 })->with([
     ['super_admin', false],
     ['doctor', true],
-    ['secretary', true],
+    ['secretary', false],
 ]);
 
 it('lets a doctor order labs for a patient from another clinic (Phase 8 global access)', function () {

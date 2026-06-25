@@ -70,6 +70,7 @@ class Appointment extends Model
             'cancelled_at' => 'datetime',
             'confirmation_at' => 'datetime',
             'confirmation_token_expires' => 'datetime',
+            'reminder_24h_sent_at' => 'datetime',
             'follow_up_call_at' => 'datetime',
             'last_follow_up_attempt_at' => 'datetime',
             'needs_follow_up_call' => 'boolean',

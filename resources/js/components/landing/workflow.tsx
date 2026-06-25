@@ -43,15 +43,25 @@ export function Workflow({ lang }: SectionProps) {
                         variants={FADE_UP}
                         className="mb-3 text-[12px] font-semibold tracking-wider text-olive-300 uppercase"
                     >
-                        {lang === 'fr' ? 'Comment ça marche' : 'How it works'}
+                        {
+                            {
+                                en: 'How it works',
+                                fr: 'Comment ça marche',
+                                ar: 'كيف يعمل',
+                            }[lang]
+                        }
                     </motion.p>
                     <motion.h2
                         variants={FADE_UP}
                         className="text-[34px] font-semibold tracking-tight sm:text-[44px]"
                     >
-                        {lang === 'fr'
-                            ? 'Du premier patient au premier rapport.'
-                            : 'From first patient to first report.'}
+                        {
+                            {
+                                en: 'From first patient to first report.',
+                                fr: 'Du premier patient au premier rapport.',
+                                ar: 'من أول مريض إلى أول تقرير.',
+                            }[lang]
+                        }
                     </motion.h2>
                 </motion.div>
 

@@ -26,6 +26,24 @@ it('returns the actor clinic patients for the create-appointment sheet', functio
     expect($ids)->not->toContain($otherPatient->id);
 });
 
+it('returns the clinic doctors for the secretary doctor picker', function () {
+    $secretary = User::factory()->secretary()->create(['clinic_id' => $this->clinic->id]);
+
+    $otherClinic = Clinic::factory()->create();
+    $otherDoctor = User::factory()->doctor()->create(['clinic_id' => $otherClinic->id]);
+
+    $response = $this->actingAs($secretary)
+        ->getJson(route('appointments.form-options'));
+
+    $response->assertOk();
+
+    $doctorIds = collect($response->json('doctors'))->pluck('id');
+
+    expect($doctorIds)->toContain($this->doctor->id);
+    expect($doctorIds)->not->toContain($otherDoctor->id); // other clinic
+    expect($doctorIds)->not->toContain($secretary->id);   // non-doctors excluded
+});
+
 it('rejects guests', function () {
     $this->getJson(route('appointments.form-options'))->assertUnauthorized();
 });

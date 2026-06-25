@@ -184,7 +184,7 @@ export default function PatientVitalSigns({ patient, vital_signs }: Props) {
                     </h2>
                     {vital_signs.data.length === 0 ? (
                         <p className="text-xs text-muted-foreground">
-                            No vital signs recorded yet.
+                            {t.empty_no_vital_signs}
                         </p>
                     ) : (
                         <Table className="text-xs">

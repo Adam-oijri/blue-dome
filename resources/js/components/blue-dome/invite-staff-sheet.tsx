@@ -14,6 +14,7 @@ import {
     SheetTitle,
     SheetTrigger,
 } from '@/components/ui/sheet';
+import { useSuperAdminLang } from '@/lib/i18n/super-admin-context';
 import { useLocale } from '@/lib/i18n/use-locale';
 import { store as createInvitation } from '@/routes/super-admin/invitations';
 
@@ -23,6 +24,7 @@ const SELECT_CLASS =
     'border-input focus-visible:border-ring focus-visible:ring-ring/50 h-9 w-full rounded-md border bg-transparent px-3 text-sm outline-none focus-visible:ring-[3px]';
 
 export function InviteStaffSheet({ clinics }: { clinics: ClinicOpt[] }) {
+    const { t } = useSuperAdminLang();
     const { slug: locale } = useLocale();
     const [open, setOpen] = useState(false);
     const [inviteUrl, setInviteUrl] = useState<string | null>(null);
@@ -87,22 +89,18 @@ export function InviteStaffSheet({ clinics }: { clinics: ClinicOpt[] }) {
             <SheetTrigger asChild>
                 <Button className="gap-1.5 bg-olive-600 text-white hover:bg-olive-700">
                     <UserPlus className="size-4" />
-                    Invite staff
+                    {t.invite_staff}
                 </Button>
             </SheetTrigger>
             <SheetContent className="w-full sm:max-w-md">
                 <SheetHeader>
-                    <SheetTitle>Invite staff</SheetTitle>
-                    <SheetDescription>
-                        Pick the role and clinic and the person&apos;s name,
-                        then share the generated link. They set their own email
-                        and password.
-                    </SheetDescription>
+                    <SheetTitle>{t.invite_staff}</SheetTitle>
+                    <SheetDescription>{t.invite_staff_desc}</SheetDescription>
                 </SheetHeader>
 
                 <form onSubmit={submit} className="space-y-4 px-4">
                     <div className="grid gap-2">
-                        <Label htmlFor="role">Role</Label>
+                        <Label htmlFor="role">{t.role_label}</Label>
                         <select
                             id="role"
                             value={form.data.role}
@@ -111,14 +109,16 @@ export function InviteStaffSheet({ clinics }: { clinics: ClinicOpt[] }) {
                             }
                             className={SELECT_CLASS}
                         >
-                            <option value="doctor">Doctor</option>
-                            <option value="secretary">Secretary</option>
+                            <option value="doctor">{t.role_doctor}</option>
+                            <option value="secretary">
+                                {t.role_secretary}
+                            </option>
                         </select>
                         <InputError message={form.errors.role} />
                     </div>
 
                     <div className="grid gap-2">
-                        <Label htmlFor="clinic_id">Clinic</Label>
+                        <Label htmlFor="clinic_id">{t.clinic_label}</Label>
                         <select
                             id="clinic_id"
                             value={form.data.clinic_id}
@@ -127,7 +127,7 @@ export function InviteStaffSheet({ clinics }: { clinics: ClinicOpt[] }) {
                             }
                             className={SELECT_CLASS}
                         >
-                            <option value="">Select a clinic…</option>
+                            <option value="">{t.select_clinic_ph}</option>
                             {clinics.map((c) => (
                                 <option key={c.id} value={c.id}>
                                     {c.name}
@@ -138,7 +138,7 @@ export function InviteStaffSheet({ clinics }: { clinics: ClinicOpt[] }) {
                     </div>
 
                     <div className="grid gap-2">
-                        <Label htmlFor="first_name">First name</Label>
+                        <Label htmlFor="first_name">{t.first_name}</Label>
                         <Input
                             id="first_name"
                             value={form.data.first_name}
@@ -151,7 +151,7 @@ export function InviteStaffSheet({ clinics }: { clinics: ClinicOpt[] }) {
                     </div>
 
                     <div className="grid gap-2">
-                        <Label htmlFor="last_name">Last name</Label>
+                        <Label htmlFor="last_name">{t.last_name}</Label>
                         <Input
                             id="last_name"
                             value={form.data.last_name}
@@ -164,14 +164,14 @@ export function InviteStaffSheet({ clinics }: { clinics: ClinicOpt[] }) {
                     </div>
 
                     <Button type="submit" disabled={form.processing}>
-                        Generate invite link
+                        {t.generate_invite_link}
                     </Button>
                 </form>
 
                 {inviteUrl && (
                     <div className="mx-4 mt-4 rounded-lg border border-border bg-muted/40 p-3">
                         <div className="mb-1.5 text-[12px] font-medium text-muted-foreground">
-                            Invite link
+                            {t.invite_link}
                         </div>
                         <div className="flex items-center gap-2">
                             <input
@@ -186,7 +186,7 @@ export function InviteStaffSheet({ clinics }: { clinics: ClinicOpt[] }) {
                                 size="icon"
                                 className="size-9 shrink-0"
                                 onClick={copy}
-                                aria-label="Copy invite link"
+                                aria-label={t.copy_invite_link}
                             >
                                 {copied ? (
                                     <Check className="size-4" />

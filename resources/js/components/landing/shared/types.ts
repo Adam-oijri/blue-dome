@@ -1,6 +1,6 @@
-export type Lang = 'en' | 'fr';
+export type Lang = 'en' | 'fr' | 'ar';
 
-export type LangPair = { en: string; fr: string };
+export type LangPair = { en: string; fr: string; ar: string };
 
 export type SectionProps = {
     lang: Lang;

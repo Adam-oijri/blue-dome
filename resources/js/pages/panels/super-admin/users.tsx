@@ -176,7 +176,7 @@ export default function SuperAdminUsersPage({
                                     )}
                                 >
                                     <Download className="size-3.5" />
-                                    Export
+                                    {t.action_export}
                                 </a>
                             </Button>
                             <InviteStaffSheet clinics={clinics} />
@@ -286,7 +286,7 @@ export default function SuperAdminUsersPage({
                             <TableRow className="bg-muted/50">
                                 <TableHead className="w-10 px-5">
                                     <Checkbox
-                                        aria-label="Select all"
+                                        aria-label={t.users_select_all}
                                         checked={
                                             selection.allSelected
                                                 ? true
@@ -350,7 +350,10 @@ export default function SuperAdminUsersPage({
                                     >
                                         <TableCell className="px-5">
                                             <Checkbox
-                                                aria-label={`Select ${fullName}`}
+                                                aria-label={t.users_select_row.replace(
+                                                    '{name}',
+                                                    fullName,
+                                                )}
                                                 checked={selection.has(u.id)}
                                                 onCheckedChange={() =>
                                                     selection.toggle(u.id)
@@ -454,7 +457,9 @@ export default function SuperAdminUsersPage({
                                                                     )}
                                                                 >
                                                                     <Pencil className="size-3.5" />
-                                                                    Edit
+                                                                    {
+                                                                        t.action_edit
+                                                                    }
                                                                 </Link>
                                                             </DropdownMenuItem>
                                                         )}
@@ -473,7 +478,9 @@ export default function SuperAdminUsersPage({
                                                                     )}
                                                                 >
                                                                     <Building2 className="size-3.5" />
-                                                                    View clinic
+                                                                    {
+                                                                        t.users_action_view_clinic
+                                                                    }
                                                                 </Link>
                                                             </DropdownMenuItem>
                                                         )}
@@ -492,7 +499,9 @@ export default function SuperAdminUsersPage({
                                                                     as="button"
                                                                 >
                                                                     <RotateCcw className="size-3.5" />
-                                                                    Restore
+                                                                    {
+                                                                        t.action_restore
+                                                                    }
                                                                 </Link>
                                                             </DropdownMenuItem>
                                                         ) : (
@@ -515,12 +524,14 @@ export default function SuperAdminUsersPage({
                                                                             as="button"
                                                                             onBefore={() =>
                                                                                 confirm(
-                                                                                    'Remove this user? They can be restored later.',
+                                                                                    t.users_confirm_remove,
                                                                                 )
                                                                             }
                                                                         >
                                                                             <Trash2 className="size-3.5" />
-                                                                            Remove
+                                                                            {
+                                                                                t.action_remove
+                                                                            }
                                                                         </Link>
                                                                     </DropdownMenuItem>
                                                                 </>
@@ -544,14 +555,17 @@ export default function SuperAdminUsersPage({
                 count={selection.count}
                 onClear={selection.clear}
                 actions={[
-                    { label: 'Activate', onClick: () => runBulk('activate') },
                     {
-                        label: 'Deactivate',
+                        label: t.users_bulk_activate,
+                        onClick: () => runBulk('activate'),
+                    },
+                    {
+                        label: t.users_bulk_deactivate,
                         onClick: () => runBulk('deactivate'),
                     },
-                    { label: 'Export selected', onClick: exportSelected },
+                    { label: t.users_bulk_export, onClick: exportSelected },
                     {
-                        label: 'Remove',
+                        label: t.users_bulk_remove,
                         onClick: () => runBulk('delete'),
                         destructive: true,
                     },
@@ -575,18 +589,20 @@ export function Pagination<T>({
     t,
 }: {
     paginated: Paginated<T>;
-    t: Record<string, string>;
+    // Any role dictionary (or an empty object) may be passed; only
+    // `pagination_summary` is read, with a graceful English fallback.
+    t: { pagination_summary?: unknown } & Record<string, unknown>;
 }) {
     if (paginated.last_page <= 1) {
         return null;
     }
 
-    const summary = (
-        t.pagination_summary ?? 'Page {current} of {last} · {total}'
-    )
-        .replace('{current}', String(paginated.current_page))
-        .replace('{last}', String(paginated.last_page))
-        .replace('{total}', String(paginated.total));
+    const template =
+        (t.pagination_summary as string) ?? 'Page :current of :last · :total';
+    const summary = template
+        .replace(':current', String(paginated.current_page))
+        .replace(':last', String(paginated.last_page))
+        .replace(':total', String(paginated.total));
 
     return (
         <div className="flex items-center justify-between border-t border-border px-5 py-3 text-[12px]">

@@ -3,6 +3,7 @@ import {
     AlertTriangle,
     ChevronRight,
     Clock,
+    FileDown,
     FlaskConical,
     Plus,
 } from 'lucide-react';
@@ -190,7 +191,7 @@ export default function LabOrdersIndex({
                                     <TableHead className="text-[11px] tracking-wider uppercase">
                                         {t.col_status}
                                     </TableHead>
-                                    <TableHead className="w-10" />
+                                    <TableHead className="w-20" />
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -205,7 +206,8 @@ export default function LabOrdersIndex({
                                     </TableRow>
                                 )}
                                 {lab_orders.data.map((o) => {
-                                    const s = STATUS[o.status] ?? STATUS.pending;
+                                    const s =
+                                        STATUS[o.status] ?? STATUS.pending;
 
                                     return (
                                         <TableRow
@@ -286,14 +288,34 @@ export default function LabOrdersIndex({
                                                 </StatusPill>
                                             </TableCell>
                                             <TableCell>
-                                                <Link
-                                                    href={labOrders.show.url({
-                                                        locale,
-                                                        lab_order: o.id,
-                                                    })}
-                                                >
-                                                    <ChevronRight className="size-3.5 text-muted-foreground" />
-                                                </Link>
+                                                <div className="flex items-center justify-end gap-2">
+                                                    <a
+                                                        href={labOrders.pdf.url(
+                                                            {
+                                                                locale,
+                                                                lab_order: o.id,
+                                                            },
+                                                        )}
+                                                        target="_blank"
+                                                        rel="noreferrer"
+                                                        title={t.export_pdf}
+                                                        aria-label={
+                                                            t.export_pdf
+                                                        }
+                                                    >
+                                                        <FileDown className="size-3.5 text-muted-foreground hover:text-foreground" />
+                                                    </a>
+                                                    <Link
+                                                        href={labOrders.show.url(
+                                                            {
+                                                                locale,
+                                                                lab_order: o.id,
+                                                            },
+                                                        )}
+                                                    >
+                                                        <ChevronRight className="size-3.5 text-muted-foreground" />
+                                                    </Link>
+                                                </div>
                                             </TableCell>
                                         </TableRow>
                                     );
@@ -301,7 +323,7 @@ export default function LabOrdersIndex({
                             </TableBody>
                         </Table>
 
-                        <Pagination paginated={lab_orders} t={{}} />
+                        <Pagination paginated={lab_orders} t={t} />
                     </SectionCard>
 
                     <SectionCard
@@ -329,7 +351,9 @@ export default function LabOrdersIndex({
                                         </div>
                                     </div>
                                     <StatusPill
-                                        tone={r.is_critical ? 'danger' : 'warning'}
+                                        tone={
+                                            r.is_critical ? 'danger' : 'warning'
+                                        }
                                     >
                                         {r.is_critical
                                             ? t.result_critical

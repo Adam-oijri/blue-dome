@@ -29,34 +29,34 @@ const FIELD_CLASS =
 const TEXTAREA_CLASS =
     'border-input focus-visible:border-ring focus-visible:ring-ring/50 w-full rounded-md border bg-transparent px-3 py-2 text-sm outline-none focus-visible:ring-[3px]';
 
-const CATEGORY_OPTIONS: ReadonlyArray<readonly [string, string]> = [
-    ['rent', 'Rent'],
-    ['utilities', 'Utilities'],
-    ['salaries', 'Salaries'],
-    ['supplies', 'Supplies'],
-    ['equipment', 'Equipment'],
-    ['maintenance', 'Maintenance'],
-    ['marketing', 'Marketing'],
-    ['insurance', 'Insurance'],
-    ['taxes', 'Taxes'],
-    ['licenses', 'Licenses'],
-    ['training', 'Training'],
-    ['travel', 'Travel'],
-    ['miscellaneous', 'Miscellaneous'],
+const CATEGORY_OPTIONS: ReadonlyArray<string> = [
+    'rent',
+    'utilities',
+    'salaries',
+    'supplies',
+    'equipment',
+    'maintenance',
+    'marketing',
+    'insurance',
+    'taxes',
+    'licenses',
+    'training',
+    'travel',
+    'miscellaneous',
 ];
 
-const PAYMENT_STATUS_OPTIONS: ReadonlyArray<readonly [string, string]> = [
-    ['pending', 'Pending'],
-    ['paid', 'Paid'],
-    ['cancelled', 'Cancelled'],
+const PAYMENT_STATUS_OPTIONS: ReadonlyArray<string> = [
+    'pending',
+    'paid',
+    'cancelled',
 ];
 
-const RECURRING_FREQUENCY_OPTIONS: ReadonlyArray<readonly [string, string]> = [
-    ['daily', 'Daily'],
-    ['weekly', 'Weekly'],
-    ['monthly', 'Monthly'],
-    ['quarterly', 'Quarterly'],
-    ['yearly', 'Yearly'],
+const RECURRING_FREQUENCY_OPTIONS: ReadonlyArray<string> = [
+    'daily',
+    'weekly',
+    'monthly',
+    'quarterly',
+    'yearly',
 ];
 
 function vendorLabel(vendor: VendorOption): string {
@@ -122,10 +122,7 @@ export function CreateExpensesSheet({
             <SheetContent className="flex w-full flex-col sm:max-w-md">
                 <SheetHeader>
                     <SheetTitle>{t.new_expense}</SheetTitle>
-                    <SheetDescription>
-                        Log a clinic expense. Categorize it and optionally link
-                        a vendor.
-                    </SheetDescription>
+                    <SheetDescription>{t.log_expense_desc}</SheetDescription>
                 </SheetHeader>
 
                 <form
@@ -160,9 +157,12 @@ export function CreateExpensesSheet({
                                     }
                                     className={FIELD_CLASS}
                                 >
-                                    {CATEGORY_OPTIONS.map(([value, label]) => (
+                                    {CATEGORY_OPTIONS.map((value) => (
                                         <option key={value} value={value}>
-                                            {label}
+                                            {enumLabel(
+                                                t.expense_category_opts,
+                                                value,
+                                            )}
                                         </option>
                                     ))}
                                 </select>
@@ -208,7 +208,7 @@ export function CreateExpensesSheet({
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="payment_status">
-                                    Payment status
+                                    {t.payment_status_label}
                                 </Label>
                                 <select
                                     id="payment_status"
@@ -221,16 +221,14 @@ export function CreateExpensesSheet({
                                     }
                                     className={FIELD_CLASS}
                                 >
-                                    {PAYMENT_STATUS_OPTIONS.map(
-                                        ([value]) => (
-                                            <option key={value} value={value}>
-                                                {enumLabel(
-                                                    t.payment_status_opts,
-                                                    value,
-                                                )}
-                                            </option>
-                                        ),
-                                    )}
+                                    {PAYMENT_STATUS_OPTIONS.map((value) => (
+                                        <option key={value} value={value}>
+                                            {enumLabel(
+                                                t.payment_status_opts,
+                                                value,
+                                            )}
+                                        </option>
+                                    ))}
                                 </select>
                                 <InputError
                                     message={form.errors.payment_status}
@@ -239,7 +237,7 @@ export function CreateExpensesSheet({
                         </div>
 
                         <div className="grid gap-2">
-                            <Label htmlFor="paid_to">Paid to</Label>
+                            <Label htmlFor="paid_to">{t.paid_to}</Label>
                             <input
                                 id="paid_to"
                                 type="text"
@@ -262,7 +260,7 @@ export function CreateExpensesSheet({
                                 }
                                 className={FIELD_CLASS}
                             >
-                                <option value="">No vendor</option>
+                                <option value="">{t.none_label}</option>
                                 {vendors.map((vendor) => (
                                     <option key={vendor.id} value={vendor.id}>
                                         {vendorLabel(vendor)}
@@ -289,7 +287,7 @@ export function CreateExpensesSheet({
                                     }
                                     className="size-4 rounded border-input"
                                 />
-                                Recurring expense
+                                {t.recurring_expense_label}
                             </label>
                             <InputError message={form.errors.is_recurring} />
                         </div>
@@ -312,12 +310,15 @@ export function CreateExpensesSheet({
                                         className={FIELD_CLASS}
                                     >
                                         {RECURRING_FREQUENCY_OPTIONS.map(
-                                            ([value, label]) => (
+                                            (value) => (
                                                 <option
                                                     key={value}
                                                     value={value}
                                                 >
-                                                    {label}
+                                                    {enumLabel(
+                                                        t.recurring_frequency_opts,
+                                                        value,
+                                                    )}
                                                 </option>
                                             ),
                                         )}
@@ -330,7 +331,7 @@ export function CreateExpensesSheet({
                                 </div>
                                 <div className="grid gap-2">
                                     <Label htmlFor="recurring_end_date">
-                                        End date
+                                        {t.recurring_end_date}
                                     </Label>
                                     <input
                                         id="recurring_end_date"

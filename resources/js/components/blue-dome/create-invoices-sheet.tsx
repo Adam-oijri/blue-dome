@@ -14,6 +14,7 @@ import {
     SheetTitle,
     SheetTrigger,
 } from '@/components/ui/sheet';
+import { enumLabel } from '@/lib/i18n/doctor';
 import { useDoctorLang } from '@/lib/i18n/doctor-context';
 import { useLocale } from '@/lib/i18n/use-locale';
 import invoices from '@/routes/invoices';
@@ -30,15 +31,15 @@ type LineItem = {
 const FIELD_CLASS =
     'border-input focus-visible:border-ring focus-visible:ring-ring/50 h-9 w-full rounded-md border bg-transparent px-3 text-sm outline-none focus-visible:ring-[3px]';
 
-const ITEM_TYPE_OPTIONS: ReadonlyArray<readonly [string, string]> = [
-    ['consultation', 'Consultation'],
-    ['procedure', 'Procedure'],
-    ['lab_test', 'Lab test'],
-    ['imaging', 'Imaging'],
-    ['medication', 'Medication'],
-    ['vaccination', 'Vaccination'],
-    ['supplies', 'Supplies'],
-    ['other', 'Other'],
+const ITEM_TYPE_OPTIONS: ReadonlyArray<string> = [
+    'consultation',
+    'procedure',
+    'lab_test',
+    'imaging',
+    'medication',
+    'vaccination',
+    'supplies',
+    'other',
 ];
 
 const emptyItem = (): LineItem => ({
@@ -144,8 +145,7 @@ export function CreateInvoicesSheet({
                 <SheetHeader>
                     <SheetTitle>{t.new_invoice}</SheetTitle>
                     <SheetDescription>
-                        Pick a patient and add at least one line item. The
-                        invoice is billed under your clinic.
+                        {t.new_invoice_desc}
                     </SheetDescription>
                 </SheetHeader>
 
@@ -170,7 +170,9 @@ export function CreateInvoicesSheet({
                                     }
                                     className={FIELD_CLASS}
                                 >
-                                    <option value="">Select a patient…</option>
+                                    <option value="">
+                                        {t.select_patient_ph}
+                                    </option>
                                     {patients.map((patient) => (
                                         <option
                                             key={patient.id}
@@ -215,7 +217,9 @@ export function CreateInvoicesSheet({
 
                         <div className="grid grid-cols-2 gap-3">
                             <div className="grid gap-2">
-                                <Label htmlFor="tax_percentage">Tax %</Label>
+                                <Label htmlFor="tax_percentage">
+                                    {t.tax_label} %
+                                </Label>
                                 <input
                                     id="tax_percentage"
                                     type="number"
@@ -271,7 +275,7 @@ export function CreateInvoicesSheet({
                                     onClick={addItem}
                                 >
                                     <Plus className="size-3.5" />
-                                    Add item
+                                    {t.add_item}
                                 </Button>
                             </div>
                             {typeof form.errors.items === 'string' && (
@@ -294,16 +298,17 @@ export function CreateInvoicesSheet({
                                             }
                                             className={FIELD_CLASS}
                                         >
-                                            {ITEM_TYPE_OPTIONS.map(
-                                                ([value, label]) => (
-                                                    <option
-                                                        key={value}
-                                                        value={value}
-                                                    >
-                                                        {label}
-                                                    </option>
-                                                ),
-                                            )}
+                                            {ITEM_TYPE_OPTIONS.map((value) => (
+                                                <option
+                                                    key={value}
+                                                    value={value}
+                                                >
+                                                    {enumLabel(
+                                                        t.invoice_item_type_opts,
+                                                        value,
+                                                    )}
+                                                </option>
+                                            ))}
                                         </select>
                                         <InputError
                                             message={itemError(i, 'item_type')}

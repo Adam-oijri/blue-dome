@@ -1,5 +1,11 @@
 import { Head, Link } from '@inertiajs/react';
-import { ChevronLeft, Edit3, FileText, FlaskConical } from 'lucide-react';
+import {
+    ChevronLeft,
+    Edit3,
+    FileDown,
+    FileText,
+    FlaskConical,
+} from 'lucide-react';
 
 import { EditLabOrdersSheet } from '@/components/blue-dome/edit-lab-orders-sheet';
 import { SectionCard } from '@/components/blue-dome/section-card';
@@ -128,19 +134,22 @@ export default function LabOrderShow({
                                 {lab_order.lab_order_number ?? '—'}
                             </h1>
                             <StatusPill
-                                tone={STATUS_TONE[lab_order.status] ?? 'neutral'}
+                                tone={
+                                    STATUS_TONE[lab_order.status] ?? 'neutral'
+                                }
                                 withDot
                             >
                                 {enumLabel(t.lab_status_opts, lab_order.status)}
                             </StatusPill>
-                            {lab_order.urgency && lab_order.urgency !== 'routine' && (
-                                <StatusPill tone="warning">
-                                    {enumLabel(
-                                        t.urgency_opts,
-                                        lab_order.urgency,
-                                    )}
-                                </StatusPill>
-                            )}
+                            {lab_order.urgency &&
+                                lab_order.urgency !== 'routine' && (
+                                    <StatusPill tone="warning">
+                                        {enumLabel(
+                                            t.urgency_opts,
+                                            lab_order.urgency,
+                                        )}
+                                    </StatusPill>
+                                )}
                         </div>
                         <div className="mt-2 grid gap-1 text-[13px] text-muted-foreground">
                             <span>
@@ -166,20 +175,40 @@ export default function LabOrderShow({
                             </span>
                         </div>
                     </div>
-                    <EditLabOrdersSheet
-                        lab_order={lab_order}
-                        images={images}
-                        external_labs={external_labs}
-                    >
+                    <div className="flex items-center gap-2">
                         <Button
                             variant="outline"
                             size="sm"
+                            asChild
                             className="gap-2"
                         >
-                            <Edit3 className="size-3.5" />
-                            {t.edit}
+                            <a
+                                href={labOrders.pdf.url({
+                                    locale,
+                                    lab_order: lab_order.id,
+                                })}
+                                target="_blank"
+                                rel="noreferrer"
+                            >
+                                <FileDown className="size-3.5" />
+                                {t.export_pdf}
+                            </a>
                         </Button>
-                    </EditLabOrdersSheet>
+                        <EditLabOrdersSheet
+                            lab_order={lab_order}
+                            images={images}
+                            external_labs={external_labs}
+                        >
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="gap-2"
+                            >
+                                <Edit3 className="size-3.5" />
+                                {t.edit}
+                            </Button>
+                        </EditLabOrdersSheet>
+                    </div>
                 </div>
 
                 {(lab_order.clinical_diagnosis || lab_order.notes) && (
@@ -205,7 +234,7 @@ export default function LabOrderShow({
 
                 <SectionCard
                     titleIcon={<FlaskConical className="size-4" />}
-                    title="Tests"
+                    title={t.tests_col}
                     bodyClassName="p-0"
                     className="mb-5"
                 >
@@ -326,7 +355,10 @@ export default function LabOrderShow({
                     )}
                 </SectionCard>
 
-                <ProvenancePanel deferredKey="provenance" entries={provenance} />
+                <ProvenancePanel
+                    deferredKey="provenance"
+                    entries={provenance}
+                />
             </div>
         </>
     );

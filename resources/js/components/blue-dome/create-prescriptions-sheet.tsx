@@ -432,7 +432,7 @@ export function CreatePrescriptionsSheet({
                                         </div>
                                         <div className="grid gap-1.5">
                                             <Label htmlFor={`qty-${i}`}>
-                                                Quantity
+                                                {t.quantity_label}
                                             </Label>
                                             <input
                                                 id={`qty-${i}`}

@@ -12,7 +12,6 @@ import { Pricing } from '@/components/landing/pricing';
 import { ScrollProgress } from '@/components/landing/scroll-progress';
 import { ScrollToTop } from '@/components/landing/scroll-to-top';
 import { SecuritySection } from '@/components/landing/security-section';
-import type { Lang } from '@/components/landing/shared/types';
 import { SiteFooter } from '@/components/landing/site-footer';
 import { StatsBand } from '@/components/landing/stats-band';
 import { Testimonial } from '@/components/landing/testimonial';
@@ -25,30 +24,22 @@ interface WelcomeProps {
     canRegister?: boolean;
 }
 
-/*
- * The landing page copy currently ships English + French only. When the user
- * lands on the `ma-ar` URL we keep the URL/route but show the French copy
- * (closer to the Moroccan baseline) until Arabic landing translations land.
- */
-function toLandingLang(lang: 'en' | 'fr' | 'ar'): Lang {
-    return lang === 'ar' ? 'fr' : lang;
-}
-
 export default function Welcome({ canRegister = true }: WelcomeProps) {
     const { auth } = usePage<{
         auth: { user: { first_name?: string } | null };
     }>().props;
-    const { lang: localeLang, dir } = useLocale();
-    const lang = toLandingLang(localeLang);
+    const { lang, dir } = useLocale();
 
     useEffect(() => {
         if (typeof document === 'undefined') {
             return;
         }
 
+        // The marketing page is fully trilingual; honour the locale's real
+        // direction so Arabic (ma-ar) renders right-to-left.
         document.documentElement.dir = dir;
-        document.documentElement.lang = localeLang;
-    }, [dir, localeLang]);
+        document.documentElement.lang = lang;
+    }, [lang, dir]);
 
     // Force the landing page to render light, regardless of the user's saved
     // appearance preference. Restore the previous theme on unmount so signing
@@ -76,7 +67,15 @@ export default function Welcome({ canRegister = true }: WelcomeProps) {
 
     return (
         <>
-            <Head title="Blue Dome — Run your clinic with calm precision" />
+            <Head
+                title={
+                    {
+                        en: 'Blue Dome — Run your clinic with calm precision',
+                        fr: 'Blue Dome — Gérez votre cabinet avec précision calme',
+                        ar: 'Blue Dome — أدِر عيادتك بدقّة هادئة',
+                    }[lang]
+                }
+            />
 
             <div className="min-h-screen overflow-x-hidden scroll-smooth bg-background font-sans text-foreground antialiased">
                 <BackgroundMesh />
@@ -105,7 +104,13 @@ export default function Welcome({ canRegister = true }: WelcomeProps) {
                 </main>
 
                 <ScrollToTop
-                    label={lang === 'fr' ? 'Retour en haut' : 'Back to top'}
+                    label={
+                        {
+                            en: 'Back to top',
+                            fr: 'Retour en haut',
+                            ar: 'العودة إلى الأعلى',
+                        }[lang]
+                    }
                 />
             </div>
         </>

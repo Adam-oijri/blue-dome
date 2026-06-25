@@ -176,7 +176,7 @@ export function CreateMedicationsSheet({ children }: { children: ReactNode }) {
                                 <InputError message={form.errors.category} />
                             </div>
                             <div className="grid gap-2">
-                                <Label htmlFor="atc_code">ATC code</Label>
+                                <Label htmlFor="atc_code">{t.atc_code}</Label>
                                 <input
                                     id="atc_code"
                                     value={form.data.atc_code}
@@ -238,7 +238,9 @@ export function CreateMedicationsSheet({ children }: { children: ReactNode }) {
                         </div>
 
                         <div className="grid gap-2">
-                            <Label htmlFor="side_effects">Side effects</Label>
+                            <Label htmlFor="side_effects">
+                                {t.side_effects}
+                            </Label>
                             <textarea
                                 id="side_effects"
                                 rows={3}
@@ -253,7 +255,7 @@ export function CreateMedicationsSheet({ children }: { children: ReactNode }) {
 
                         <div className="grid gap-2">
                             <Label htmlFor="contraindications">
-                                Contraindications
+                                {t.contraindications}
                             </Label>
                             <textarea
                                 id="contraindications"
@@ -274,7 +276,7 @@ export function CreateMedicationsSheet({ children }: { children: ReactNode }) {
 
                         <div className="grid gap-2">
                             <Label htmlFor="storage_instructions">
-                                Storage instructions
+                                {t.storage_instructions}
                             </Label>
                             <textarea
                                 id="storage_instructions"

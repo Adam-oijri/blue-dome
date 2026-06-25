@@ -79,10 +79,11 @@ export function CreateLabOrdersSheet({
     const { t } = useDoctorLang();
     const { slug: locale } = useLocale();
     const [open, setOpen] = useState(false);
+    const [labType, setLabType] = useState<'internal' | 'external'>('internal');
 
     const form = useForm<{
         patient_id: string;
-        external_lab_id: string;
+        external_lab_name: string;
         order_date: string;
         urgency: string;
         fasting_required: boolean;
@@ -92,7 +93,7 @@ export function CreateLabOrdersSheet({
         images: File[];
     }>({
         patient_id: '',
-        external_lab_id: '',
+        external_lab_name: '',
         order_date: '',
         urgency: 'routine',
         fasting_required: false,
@@ -140,6 +141,7 @@ export function CreateLabOrdersSheet({
                 if (!next) {
                     form.reset();
                     form.clearErrors();
+                    setLabType('internal');
                 }
             }}
         >
@@ -148,8 +150,7 @@ export function CreateLabOrdersSheet({
                 <SheetHeader>
                     <SheetTitle>{t.new_lab_order}</SheetTitle>
                     <SheetDescription>
-                        Pick a patient and add the tests to order. At least one
-                        test is required.
+                        {t.new_lab_order_desc}
                     </SheetDescription>
                 </SheetHeader>
 
@@ -167,7 +168,7 @@ export function CreateLabOrdersSheet({
                             }
                             className={FIELD_CLASS}
                         >
-                            <option value="">Select a patient…</option>
+                            <option value="">{t.select_patient_ph}</option>
                             {patients.map((patient) => (
                                 <option key={patient.id} value={patient.id}>
                                     {optionLabel(patient)}
@@ -178,28 +179,61 @@ export function CreateLabOrdersSheet({
                     </div>
 
                     <div className="grid gap-2">
-                        <Label htmlFor="external_lab_id">{t.lab_col}</Label>
+                        <Label htmlFor="lab_type">{t.lab_col}</Label>
                         <select
-                            id="external_lab_id"
-                            value={form.data.external_lab_id}
-                            onChange={(e) =>
-                                form.setData('external_lab_id', e.target.value)
-                            }
+                            id="lab_type"
+                            value={labType}
+                            onChange={(e) => {
+                                const next = e.target.value as
+                                    | 'internal'
+                                    | 'external';
+                                setLabType(next);
+
+                                if (next === 'internal') {
+                                    form.setData('external_lab_name', '');
+                                }
+                            }}
                             className={FIELD_CLASS}
                         >
-                            <option value="">{t.in_house}</option>
-                            {external_labs.map((lab) => (
-                                <option key={lab.id} value={lab.id}>
-                                    {lab.lab_name ?? '—'}
-                                </option>
-                            ))}
+                            <option value="internal">{t.in_house}</option>
+                            <option value="external">{t.lab_external}</option>
                         </select>
-                        <InputError message={err.external_lab_id} />
                     </div>
+
+                    {labType === 'external' && (
+                        <div className="grid gap-2">
+                            <Label htmlFor="external_lab_name">
+                                {t.external_lab_name}
+                            </Label>
+                            <input
+                                id="external_lab_name"
+                                list="external-lab-options"
+                                value={form.data.external_lab_name}
+                                onChange={(e) =>
+                                    form.setData(
+                                        'external_lab_name',
+                                        e.target.value,
+                                    )
+                                }
+                                className={FIELD_CLASS}
+                            />
+                            <datalist id="external-lab-options">
+                                {external_labs.map((lab) =>
+                                    lab.lab_name ? (
+                                        <option
+                                            key={lab.id}
+                                            value={lab.lab_name}
+                                        />
+                                    ) : null,
+                                )}
+                            </datalist>
+                            <InputError message={err.external_lab_name} />
+                        </div>
+                    )}
 
                     <div className="grid grid-cols-2 gap-3">
                         <div className="grid gap-2">
-                            <Label htmlFor="order_date">Order date</Label>
+                            <Label htmlFor="order_date">{t.order_date}</Label>
                             <input
                                 id="order_date"
                                 type="date"
@@ -243,13 +277,13 @@ export function CreateLabOrdersSheet({
                             }
                             className="size-4 rounded border-input"
                         />
-                        Fasting required
+                        {t.fasting_required}
                     </label>
                     <InputError message={err.fasting_required} />
 
                     <div className="grid gap-2">
                         <Label htmlFor="clinical_diagnosis">
-                            Clinical diagnosis
+                            {t.clinical_diagnosis}
                         </Label>
                         <textarea
                             id="clinical_diagnosis"
@@ -267,7 +301,7 @@ export function CreateLabOrdersSheet({
                     </div>
 
                     <div className="grid gap-2">
-                        <Label htmlFor="notes">Notes</Label>
+                        <Label htmlFor="notes">{t.notes_label}</Label>
                         <textarea
                             id="notes"
                             rows={2}
@@ -281,7 +315,7 @@ export function CreateLabOrdersSheet({
                     </div>
 
                     <div className="grid gap-2">
-                        <Label htmlFor="images">Attachments (images / PDF)</Label>
+                        <Label htmlFor="images">{t.add_images}</Label>
                         <input
                             id="images"
                             type="file"
@@ -297,7 +331,7 @@ export function CreateLabOrdersSheet({
                         />
                         {form.data.images.length > 0 && (
                             <p className="text-[12px] text-muted-foreground">
-                                {form.data.images.length} file(s) selected
+                                {form.data.images.length} {t.files_selected}
                             </p>
                         )}
                         <InputError message={err.images} />
@@ -314,7 +348,7 @@ export function CreateLabOrdersSheet({
                                 onClick={addItem}
                             >
                                 <Plus className="size-3.5" />
-                                Add test
+                                {t.add_test_label}
                             </Button>
                         </div>
 
@@ -332,7 +366,7 @@ export function CreateLabOrdersSheet({
                                 <div className="grid gap-3 sm:grid-cols-2">
                                     <div className="grid gap-1.5 sm:col-span-2">
                                         <Label htmlFor={`test_name-${i}`}>
-                                            Test name
+                                            {t.test_name_label}
                                         </Label>
                                         <input
                                             id={`test_name-${i}`}
@@ -352,7 +386,7 @@ export function CreateLabOrdersSheet({
                                     </div>
                                     <div className="grid gap-1.5">
                                         <Label htmlFor={`test_code-${i}`}>
-                                            Test code
+                                            {t.test_code_label}
                                         </Label>
                                         <input
                                             id={`test_code-${i}`}
@@ -372,7 +406,7 @@ export function CreateLabOrdersSheet({
                                     </div>
                                     <div className="grid gap-1.5">
                                         <Label htmlFor={`test_category-${i}`}>
-                                            Category
+                                            {t.test_category_label}
                                         </Label>
                                         <input
                                             id={`test_category-${i}`}
@@ -393,7 +427,7 @@ export function CreateLabOrdersSheet({
                                     </div>
                                     <div className="grid gap-1.5">
                                         <Label htmlFor={`specimen_type-${i}`}>
-                                            Specimen type
+                                            {t.specimen_type_label}
                                         </Label>
                                         <input
                                             id={`specimen_type-${i}`}
@@ -414,7 +448,7 @@ export function CreateLabOrdersSheet({
                                     </div>
                                     <div className="grid gap-1.5">
                                         <Label htmlFor={`normal_range-${i}`}>
-                                            Normal range
+                                            {t.normal_range_col}
                                         </Label>
                                         <input
                                             id={`normal_range-${i}`}
@@ -434,7 +468,9 @@ export function CreateLabOrdersSheet({
                                         />
                                     </div>
                                     <div className="grid gap-1.5">
-                                        <Label htmlFor={`unit-${i}`}>Unit</Label>
+                                        <Label htmlFor={`unit-${i}`}>
+                                            {t.unit_label}
+                                        </Label>
                                         <input
                                             id={`unit-${i}`}
                                             value={item.unit}

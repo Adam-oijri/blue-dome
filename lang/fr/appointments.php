@@ -6,6 +6,8 @@ return [
     'deleted' => 'Rendez-vous supprimé.',
     'cancelled' => 'Rendez-vous annulé.',
     'confirmed' => 'Rendez-vous confirmé.',
+    'confirmation_sent' => 'Confirmation envoyée au patient.',
+    'confirmation_no_phone' => 'Aucun numéro de téléphone enregistré pour ce patient.',
     'follow_up_recorded' => 'Appel de suivi enregistré.',
     'doctor_overlap' => 'Le médecin sélectionné a déjà un rendez-vous qui chevauche ce créneau.',
     'token_expired' => "Ce lien de confirmation n'est plus valide.",

@@ -16,6 +16,7 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import { fmtNumber } from '@/lib/format';
+import { enumLabel } from '@/lib/i18n/doctor';
 import { useSuperAdminLang } from '@/lib/i18n/super-admin-context';
 import { useLocale } from '@/lib/i18n/use-locale';
 import { Pagination } from '@/pages/panels/super-admin/users';
@@ -89,6 +90,15 @@ export default function SuperAdminAppointmentsPage({
 }: Props) {
     const { t } = useSuperAdminLang();
     const { slug: locale } = useLocale();
+    const statusLabels: Record<string, string> = {
+        scheduled: t.appt_status_scheduled,
+        confirmed: t.appt_status_confirmed,
+        arrived: t.appt_status_arrived,
+        in_progress: t.appt_status_in_progress,
+        completed: t.appt_status_completed,
+        cancelled: t.appt_status_cancelled,
+        no_show: t.appt_status_no_show,
+    };
 
     const setFilter = (key: keyof Filters, value: string): void => {
         router.get(
@@ -120,7 +130,7 @@ export default function SuperAdminAppointmentsPage({
                                 )}
                             >
                                 <Download className="size-3.5" />
-                                Export
+                                {t.action_export}
                             </a>
                         </Button>
                     }
@@ -165,13 +175,27 @@ export default function SuperAdminAppointmentsPage({
                             <option value="">
                                 {t.appts_filter_status}: {t.status_all}
                             </option>
-                            <option value="scheduled">scheduled</option>
-                            <option value="confirmed">confirmed</option>
-                            <option value="arrived">arrived</option>
-                            <option value="in_progress">in_progress</option>
-                            <option value="completed">completed</option>
-                            <option value="cancelled">cancelled</option>
-                            <option value="no_show">no_show</option>
+                            <option value="scheduled">
+                                {enumLabel(statusLabels, 'scheduled')}
+                            </option>
+                            <option value="confirmed">
+                                {enumLabel(statusLabels, 'confirmed')}
+                            </option>
+                            <option value="arrived">
+                                {enumLabel(statusLabels, 'arrived')}
+                            </option>
+                            <option value="in_progress">
+                                {enumLabel(statusLabels, 'in_progress')}
+                            </option>
+                            <option value="completed">
+                                {enumLabel(statusLabels, 'completed')}
+                            </option>
+                            <option value="cancelled">
+                                {enumLabel(statusLabels, 'cancelled')}
+                            </option>
+                            <option value="no_show">
+                                {enumLabel(statusLabels, 'no_show')}
+                            </option>
                         </select>
                         <select
                             value={filters.clinic_id}

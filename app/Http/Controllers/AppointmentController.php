@@ -10,6 +10,7 @@ use App\Http\Requests\Appointment\UpdateAppointmentRequest;
 use App\Models\Appointment;
 use App\Models\FieldChange;
 use App\Models\Patient;
+use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -86,6 +87,15 @@ class AppointmentController extends Controller
                 ->orderBy('first_name')
                 ->orderBy('last_name')
                 ->get(['id', 'first_name', 'last_name', 'phone']),
+            // Doctors of the actor's clinic — the secretary picks one when
+            // booking; a doctor books under their own name (no picker shown).
+            'doctors' => User::query()
+                ->where('clinic_id', $request->user()->clinic_id)
+                ->where('role', 'doctor')
+                ->whereNull('deleted_at')
+                ->orderBy('first_name')
+                ->orderBy('last_name')
+                ->get(['id', 'first_name', 'last_name']),
         ]);
     }
 

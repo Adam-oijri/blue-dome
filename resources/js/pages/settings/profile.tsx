@@ -2,6 +2,7 @@ import { Head } from '@inertiajs/react';
 import DeleteUser from '@/components/delete-user';
 import Heading from '@/components/heading';
 import ProfileInformationForm from '@/components/settings/profile-information-form';
+import { useSettingsLang } from '@/lib/i18n/settings';
 
 export default function Profile({
     mustVerifyEmail,
@@ -10,17 +11,19 @@ export default function Profile({
     mustVerifyEmail: boolean;
     status?: string;
 }) {
+    const { t } = useSettingsLang();
+
     return (
         <>
-            <Head title="Profile settings" />
+            <Head title={t.profile_settings_title} />
 
-            <h1 className="sr-only">Profile settings</h1>
+            <h1 className="sr-only">{t.profile_settings_title}</h1>
 
             <div className="space-y-6">
                 <Heading
                     variant="small"
-                    title="Profile information"
-                    description="Update your name and email address"
+                    title={t.profile_heading}
+                    description={t.profile_desc}
                 />
 
                 <ProfileInformationForm

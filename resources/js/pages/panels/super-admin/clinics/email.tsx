@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
+import { useSuperAdminLang } from '@/lib/i18n/super-admin-context';
 import { useLocale } from '@/lib/i18n/use-locale';
 import superAdmin from '@/routes/super-admin';
 
@@ -22,11 +23,12 @@ type Props = {
 };
 
 export default function SuperAdminClinicEmail({ clinic, integration }: Props) {
+    const { t } = useSuperAdminLang();
     const { slug: locale } = useLocale();
 
     return (
         <>
-            <Head title={`${clinic.name} — Email`} />
+            <Head title={t.cl_email_head.replace('{clinic}', clinic.name)} />
 
             <div className="px-6 py-5 lg:px-8">
                 <div className="mb-4 flex items-center gap-2 text-sm">
@@ -47,12 +49,17 @@ export default function SuperAdminClinicEmail({ clinic, integration }: Props) {
                         </Link>
                     </Button>
                     <span className="text-muted-foreground">/</span>
-                    <span className="text-[13px] font-semibold">Email</span>
+                    <span className="text-[13px] font-semibold">
+                        {t.cl_email_crumb}
+                    </span>
                 </div>
 
                 <PageHeader
-                    title="Email sender"
-                    description={`Outbound email identity for ${clinic.name}. SMTP delivery is system-managed.`}
+                    title={t.cl_email_title}
+                    description={t.cl_email_desc.replace(
+                        '{clinic}',
+                        clinic.name,
+                    )}
                 />
 
                 <SectionCard className="mt-6">
@@ -68,7 +75,7 @@ export default function SuperAdminClinicEmail({ clinic, integration }: Props) {
                             <>
                                 <div className="grid gap-2">
                                     <Label htmlFor="from_email">
-                                        From address
+                                        {t.cl_email_from_address}
                                     </Label>
                                     <Input
                                         id="from_email"
@@ -84,7 +91,9 @@ export default function SuperAdminClinicEmail({ clinic, integration }: Props) {
                                 </div>
 
                                 <div className="grid gap-2">
-                                    <Label htmlFor="from_name">From name</Label>
+                                    <Label htmlFor="from_name">
+                                        {t.cl_email_from_name}
+                                    </Label>
                                     <Input
                                         id="from_name"
                                         name="from_name"
@@ -98,7 +107,7 @@ export default function SuperAdminClinicEmail({ clinic, integration }: Props) {
 
                                 <div className="grid gap-2">
                                     <Label htmlFor="reply_to">
-                                        Reply-to address (optional)
+                                        {t.cl_email_reply_to}
                                     </Label>
                                     <Input
                                         id="reply_to"
@@ -118,7 +127,7 @@ export default function SuperAdminClinicEmail({ clinic, integration }: Props) {
                                     className="bg-navy-900 text-white hover:bg-navy-800"
                                 >
                                     {processing && <Spinner />}
-                                    Save email settings
+                                    {t.cl_email_submit}
                                 </Button>
                             </>
                         )}

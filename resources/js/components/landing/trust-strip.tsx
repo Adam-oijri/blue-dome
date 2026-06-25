@@ -18,9 +18,13 @@ export function TrustStrip({ lang }: SectionProps) {
                     transition={{ duration: 0.5 }}
                     className="mb-6 text-center text-[11px] font-semibold tracking-wider text-muted-foreground uppercase"
                 >
-                    {lang === 'fr'
-                        ? 'Adopté par des cabinets dans tout le Maroc'
-                        : 'Trusted by clinics across Morocco'}
+                    {
+                        {
+                            en: 'Trusted by clinics across Morocco',
+                            fr: 'Adopté par des cabinets dans tout le Maroc',
+                            ar: 'موثوق به من عيادات في جميع أنحاء المغرب',
+                        }[lang]
+                    }
                 </motion.p>
 
                 <div

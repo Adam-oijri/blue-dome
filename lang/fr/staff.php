@@ -7,4 +7,5 @@ return [
     'secretary_invited' => 'Secrétaire :name créée. Un lien d\'activation a été envoyé.',
     'removed' => ':name a été retiré du personnel.',
     'restored' => ':name a été réintégré.',
+    'invitation_revoked' => 'Invitation annulée.',
 ];

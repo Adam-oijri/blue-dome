@@ -83,10 +83,7 @@ export function CreatePatientsSheet({ children }: { children: ReactNode }) {
             <SheetContent className="flex w-full flex-col sm:max-w-md">
                 <SheetHeader>
                     <SheetTitle>{t.new_patient}</SheetTitle>
-                    <SheetDescription>
-                        Add a patient to your clinic. Only the name is required;
-                        everything else can be filled in later.
-                    </SheetDescription>
+                    <SheetDescription>{t.new_patient_desc}</SheetDescription>
                 </SheetHeader>
 
                 <form
@@ -249,7 +246,7 @@ export function CreatePatientsSheet({ children }: { children: ReactNode }) {
                             disabled={form.processing}
                             className="w-full bg-olive-600 text-white hover:bg-olive-700"
                         >
-                            Create patient
+                            {t.new_patient}
                         </Button>
                     </div>
                 </form>

@@ -224,7 +224,7 @@ export default function PrescriptionsIndex({
                         </TableBody>
                     </Table>
 
-                    <Pagination paginated={paginated} t={{}} />
+                    <Pagination paginated={paginated} t={t} />
                 </SectionCard>
             </div>
         </>

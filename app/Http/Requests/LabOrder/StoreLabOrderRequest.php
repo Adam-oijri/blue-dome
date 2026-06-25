@@ -37,6 +37,9 @@ class StoreLabOrderRequest extends FormRequest
                     ->where('clinic_id', $clinicId)
                     ->whereNull('deleted_at'),
             ],
+            // Free-typed external lab name (Laboratory type = External). The
+            // controller resolves it to an external_labs row; empty = Internal.
+            'external_lab_name' => ['nullable', 'string', 'max:255'],
             'order_date' => ['nullable', 'date'],
             'status' => ['nullable', 'in:draft,pending,sample_collected,in_progress,completed,partially_completed,cancelled,rejected'],
             'urgency' => ['nullable', 'in:routine,urgent,stat'],

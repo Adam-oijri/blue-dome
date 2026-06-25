@@ -779,13 +779,13 @@ export default function SuperAdminDashboard({
                                                     <div className="grid size-7 shrink-0 place-items-center rounded-full bg-navy-700 text-[10px] font-semibold text-white">
                                                         {initials(
                                                             a.user?.name ??
-                                                                'System',
+                                                                t.system_actor,
                                                         )}
                                                     </div>
                                                     <div className="min-w-0 flex-1 text-[12px] leading-tight">
                                                         <span className="font-semibold">
                                                             {a.user?.name ??
-                                                                'System'}
+                                                                t.system_actor}
                                                         </span>{' '}
                                                         <span className="text-muted-foreground">
                                                             {a.action.replace(

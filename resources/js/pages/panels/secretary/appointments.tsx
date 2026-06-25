@@ -1,5 +1,6 @@
 import { Head, router } from '@inertiajs/react';
-import { Calendar as CalendarIcon, Check, Clock, X } from 'lucide-react';
+import { Calendar as CalendarIcon, Check, Clock, Send, X } from 'lucide-react';
+import { useState } from 'react';
 
 import { CreateAppointmentSheet } from '@/components/blue-dome/create-appointment-sheet';
 import { KpiCard } from '@/components/blue-dome/kpi-card';
@@ -22,6 +23,7 @@ import { useSecretaryLang } from '@/lib/i18n/secretary-context';
 import { useLocale } from '@/lib/i18n/use-locale';
 import { cn } from '@/lib/utils';
 import { appointments as appointmentsRoute } from '@/routes/secretary';
+import { sendConfirmation as sendConfirmationRoute } from '@/routes/secretary/appointments';
 
 type Person = {
     id: string;
@@ -47,6 +49,8 @@ type AppointmentRow = {
     status: string;
     type: string | null;
     duration_minutes: number | null;
+    confirmation_status: string | null;
+    confirmation_method: string | null;
     patient?: Patient;
     doctor?: Person;
 };
@@ -88,6 +92,42 @@ const STATUS_LABEL_KEY: Record<string, string> = {
     rescheduled: 'ap_status_rescheduled',
 };
 
+/**
+ * Four confirmation states surfaced to the front desk, derived from the
+ * (confirmation_status, confirmation_method) pair: still pending, sent
+ * automatically (create-time or the 24h reminder), sent manually by the
+ * secretary, or confirmed by the patient / a phone call.
+ */
+type ConfState = 'pending' | 'sent_auto' | 'sent_manual' | 'confirmed';
+
+const confState = (a: AppointmentRow): ConfState => {
+    const s = a.confirmation_status;
+
+    if (s === 'confirmed_by_patient' || s === 'confirmed_by_call') {
+        return 'confirmed';
+    }
+
+    if (s === 'reminder_sent' || s === 'delivered' || s === 'seen') {
+        return a.confirmation_method === 'manual' ? 'sent_manual' : 'sent_auto';
+    }
+
+    return 'pending';
+};
+
+const CONF_TONE: Record<ConfState, StatusTone> = {
+    pending: 'warning',
+    sent_auto: 'navy',
+    sent_manual: 'info',
+    confirmed: 'success',
+};
+
+const CONF_LABEL_KEY: Record<ConfState, string> = {
+    pending: 'conf_pending',
+    sent_auto: 'conf_sent_auto',
+    sent_manual: 'conf_sent_manual',
+    confirmed: 'conf_confirmed',
+};
+
 const fullName = (p?: Person | Patient): string =>
     p ? `${p.first_name ?? ''} ${p.last_name ?? ''}`.trim() || '—' : '—';
 
@@ -109,6 +149,19 @@ export default function SecretaryAppointments({
 }: Props) {
     const { t } = useSecretaryLang();
     const { slug: locale } = useLocale();
+    const [sendingId, setSendingId] = useState<string | null>(null);
+
+    const sendConfirmation = (appointmentId: string): void => {
+        router.post(
+            sendConfirmationRoute.url({ locale, appointment: appointmentId }),
+            {},
+            {
+                preserveScroll: true,
+                onStart: () => setSendingId(appointmentId),
+                onFinish: () => setSendingId(null),
+            },
+        );
+    };
 
     const statusTone = (s: string): StatusTone => STATUS_TONE[s] ?? 'neutral';
     const statusLabel = (s: string): string =>
@@ -226,13 +279,16 @@ export default function SecretaryAppointments({
                                     <TableHead className="text-[11px] tracking-wider uppercase">
                                         {t.wr_col_status}
                                     </TableHead>
+                                    <TableHead className="text-[11px] tracking-wider uppercase">
+                                        {t.ap_col_confirmation}
+                                    </TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 {appointments.length === 0 && (
                                     <TableRow>
                                         <TableCell
-                                            colSpan={6}
+                                            colSpan={7}
                                             className="py-10 text-center text-sm text-muted-foreground"
                                         >
                                             {t.empty_none}
@@ -289,6 +345,53 @@ export default function SecretaryAppointments({
                                             >
                                                 {statusLabel(a.status)}
                                             </StatusPill>
+                                        </TableCell>
+                                        <TableCell>
+                                            {(() => {
+                                                const state = confState(a);
+                                                const canSend =
+                                                    state !== 'confirmed' &&
+                                                    a.status !== 'cancelled' &&
+                                                    a.status !== 'no_show';
+
+                                                return (
+                                                    <div className="flex items-center gap-2">
+                                                        <StatusPill
+                                                            tone={
+                                                                CONF_TONE[state]
+                                                            }
+                                                            withDot
+                                                        >
+                                                            {
+                                                                t[
+                                                                    CONF_LABEL_KEY[
+                                                                        state
+                                                                    ]
+                                                                ]
+                                                            }
+                                                        </StatusPill>
+                                                        {canSend && (
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="sm"
+                                                                className="h-7 gap-1.5"
+                                                                disabled={
+                                                                    sendingId ===
+                                                                    a.id
+                                                                }
+                                                                onClick={() =>
+                                                                    sendConfirmation(
+                                                                        a.id,
+                                                                    )
+                                                                }
+                                                            >
+                                                                <Send className="size-3.5" />
+                                                                {t.conf_send}
+                                                            </Button>
+                                                        )}
+                                                    </div>
+                                                );
+                                            })()}
                                         </TableCell>
                                     </TableRow>
                                 ))}

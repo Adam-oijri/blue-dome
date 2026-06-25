@@ -31,25 +31,37 @@ export function SecuritySection({ lang }: SectionProps) {
                         variants={FADE_UP}
                         className="mb-3 text-[12px] font-semibold tracking-wider text-olive-700 uppercase"
                     >
-                        {lang === 'fr'
-                            ? 'Sécurité · Conformité'
-                            : 'Security · Compliance'}
+                        {
+                            {
+                                en: 'Security · Compliance',
+                                fr: 'Sécurité · Conformité',
+                                ar: 'الأمان · الامتثال',
+                            }[lang]
+                        }
                     </motion.p>
                     <motion.h2
                         variants={FADE_UP}
                         className="text-[34px] font-semibold tracking-tight text-navy-950 sm:text-[44px]"
                     >
-                        {lang === 'fr'
-                            ? 'Conçu autour des données patient.'
-                            : 'Built around patient data.'}
+                        {
+                            {
+                                en: 'Built around patient data.',
+                                fr: 'Conçu autour des données patient.',
+                                ar: 'مصمَّم حول بيانات المرضى.',
+                            }[lang]
+                        }
                     </motion.h2>
                     <motion.p
                         variants={FADE_UP}
                         className="mt-3 text-[15px] text-muted-foreground"
                     >
-                        {lang === 'fr'
-                            ? 'Vos patients vous confient leur santé. Voici comment nous protégeons leur dossier.'
-                            : 'Your patients trust you with their health. Here’s how we protect their record.'}
+                        {
+                            {
+                                en: 'Your patients trust you with their health. Here’s how we protect their record.',
+                                fr: 'Vos patients vous confient leur santé. Voici comment nous protégeons leur dossier.',
+                                ar: 'يأتمنك مرضاك على صحتهم. وإليك كيف نحمي سجلاتهم.',
+                            }[lang]
+                        }
                     </motion.p>
                 </motion.div>
 

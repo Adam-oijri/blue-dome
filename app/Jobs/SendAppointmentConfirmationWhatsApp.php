@@ -2,20 +2,28 @@
 
 namespace App\Jobs;
 
-use App\Contracts\WhatsAppGateway;
 use App\Models\Appointment;
+use App\Services\Appointments\AppointmentConfirmationSender;
 
 /**
  * Inherits TenantAwareJob so queue workers restore the Postgres GUCs the
  * SetTenantContext middleware would normally set. The job only needs the
  * appointment id + clinic context; everything else is resolved fresh.
+ *
+ * Used for the automatic sends — the create-time confirmation and the 24h
+ * reminder sweep. The secretary's manual send runs synchronously through the
+ * same AppointmentConfirmationSender.
  */
 class SendAppointmentConfirmationWhatsApp extends TenantAwareJob
 {
+    /**
+     * @param  'auto'|'manual'  $method  how this send was triggered.
+     */
     public function __construct(
         string $clinicId,
         public readonly string $appointmentId,
         ?string $userId = null,
+        public readonly string $method = 'auto',
     ) {
         parent::__construct($clinicId, $userId);
 
@@ -36,27 +44,12 @@ class SendAppointmentConfirmationWhatsApp extends TenantAwareJob
     {
         $appointment = Appointment::query()
             ->with('patient')
-            ->findOrFail($this->appointmentId);
+            ->find($this->appointmentId);
 
-        $patient = $appointment->patient;
-
-        if ($patient === null) {
+        if ($appointment === null) {
             return;
         }
 
-        // Only send when we actually have a phone to reach the patient on.
-        if (($patient->phone_e164 ?? $patient->phone) === null) {
-            return;
-        }
-
-        if ($appointment->confirmation_token === null) {
-            return;
-        }
-
-        $url = url(route('appointments.confirm', ['token' => $appointment->confirmation_token], false));
-
-        app(WhatsAppGateway::class)->sendAppointmentConfirmation($patient, $appointment, $url);
-
-        $appointment->forceFill(['confirmation_status' => 'reminder_sent'])->save();
+        app(AppointmentConfirmationSender::class)->send($appointment, $this->method);
     }
 }

@@ -11,6 +11,7 @@ use App\Models\FieldChange;
 use App\Models\LabOrder;
 use App\Models\LabOrderItem;
 use App\Models\Patient;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -101,6 +102,13 @@ class LabOrderController extends Controller
         $clinicId = $request->user()->clinic_id;
         $userId = $request->user()->id;
 
+        // External lab: a typed name resolves to (or creates) an external_labs
+        // row; an empty name (Internal) clears the link.
+        if ($request->has('external_lab_name')) {
+            $validated['external_lab_id'] = $this->resolveExternalLabId($request->input('external_lab_name'), $clinicId);
+        }
+        unset($validated['external_lab_name']);
+
         DB::transaction(function () use ($request, $validated, $items, $clinicId, $userId): void {
             $labOrder = LabOrder::create($validated + [
                 'clinic_id' => $clinicId,
@@ -118,6 +126,32 @@ class LabOrderController extends Controller
 
         return back()
             ->with('toast', ['type' => 'success', 'message' => __('lab_orders.created')]);
+    }
+
+    /**
+     * Map a free-typed external-lab name to an external_labs row id, creating
+     * the row on first use (clinic-scoped, case-insensitive match so the same
+     * lab isn't duplicated). An empty name means the analysis runs internally —
+     * returns null to clear the link.
+     */
+    private function resolveExternalLabId(?string $name, string $clinicId): ?string
+    {
+        $name = trim((string) $name);
+
+        if ($name === '') {
+            return null;
+        }
+
+        $lab = ExternalLab::query()
+            ->where('clinic_id', $clinicId)
+            ->whereRaw('lower(lab_name) = ?', [mb_strtolower($name)])
+            ->first();
+
+        return ($lab ?? ExternalLab::create([
+            'clinic_id' => $clinicId,
+            'lab_name' => $name,
+            'is_active' => true,
+        ]))->id;
     }
 
     /**
@@ -201,11 +235,42 @@ class LabOrderController extends Controller
         ]);
     }
 
+    /**
+     * Render the lab order + its results as a printable / PDF "Analyses"
+     * document. Doctor-only (clinical record); mirrors PrescriptionController::pdf.
+     */
+    public function pdf(string $locale, LabOrder $labOrder): \Illuminate\Http\Response
+    {
+        unset($locale);
+        $this->authorize('view', $labOrder);
+
+        $labOrder->load([
+            // Full clinic relation so the letterhead has address/phone/email.
+            'clinic',
+            'patient:id,first_name,last_name,patient_code,date_of_birth',
+            'doctor:id,first_name,last_name',
+            'externalLab:id,lab_name,phone,email',
+            'items',
+            'reviewedBy:id,first_name,last_name',
+        ]);
+
+        return Pdf::loadView('pdf.lab-order', [
+            'labOrder' => $labOrder,
+            'clinic' => $labOrder->clinic,
+            'generatedAt' => now()->toDayDateTimeString(),
+        ])->download('analyses-'.($labOrder->lab_order_number ?? $labOrder->id).'.pdf');
+    }
+
     public function update(UpdateLabOrderRequest $request, string $locale, LabOrder $labOrder): RedirectResponse
     {
         unset($locale);
         $validated = $request->validated();
         unset($validated['images']);
+
+        if ($request->has('external_lab_name')) {
+            $validated['external_lab_id'] = $this->resolveExternalLabId($request->input('external_lab_name'), $labOrder->clinic_id);
+        }
+        unset($validated['external_lab_name']);
 
         DB::transaction(function () use ($request, $validated, $labOrder): void {
             $labOrder->update($validated);

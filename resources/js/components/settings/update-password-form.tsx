@@ -5,6 +5,7 @@ import InputError from '@/components/input-error';
 import PasswordInput from '@/components/password-input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import { useSettingsLang } from '@/lib/i18n/settings';
 import { useLocale } from '@/lib/i18n/use-locale';
 
 export default function UpdatePasswordForm({
@@ -15,6 +16,7 @@ export default function UpdatePasswordForm({
     const passwordInput = useRef<HTMLInputElement>(null);
     const currentPasswordInput = useRef<HTMLInputElement>(null);
     const { slug: locale } = useLocale();
+    const { t } = useSettingsLang();
 
     return (
         <Form
@@ -43,7 +45,7 @@ export default function UpdatePasswordForm({
                 <>
                     <div className="grid gap-2">
                         <Label htmlFor="current_password">
-                            Current password
+                            {t.current_password_label}
                         </Label>
 
                         <PasswordInput
@@ -52,14 +54,14 @@ export default function UpdatePasswordForm({
                             name="current_password"
                             className="mt-1 block w-full"
                             autoComplete="current-password"
-                            placeholder="Current password"
+                            placeholder={t.current_password_ph}
                         />
 
                         <InputError message={errors.current_password} />
                     </div>
 
                     <div className="grid gap-2">
-                        <Label htmlFor="password">New password</Label>
+                        <Label htmlFor="password">{t.new_password_label}</Label>
 
                         <PasswordInput
                             id="password"
@@ -67,7 +69,7 @@ export default function UpdatePasswordForm({
                             name="password"
                             className="mt-1 block w-full"
                             autoComplete="new-password"
-                            placeholder="New password"
+                            placeholder={t.new_password_ph}
                             passwordrules={passwordRules}
                         />
 
@@ -76,7 +78,7 @@ export default function UpdatePasswordForm({
 
                     <div className="grid gap-2">
                         <Label htmlFor="password_confirmation">
-                            Confirm password
+                            {t.confirm_password_label}
                         </Label>
 
                         <PasswordInput
@@ -84,7 +86,7 @@ export default function UpdatePasswordForm({
                             name="password_confirmation"
                             className="mt-1 block w-full"
                             autoComplete="new-password"
-                            placeholder="Confirm password"
+                            placeholder={t.confirm_password_ph}
                             passwordrules={passwordRules}
                         />
 
@@ -96,7 +98,7 @@ export default function UpdatePasswordForm({
                             disabled={processing}
                             data-test="update-password-button"
                         >
-                            Save password
+                            {t.save_password_btn}
                         </Button>
                     </div>
                 </>

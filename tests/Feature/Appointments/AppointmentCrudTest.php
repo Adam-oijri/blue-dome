@@ -49,6 +49,22 @@ it('lets clinic staff and super_admin schedule an appointment', function (string
     ['secretary', true],
 ]);
 
+it('rejects a secretary booking that names a non-doctor as the doctor', function () {
+    $secretary = User::factory()->secretary()->create(['clinic_id' => $this->clinic->id]);
+    $start = now()->addDays(2)->setTime(11, 0);
+
+    $this->actingAs($secretary)
+        ->post(route('appointments.store'), [
+            'patient_id' => $this->patient->id,
+            'doctor_id' => $secretary->id, // self — a secretary is not a doctor
+            'scheduled_start' => $start->toDateTimeString(),
+            'scheduled_end' => $start->copy()->addMinutes(30)->toDateTimeString(),
+        ])
+        ->assertSessionHasErrors('doctor_id');
+
+    expect(Appointment::query()->where('patient_id', $this->patient->id)->exists())->toBeFalse();
+});
+
 it('lets a secretary cancel an appointment', function () {
     $secretary = User::factory()->secretary()->create(['clinic_id' => $this->clinic->id]);
     $appointment = Appointment::factory()->create([

@@ -1,0 +1,64 @@
+# Production topology for BlueDome (Dokploy "Docker Compose" deployment).
+#
+# The Dockerfile builds a single image that, by default, runs only the FrankenPHP
+# web server. Production also needs two long-lived background processes that the
+# web container does NOT provide on its own:
+#   - scheduler -> fires `app:send-appointment-reminders` (hourly) plus the daily
+#                  trial-expiry / weekly field-change-rotation tasks.
+#   - worker    -> drains the `whatsapp` queue (automatic appointment confirmation
+#                  + 24h reminder sends). Without it, only the secretary's manual
+#                  "send confirmation" button works (that path is synchronous).
+#
+# All three services share ONE built image (built once by `app`, reused by the
+# others). Dokploy injects the project environment variables into every service,
+# so no `env_file` is declared here.
+#
+# MIGRATIONS ARE NOT RUN HERE ON PURPOSE.
+# Run them once per release as a Dokploy pre-deploy / run command, using the
+# privileged schema-owner DB role (NOT the restricted app role): the
+# `make_fn_next_seq_security_definer` migration does `ALTER FUNCTION`, which
+# requires the function's owner.
+#     php artisan migrate --force
+
+services:
+    app:
+        build:
+            context: .
+            dockerfile: Dockerfile
+        image: bluedome-app:latest
+        restart: unless-stopped
+        ports:
+            - '${APP_PORT:-8080}:8080'
+        healthcheck:
+            test: ['CMD', 'curl', '-fsS', 'http://127.0.0.1:8080/up']
+            interval: 30s
+            timeout: 5s
+            retries: 3
+            start_period: 20s
+
+    scheduler:
+        image: bluedome-app:latest
+        depends_on:
+            - app
+        restart: unless-stopped
+        # `schedule:work` is the container-friendly scheduler: one foreground
+        # process that triggers due tasks every minute (no host cron needed).
+        command: ['php', 'artisan', 'schedule:work']
+
+    worker:
+        image: bluedome-app:latest
+        depends_on:
+            - app
+        restart: unless-stopped
+        # Prioritise the whatsapp queue, then default. --max-time recycles the
+        # process hourly (restart policy brings it straight back) to cap memory.
+        command:
+            [
+                'php',
+                'artisan',
+                'queue:work',
+                '--queue=whatsapp,default',
+                '--sleep=3',
+                '--tries=3',
+                '--max-time=3600',
+            ]
